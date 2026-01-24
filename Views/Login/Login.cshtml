@@ -1,0 +1,154 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Meetings Of Minutes </title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4e54c8, #b700ff);
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 14px;
+        }
+
+        .signin {
+            background: linear-gradient(90deg, #4e54c8, #b700ff, #4e54c8);
+            background-size: 200% 100%;
+            background-position: left;
+            transition: background-position 1s ease;
+        }
+
+            .signin:hover {
+                background-position: right;
+            }
+
+
+        .text-muted-small {
+            color: black;
+            font-size: 14px;
+        }
+
+        .link-color {
+            color: #4e54c8;
+            text-decoration: none;
+        }
+
+        .logo {
+            /* background: transparent; */
+            background: linear-gradient(135deg, #4e54c8, #b700ff);
+            color: white;
+            border-radius: 50%;
+            width: 15%;
+            /* height: 5%; */
+            font-size: xx-large;
+        }
+
+        a,
+        h5 {
+            color: #4e54c8;
+            text-decoration: none;
+        }
+
+        .bi:hover {
+            cursor: pointer;
+        }
+
+        button a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .heading {
+            letter-spacing: 3px;
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body class="d-flex justify-content-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4 text-center">
+
+                <div style="margin-top:20%;" class="brand-icon d-flex align-items-center justify-content-center mx-auto mb-3">
+                    <i class="bi bi-calendar-check text-white fs-4"></i>
+                    <h4 class="fw-bold heading text-white ms-2 mt-2">MOM System</h4>
+                </div>
+                <div class="card login-card shadow p-4">
+
+                    <div class="text-center mb-3">
+                        <div class="brand-icon d-flex align-items-center justify-content-center mx-auto mb-2">
+                            <i class="logo bi bi-calendar-check"></i>
+                            <h5 class="fw-bold ms-2 mt-2">MOM System</h5>
+                        </div>
+                    </div>
+
+                    <h4 class="text-center fw-bold mb-3">Welcome Back</h4>
+                    <p class="text-center text-muted-small mb-4">
+                        Sign in to access your meeting management dashboard
+                    </p>
+
+                    <form>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input type="text" class="form-control shadow-none border border-start-0" placeholder="Username">
+                        </div>
+
+
+                        <div class="input-group mb-3">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            <input type="password" class="form-control shadow-none border border-start-0 border-end-0"
+                                   placeholder="Password">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-eye"></i>
+                            </span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input shadow-none" type="checkbox" id="remember">
+                                <label class="form-check-label text-muted-small" for="remember">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="#">Forgot password?</a>
+                        </div>
+
+                        <a class="signin btn btn-gradient w-100 py-2 text-white" asp-controller="DashBoard" asp-action="DashBoard">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                        </a>
+                    </form>
+
+                    <hr class="my-4">
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

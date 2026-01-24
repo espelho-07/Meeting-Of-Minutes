@@ -1,0 +1,52 @@
+﻿@{
+    ViewData["Title"] = "Staff Member Configuration - MOM";
+}
+
+<div class="pagetitle">
+    <h1>Staff Member Configuration</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Staff" asp-action="StaffList">Staff Members</a></li>
+            <li class="breadcrumb-item active">Add/Edit</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="card border-0 shadow-sm col-lg-9 mx-auto" style="border-radius: 15px;">
+    <div class="card-header border-0 py-3 text-white" style="background: linear-gradient(45deg, #5a52e0, #8965e0);">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-person-plus-fill me-2"></i> Staff Details</h6>
+    </div>
+    <div class="card-body p-4 pt-5">
+        <form class="row g-4" method="post">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Staff Name</label> @* StaffName (Nvarchar 50) *@
+                <input type="text" class="form-control rounded-3 shadow-none" placeholder="Enter full name" maxlength="50" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Department</label> @* DepartmentID (FK) *@
+                <select class="form-select rounded-3 shadow-none" required>
+                    <option selected disabled>-- Select Department --</option>
+                    <option>Information Technology</option>
+                    <option>Human Resources</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Mobile Number</label> @* MobileNo (Nvarchar 20) *@
+                <input type="text" class="form-control rounded-3 shadow-none" placeholder="+91 00000 00000" maxlength="20" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Email Address</label> @* EmailAddress (Nvarchar 50) *@
+                <input type="email" class="form-control rounded-3 shadow-none" placeholder="official@company.com" maxlength="50" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label small fw-bold">Remarks</label> @* Remarks (Nvarchar 250) *@
+                <textarea class="form-control rounded-3 shadow-none" rows="3" maxlength="250" placeholder="Optional notes..."></textarea>
+            </div>
+            <div class="col-12 text-end border-top pt-4">
+                <a asp-action="StaffList" class="btn btn-light rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;">Save Member</button>
+            </div>
+        </form>
+    </div>
+</div>

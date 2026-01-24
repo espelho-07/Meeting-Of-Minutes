@@ -1,0 +1,44 @@
+﻿@model Meeting_Of_Minutes.Models.DepartmentModel
+@{
+    ViewData["Title"] = "Department Add - Meeting Of Minutes";
+}
+
+<div class="pagetitle">
+    <h1>Department Configuration</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Department" asp-action="DepartmentList">Department</a></li>
+            <li class="breadcrumb-item active">Add/Edit</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="card border-0 shadow-sm col-lg-7 mx-auto" style="border-radius: 15px; margin-top: 3rem;">
+    <div class="card-header border-0 py-3 text-white" style="background: #5a52e0;">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i> Edit Department Details</h6>
+    </div>
+
+    <div class="card-body p-5">
+        <form class="row g-4" asp-action="Save" method="post">
+            @Html.AntiForgeryToken()
+            <div class="col-md-12">
+                <label asp-for="DepartmentName" class="form-label small fw-bold text-muted"></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-building"></i></span>
+                    <input asp-for="DepartmentName" type="text" class="form-control"
+                           placeholder="Enter name (e.g. IT Department)" maxlength="100">
+                </div>
+                <span asp-validation-for="DepartmentName" class="text-danger"></span>
+                <div class="form-text x-small text-muted mt-2">Maximum 100 characters allowed as per system requirements.</div>
+            </div>
+
+            <div class="col-12 text-end mt-5 border-top pt-4">
+                <a asp-action="DepartmentList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;">
+                    <i class="bi bi-save me-2"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

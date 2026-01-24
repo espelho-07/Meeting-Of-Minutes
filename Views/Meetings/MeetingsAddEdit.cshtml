@@ -1,0 +1,54 @@
+﻿@model Meeting_Of_Minutes.Models.MeetingsModel
+@{
+    ViewData["Title"] = "Schedule Meeting - Meeting Of Minutes";
+}
+
+<div class="card border-0 shadow-sm col-lg-10 mx-auto mt-4" style="border-radius: 15px;">
+    <div class="card-header border-0 py-3 text-white" style="background: linear-gradient(45deg, #5a52e0, #8965e0);">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-plus me-2"></i> Meeting Configuration</h6>
+    </div>
+    <div class="card-body p-5">
+        <form class="row g-4" enctype="multipart/form-data">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Meeting Date & Time</label> @* MeetingDate *@
+                <input type="datetime-local" class="form-control rounded-3 shadow-none">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Venue (MeetingVenueID)</label> @* FK MeetingVenue *@
+                <select class="form-select rounded-3 shadow-none" required>
+                    <option selected disabled>-- Select Venue --</option>
+                    <option value="1">Conference Room 1</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Type (MeetingTypeID)</label> @* FK MeetingType *@
+                <select class="form-select rounded-3 shadow-none" required>
+                    <option selected disabled>-- Select Type --</option>
+                    <option value="1">Board Meeting</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Department (DepartmentID)</label> @* FK Department *@
+                <select class="form-select rounded-3 shadow-none" required>
+                    <option selected disabled>-- Select Dept --</option>
+                    <option value="1">IT Support</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label small fw-bold">Description</label> @* Meeting Description *@
+                <textarea class="form-control rounded-3 shadow-none" rows="3" maxlength="250"></textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label small fw-bold">Is Cancelled? (Bit)</label> @* IsCancelled *@
+                <select class="form-select rounded-3 shadow-none">
+                    <option value="false">Active</option>
+                    <option value="true">Cancelled</option>
+                </select>
+            </div>
+            <div class="text-end mt-4 pt-3 border-top">
+                <a asp-controller="Meetings" asp-action="MeetingsList" class="btn btn-light rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;">Schedule Meeting</button>
+            </div>
+        </form>
+    </div>
+</div>

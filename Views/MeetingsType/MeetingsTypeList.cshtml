@@ -1,0 +1,156 @@
+﻿@{
+    ViewData["Title"] = "Meeting Types - Meeting Of Minutes";
+}
+
+<div class="pagetitle">
+    <h1>Meeting Categories</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="DashBoard" asp-action="DashBoard">Home</a>
+            </li>
+            <li class="breadcrumb-item active">Meeting Type</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted small mb-0">
+        Define meeting categories to structure organizational discussions.
+    </p>
+    <a asp-action="MeetingTypeAddEdit"
+       class="btn btn-primary rounded-pill px-4 shadow-sm"
+       style="background-color:#5a52e0;border:none;">
+        <i class="bi bi-tags-fill me-2"></i>
+        Add Meeting Type
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius:15px;overflow:hidden;">
+
+    <div class="card-header border-0 d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(45deg,#5a52e0,#8965e0);padding:12px 20px;">
+
+        <h6 class="mb-0 fw-bold text-white" style="display:flex;align-items:center;">
+            <i class="bi bi-geo-fill me-2"></i>
+            Meeting Type List
+        </h6>
+
+        <div style="
+            width:260px;
+            height:34px;
+            background:#ffffff;
+            border-radius:999px;
+            display:flex;
+            align-items:center;
+            padding:0 14px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15);
+        ">
+            <i class="bi bi-search" style="color:#6c757d;font-size:14px;"></i>
+
+            <input type="text"
+                   id="typeSearch"
+                   placeholder="Search meeting type..."
+                   style="
+                        border:none;
+                        outline:none;
+                        width:100%;
+                        margin-left:8px;
+                        font-size:13px;
+                        background:transparent;
+                        color:#111827;
+                   " />
+        </div>
+    </div>
+
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0" id="typeTable">
+            <thead class="bg-light">
+                <tr class="text-muted small text-uppercase">
+                    <th class="ps-4">ID</th>
+                    <th>Meeting Type Name</th>
+                    <th>Remarks</th>
+                    <th>Created</th>
+                    <th>Modified</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="ps-4">01</td>
+                    <td><div class="fw-bold">Board Meeting</div></td>
+                    <td>High-level strategy</td>
+                    <td>2025-10-01</td>
+                    <td>2025-12-01</td>
+                    <td class="text-center">
+                        <a asp-action="MeetingTypeAddEdit" class="btn btn-sm btn-light border rounded-pill">
+                            <i class="bi bi-pencil-square text-warning"></i>
+                        </a>
+                        <button class="btn btn-sm btn-light border rounded-pill">
+                            <i class="bi bi-trash3 text-danger"></i>
+                        </button>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="ps-4">02</td>
+                    <td><div class="fw-bold">Review Meeting</div></td>
+                    <td>Monthly progress check</td>
+                    <td>2025-10-05</td>
+                    <td>2025-12-05</td>
+                    <td class="text-center">
+                        <a asp-action="MeetingTypeAddEdit" class="btn btn-sm btn-light border rounded-pill">
+                            <i class="bi bi-pencil-square text-warning"></i>
+                        </a>
+                        <button class="btn btn-sm btn-light border rounded-pill">
+                            <i class="bi bi-trash3 text-danger"></i>
+                        </button>
+                    </td>
+                </tr>
+
+                <tr id="noTypeRow" style="display:none;">
+                    <td colspan="6" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                            <i class="bi bi-emoji-frown display-6 mb-2" style="color: #cbd5e1;"></i>
+                            <h6 class="fw-bold mb-0">No meeting type found</h6>
+                            <small>Try adjusting your search criteria</small>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("typeSearch").addEventListener("keyup", function () {
+            var input = this.value.toLowerCase();
+            // Select rows excluding the no-data row
+            var rows = document.querySelectorAll("#typeTable tbody tr:not(#noTypeRow)");
+            var noRow = document.getElementById("noTypeRow");
+            var visibleCount = 0;
+
+            rows.forEach(function (row) {
+                var searchableText =
+                    row.cells[1].textContent.toLowerCase() + // Meeting Type Name
+                    row.cells[2].textContent.toLowerCase();  // Remarks
+
+                if (searchableText.includes(input)) {
+                    row.style.display = "";
+                    visibleCount++;
+                } else {
+                    row.style.display = "none";
+                }
+            });
+
+            // Logic to show/hide "No Type Found" message
+            if (visibleCount === 0) {
+                noRow.style.display = "table-row";
+            } else {
+                noRow.style.display = "none";
+            }
+        });
+    </script>
+}

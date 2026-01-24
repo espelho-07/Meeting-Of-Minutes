@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Meeting Venue Configuration - Meeting Of Minutes";
+}
+
+<div class="pagetitle">
+    <h1>Meeting Venue Edit</h1>
+    <nav>
+        <ol class="breadcrumb flex-nowrap">
+            <li class="breadcrumb-item">
+                <a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i> Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-controller="MeetingVenue" asp-action="MeetingVenueList">Meeting Venue</a>
+            </li>
+            <li class="breadcrumb-item active">Add Edit</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="card border-0 shadow-sm col-lg-8 mx-auto mt-4" style="border-radius: 15px;">
+    <div class="card-header border-0 py-3 text-white" style="background: linear-gradient(45deg, #5a52e0, #8965e0);">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-geo-alt-fill me-2"></i> Venue Details</h6>
+    </div>
+
+    <div class="card-body p-5">
+        <form class="row g-4" method="post">
+            <div class="col-md-12">
+                <label class="form-label small fw-bold text-muted">Meeting Venue Name</label> @* Nvarchar(100) *@
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-door-open"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0 shadow-none"
+                           placeholder="e.g. Conference Room A or Zoom Link" maxlength="100" required>
+                </div>
+                <div class="form-text x-small text-muted mt-2">
+                    System prevents duplicate names[cite: 441]. Max 100 characters allowed.
+                </div>
+            </div>
+
+            @* Audit fields Created and Modified are managed by Database context *@
+
+            <div class="text-end mt-5 border-top pt-4">
+                <a asp-action="MeetingVenueList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;">
+                    <i class="bi bi-save me-2"></i> Save Venue
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

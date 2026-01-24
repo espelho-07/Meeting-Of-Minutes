@@ -1,0 +1,209 @@
+﻿@{
+    ViewData["Title"] = "My Profile - Meeting Of Minutes";
+}
+
+<div class="pagetitle">
+    <h1>My Profile</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
+            <li class="breadcrumb-item">User</li>
+            <li class="breadcrumb-item active">Profile</li>
+        </ol>
+    </nav>
+</div>
+
+<section class="section profile">
+    <div class="row">
+        <div class="col-xl-4">
+
+            <div class="card border-0 shadow-sm text-center py-4" style="border-radius: 20px;">
+                <div class="card-body">
+                    <div class="position-relative d-inline-block">
+                        <img src="~/assets/img/profile-img.jpg" alt="Profile" class="rounded-circle border border-4 border-primary p-1 shadow" style="width: 130px; height: 130px; object-fit: cover;">
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-2" title="Online Status"></span>
+                    </div>
+                    <h4 class="fw-bold mt-3 mb-0">Kevin Anderson</h4>
+                    <p class="text-muted small uppercase fw-bold mb-3">Senior Administrator</p>
+
+                    <div class="d-flex justify-content-center gap-2 mb-3">
+                        <button class="btn btn-primary btn-sm rounded-pill px-3">Follow</button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3">Message</button>
+                    </div>
+
+                    <div class="social-links border-top pt-3">
+                        <a href="#" class="mx-2 text-primary fs-5"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="mx-2 text-primary fs-5"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="mx-2 text-danger fs-5"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="mx-2 text-info fs-5"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-3" style="border-radius: 20px;">
+                <div class="card-body pt-3">
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">Performance Overview</h6>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Meetings Efficiency</span>
+                            <span class="fw-bold">85%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>MOM Documentation</span>
+                            <span class="fw-bold">70%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 70%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="card-body pt-3">
+
+                    <ul class="nav nav-pills nav-justified mb-4" id="pills-tab" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-overview">Overview</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-edit">Edit Profile</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-activity">Recent Activity</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-settings">Security</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content pt-2">
+
+                        <div class="tab-pane fade show active" id="profile-overview">
+                            <h5 class="fw-bold mb-3" style="color: #5a52e0;">About Me</h5>
+                            <p class="text-muted fst-italic">Experienced in managing high-level board meetings and ensuring accurate documentation of Minutes of Meetings (MOM). Passionate about organizational efficiency.</p>
+
+                            <h5 class="fw-bold mb-3 mt-4" style="color: #5a52e0;">Account Details</h5>
+                            <div class="row g-3">
+                                <div class="col-sm-6 border-start border-4 border-primary ps-3 mb-3">
+                                    <small class="text-muted d-block">Official Email</small>
+                                    <span class="fw-bold">k.anderson@@example.com</span>
+                                </div>
+                                <div class="col-sm-6 border-start border-4 border-info ps-3 mb-3">
+                                    <small class="text-muted d-block">Department</small>
+                                    <span class="fw-bold">IT Administration</span>
+                                </div>
+                                <div class="col-sm-6 border-start border-4 border-warning ps-3 mb-3">
+                                    <small class="text-muted d-block">Mobile Number</small>
+                                    <span class="fw-bold">+91 98765 43210</span>
+                                </div>
+                                <div class="col-sm-6 border-start border-4 border-success ps-3 mb-3">
+                                    <small class="text-muted d-block">Current Location</small>
+                                    <span class="fw-bold">Mumbai, India</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="profile-edit">
+                            <form class="row g-3 mt-1">
+                                <div class="col-md-12 text-center mb-3">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-primary"><i class="bi bi-upload me-1"></i> Update Avatar</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Full Name</label>
+                                    <input type="text" class="form-control rounded-3" value="Kevin Anderson">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Job Role</label>
+                                    <input type="text" class="form-control rounded-3" value="Senior Administrator">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Short Bio</label>
+                                    <textarea class="form-control rounded-3" rows="3">Experienced in managing board meetings...</textarea>
+                                </div>
+                                <div class="text-end mt-4">
+                                    <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background: #5a52e0; border:none;">Update Profile</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="profile-activity">
+                            <h5 class="fw-bold mb-4">Your Recent Actions</h5>
+                            <div class="activity">
+                                <div class="activity-item d-flex mb-3">
+                                    <div class="activite-label small text-muted" style="min-width: 60px;">32 min</div>
+                                    <i class='bi bi-circle-fill activity-badge text-success align-self-start mx-2 small'></i>
+                                    <div class="activity-content">Created <strong>MOM</strong> for Project Alpha Meeting</div>
+                                </div>
+                                <div class="activity-item d-flex mb-3">
+                                    <div class="activite-label small text-muted" style="min-width: 60px;">2 hrs</div>
+                                    <i class='bi bi-circle-fill activity-badge text-primary align-self-start mx-2 small'></i>
+                                    <div class="activity-content">Added new staff member <strong>John Doe</strong></div>
+                                </div>
+                                <div class="activity-item d-flex mb-3">
+                                    <div class="activite-label small text-muted" style="min-width: 60px;">1 day</div>
+                                    <i class='bi bi-circle-fill activity-badge text-warning align-self-start mx-2 small'></i>
+                                    <div class="activity-content">Updated Venue settings for <strong>Main Auditorium</strong></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="profile-settings">
+                            <form class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Current Password</label>
+                                    <input type="password" class="form-control rounded-3 shadow-none">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">New Password</label>
+                                    <input type="password" class="form-control rounded-3 shadow-none">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Confirm Password</label>
+                                    <input type="password" class="form-control rounded-3 shadow-none">
+                                </div>
+                                <div class="text-end mt-4">
+                                    <button type="submit" class="btn btn-danger rounded-pill px-4">Change Password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Custom Styling for Awesome Look */
+    .nav-pills .nav-link.active {
+        background-color: #5a52e0 !important;
+        box-shadow: 0 4px 15px rgba(90, 82, 224, 0.3);
+    }
+
+    .nav-pills .nav-link {
+        color: #666;
+        font-weight: 600;
+        border: 1px solid #eee;
+    }
+
+    .activity-badge {
+        font-size: 10px;
+        padding-top: 5px;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+</style>
