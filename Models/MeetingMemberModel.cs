@@ -16,13 +16,10 @@ namespace Meeting_Of_Minutes.Models
         [Required]
         public bool IsPresent { get; set; }
 
-        [Required]
         public string? Remarks { get; set; }
 
-        [Required]
         public DateTime Created { get; set; }
 
-        [Required]
         public DateTime Modified { get; set; }
     }
 }

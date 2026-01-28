@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Meeting_Of_Minutes.Models.MeetingTypeModel
+@{
     ViewData["Title"] = "Meeting Type Configuration - Meeting Of Minutes";
 }
 
@@ -10,7 +11,7 @@
                 <a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i> Home</a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-controller="MeetingType" asp-action="MeetingTypeList">Meeting Type</a>
+                <a asp-controller="MeetingsType" asp-action="MeetingsTypeList">Meeting Type</a>
             </li>
             <li class="breadcrumb-item active">Add Edit</li>
         </ol>
@@ -23,14 +24,17 @@
     </div>
 
     <div class="card-body p-5">
-        <form class="row g-4" method="post">
+        <form class="row g-4" asp-action="Save" method="post">
+            @Html.AntiForgeryToken()
             <div class="col-md-12">
                 <label class="form-label small fw-bold text-muted">Meeting Type Name</label> @* Nvarchar(100) *@
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-bookmark-star"></i></span>
-                    <input type="text" class="form-control border-start-0 ps-0 shadow-none"
-                           placeholder="e.g. Brainstorming, Quarterly Review" maxlength="100" required>
+                    <input asp-for="MeetingTypeName" type="text" class="form-control border-start-0 ps-0 shadow-none"
+                           placeholder="e.g. Brainstorming, Quarterly Review" maxlength="100" >
+
                 </div>
+                <span asp-validation-for="MeetingTypeName" class=" text-danger"></span>
             </div>
 
             <div class="col-md-12">
@@ -38,7 +42,7 @@
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-chat-left-dots"></i></span>
                     <input type="text" class="form-control border-start-0 ps-0 shadow-none"
-                           placeholder="Brief description of this category" maxlength="100" required>
+                           placeholder="Brief description of this category" maxlength="100">
                 </div>
                 <div class="form-text x-small text-muted mt-2">
                     Duplicate TypeNames are prevented[cite: 430]. Max 100 characters allowed.

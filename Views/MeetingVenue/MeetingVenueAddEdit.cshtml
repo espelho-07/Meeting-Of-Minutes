@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Meeting_Of_Minutes.Models.MeetingVenueModel
+@{
     ViewData["Title"] = "Meeting Venue Configuration - Meeting Of Minutes";
 }
 
@@ -23,17 +24,16 @@
     </div>
 
     <div class="card-body p-5">
-        <form class="row g-4" method="post">
+        <form asp-controller="MeetingVenue" asp-action="Save" class="row g-4" method="post">
+            @Html.AntiForgeryToken()
             <div class="col-md-12">
                 <label class="form-label small fw-bold text-muted">Meeting Venue Name</label> @* Nvarchar(100) *@
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-door-open"></i></span>
-                    <input type="text" class="form-control border-start-0 ps-0 shadow-none"
-                           placeholder="e.g. Conference Room A or Zoom Link" maxlength="100" required>
+                    <input asp-for="MeetingVenueName" type="text" class="form-control border-start-0 ps-0 shadow-none"
+                           placeholder="e.g. Conference Room A or Zoom Link" maxlength="100">
                 </div>
-                <div class="form-text x-small text-muted mt-2">
-                    System prevents duplicate names[cite: 441]. Max 100 characters allowed.
-                </div>
+                <span asp-validation-for="MeetingVenueName" class=" text-danger"></span>
             </div>
 
             @* Audit fields Created and Modified are managed by Database context *@

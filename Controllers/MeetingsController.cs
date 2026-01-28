@@ -15,14 +15,14 @@ namespace Meeting_Of_Minutes.Controllers
             return View();
         }
 
-        public IActionResult Save(DepartmentModel model)
+        public IActionResult Save(MeetingsModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View("DepartmentAddEdit", model);
+                return View("MeetingsAddEdit", model);
             }
 
-            return RedirectToAction("DepartmentList");
+            return RedirectToAction("MeetingsList");
         }
     }
 }

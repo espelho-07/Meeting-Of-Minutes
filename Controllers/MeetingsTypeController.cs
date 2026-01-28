@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Meeting_Of_Minutes.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Meeting_Of_Minutes.Controllers
 {
@@ -11,6 +12,15 @@ namespace Meeting_Of_Minutes.Controllers
         public IActionResult MeetingsTypeList()
         {
             return View();
+        }
+        public IActionResult Save(MeetingTypeModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("MeetingsTypeAddEdit", model);
+            }
+
+            return RedirectToAction("MeetingsTypeList");
         }
     }
 }

@@ -8,10 +8,11 @@
         <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-plus me-2"></i> Meeting Configuration</h6>
     </div>
     <div class="card-body p-5">
-        <form class="row g-4" enctype="multipart/form-data">
+        <form asp-controller="Meetings" asp-action="Save" class="row g-4" enctype="multipart/form-data">
             <div class="col-md-6">
                 <label class="form-label small fw-bold">Meeting Date & Time</label> @* MeetingDate *@
-                <input type="datetime-local" class="form-control rounded-3 shadow-none">
+                <input asp-for="MeetingDate" type="datetime-local" class="form-control rounded-3 shadow-none">
+                <span asp-validation-for="MeetingDate" class=" text-danger"></span>
             </div>
             <div class="col-md-6">
                 <label class="form-label small fw-bold">Venue (MeetingVenueID)</label> @* FK MeetingVenue *@

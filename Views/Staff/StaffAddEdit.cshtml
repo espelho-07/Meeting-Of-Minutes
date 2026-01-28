@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Meeting_Of_Minutes.Models.StaffModel
+@{
     ViewData["Title"] = "Staff Member Configuration - MOM";
 }
 
@@ -18,11 +19,14 @@
         <h6 class="mb-0 fw-bold"><i class="bi bi-person-plus-fill me-2"></i> Staff Details</h6>
     </div>
     <div class="card-body p-4 pt-5">
-        <form class="row g-4" method="post">
+        <form asp-action="Save" class="row g-4" method="post">
+            @Html.AntiForgeryToken()
             <div class="col-md-6">
                 <label class="form-label small fw-bold">Staff Name</label> @* StaffName (Nvarchar 50) *@
-                <input type="text" class="form-control rounded-3 shadow-none" placeholder="Enter full name" maxlength="50" required>
+                <input asp-for="StaffName" type="text" class="form-control rounded-3 shadow-none" placeholder="Enter full name" maxlength="50">
+                <span asp-validation-for="StaffName" class=" text-danger"></span>
             </div>
+            
             <div class="col-md-6">
                 <label class="form-label small fw-bold">Department</label> @* DepartmentID (FK) *@
                 <select class="form-select rounded-3 shadow-none" required>
@@ -33,12 +37,16 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label small fw-bold">Mobile Number</label> @* MobileNo (Nvarchar 20) *@
-                <input type="text" class="form-control rounded-3 shadow-none" placeholder="+91 00000 00000" maxlength="20" required>
+                <input asp-for="MobileNo" type="text" class="form-control rounded-3 shadow-none" placeholder="+91 00000 00000" maxlength="20" >
+                <span asp-validation-for="MobileNo" class=" text-danger"></span>
             </div>
+            
             <div class="col-md-6">
                 <label class="form-label small fw-bold">Email Address</label> @* EmailAddress (Nvarchar 50) *@
-                <input type="email" class="form-control rounded-3 shadow-none" placeholder="official@company.com" maxlength="50" required>
+                <input asp-for="EmailAddress" type="email" class="form-control rounded-3 shadow-none" placeholder="official@company.com" maxlength="50" >
+                <span asp-validation-for="EmailAddress" class=" text-danger"></span>
             </div>
+            
             <div class="col-12">
                 <label class="form-label small fw-bold">Remarks</label> @* Remarks (Nvarchar 250) *@
                 <textarea class="form-control rounded-3 shadow-none" rows="3" maxlength="250" placeholder="Optional notes..."></textarea>
