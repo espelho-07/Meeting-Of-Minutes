@@ -15,6 +15,13 @@ namespace Meeting_Of_Minutes.Controllers
             return View();
         }
 
+        public IActionResult MeetingsDetails(int id)
+        {
+            ViewBag.MeetingID = id;
+            return View();
+        }
+
+
         public IActionResult Save(MeetingsModel model)
         {
             if (!ModelState.IsValid)

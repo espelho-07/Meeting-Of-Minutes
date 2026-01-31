@@ -1,0 +1,217 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@{
+    ViewData["Title"] = "Department Details";
+}
+
+<div class="container-fluid mt-4">
+
+    <!-- Breadcrumb -->
+    <div class="pagetitle">
+        <h1>Departments Details</h1>
+        <nav>
+            <ol class="breadcrumb flex-nowrap">
+                <li class="breadcrumb-item">
+                    <a asp-controller="DashBoard" asp-action="DashBoard">Home</a>
+                </li>
+                <li class="breadcrumb-item active"> <a asp-controller="Department" asp-action="DepartmentList">Departments</a></li>
+                <li class="breadcrumb-item active">Departments Details</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-8">
+
+            <!-- Department Information -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+                <div class="card-header text-white d-flex justify-content-between align-items-center"
+                     style="background:linear-gradient(90deg,#6a6fdc,#7b5be6);border-radius:14px 14px 0 0;">
+                    <span><i class="bi bi-building me-2"></i> Department Information</span>
+
+                    <div class="d-flex gap-3 small">
+                        <a href="#" class="text-white text-decoration-none">
+                            <i class="bi bi-people"></i> View Staff
+                        </a>
+                        <a href="#" class="text-warning text-decoration-none">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a href="#" class="text-danger text-decoration-none">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Department ID</small>
+                            <div class="fw-semibold">7</div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Department Name</small><br />
+                            <span class="badge bg-primary px-3 py-2 rounded-pill">
+                                Customer Service
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> Created Date
+                            </small>
+                            <div>2025-11-20 10:45:09</div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="bi bi-clock-history"></i> Last Modified
+                            </small>
+                            <div>2025-11-20 22:38:36</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card border-0 shadow-sm" style="border-radius:14px;">
+                <div class="card-header text-white"
+                     style="background:linear-gradient(90deg,#6a6fdc,#7b5be6);border-radius:14px 14px 0 0;">
+                    <i class="bi bi-activity me-2"></i> Recent Department Activity
+                </div>
+
+                <div class="card-body">
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <span class="badge rounded-circle bg-primary p-3">
+                                <i class="bi bi-person-plus"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <strong>New staff member added</strong>
+                            <div class="text-muted small">
+                                Emily Davis joined as Developer
+                            </div>
+                            <small class="text-muted">2025-01-20</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex mb-3">
+                        <div class="me-3">
+                            <span class="badge rounded-circle bg-primary p-3">
+                                <i class="bi bi-calendar-check"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <strong>Meeting scheduled</strong>
+                            <div class="text-muted small">
+                                Q1 Planning Session – Jan 25
+                            </div>
+                            <small class="text-muted">2025-01-18</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <span class="badge rounded-circle bg-primary p-3">
+                                <i class="bi bi-pencil"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <strong>Department updated</strong>
+                            <div class="text-muted small">
+                                Contact information changed
+                            </div>
+                            <small class="text-muted">2025-01-15</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-lg-4">
+
+            <!-- Statistics -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+                <div class="card-header text-white"
+                     style="background:linear-gradient(90deg,#6a6fdc,#7b5be6);border-radius:14px 14px 0 0;">
+                    <i class="bi bi-bar-chart me-2"></i> Department Statistics
+                </div>
+
+                <div class="card-body text-center">
+                    <h2 class="fw-bold text-primary">3</h2>
+                    <small class="text-muted">Total Staff Members</small>
+
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <h5 class="fw-bold text-success">2</h5>
+                            <small>Total Meetings</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="fw-bold text-warning">0</h5>
+                            <small>Upcoming</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Members -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+                <div class="card-header text-white"
+                     style="background:linear-gradient(90deg,#6a6fdc,#7b5be6);border-radius:14px 14px 0 0;">
+                    <i class="bi bi-people me-2"></i> Staff Members
+                </div>
+
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>John Smith</strong>
+                        <div class="small text-muted">Manager</div>
+                        <small class="text-muted">john.smith@company.com</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Sarah Johnson</strong>
+                        <div class="small text-muted">Senior Developer</div>
+                        <small class="text-muted">sarah.j@company.com</small>
+                    </div>
+
+                    <div>
+                        <strong>Mike Chen</strong>
+                        <div class="small text-muted">Developer</div>
+                        <small class="text-muted">mike.chen@company.com</small>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a href="#" class="text-decoration-none">
+                            View All Staff
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm" style="border-radius:14px;">
+                <div class="card-header text-white"
+                     style="background:linear-gradient(90deg,#6a6fdc,#7b5be6);border-radius:14px 14px 0 0;">
+                    <i class="bi bi-lightning-charge me-2"></i> Quick Actions
+                </div>
+
+                <div class="card-body">
+                    <a href="#" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-people"></i> Manage Staff Members
+                    </a>
+                    <a href="#" class="btn btn-success w-100">
+                        <i class="bi bi-person-plus"></i> Add Staff Member
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

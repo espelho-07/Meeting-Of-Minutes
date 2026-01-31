@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Meeting_Of_Minutes.Models
 {
@@ -7,30 +8,32 @@ namespace Meeting_Of_Minutes.Models
         [Key]
         public int MeetingID { get; set; }
 
-        [Required(ErrorMessage = "The Field Is Required")]
-        public DateTime MeetingDate { get; set; }
+        [Required(ErrorMessage = "Meeting date & time is required")]
+        public DateTime? MeetingDate { get; set; }
 
-        public int MeetingVenueID { get; set; }
+        [Required(ErrorMessage = "Venue is required")]
+        public int? MeetingVenueID { get; set; }
 
-        public int MeetingTypeID { get; set; }
+        [Required(ErrorMessage = "Meeting type is required")]
+        public int? MeetingTypeID { get; set; }
 
-        public int DepartmentID { get; set; }
+        [Required(ErrorMessage = "Department is required")]
+        public int? DepartmentID { get; set; }
 
+        [MaxLength(250, ErrorMessage = "Description can be max 250 characters")]
         public string? MeetingDescription { get; set; }
 
         public string? DocumentPath { get; set; }
 
-        public DateTime Created { get; set; }
-
-        public DateTime Modified { get; set; }
+        public DateTime Created { get; set; } = DateTime.Now;
+        public DateTime Modified { get; set; } = DateTime.Now;
 
         [Required]
-        public bool? IsCancelled { get; set; }
+        public bool IsCancelled { get; set; } = false;
 
         public DateTime? CancellationDateTime { get; set; }
 
-        [Required]
+        [MaxLength(250)]
         public string? CancellationReason { get; set; }
-
     }
 }

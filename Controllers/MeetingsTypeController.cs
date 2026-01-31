@@ -5,14 +5,26 @@ namespace Meeting_Of_Minutes.Controllers
 {
     public class MeetingsTypeController : Controller
     {
-        public IActionResult MeetingsTypeAddEdit()
-        {
-            return View();
-        }
+        // LIST
         public IActionResult MeetingsTypeList()
         {
             return View();
         }
+
+        public IActionResult MeetingsTypeAddEdit(int? id)
+        {
+
+            return View();
+        }
+
+        public IActionResult MeetingsTypeDetails(int id)
+        {
+
+            ViewBag.MeetingID = id;
+            return View();
+        }
+
+        
         public IActionResult Save(MeetingTypeModel model)
         {
             if (!ModelState.IsValid)

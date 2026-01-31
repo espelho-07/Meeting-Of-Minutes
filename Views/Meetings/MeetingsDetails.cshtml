@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Meeting Details - Meeting Of Minutes";
+}
+<div class="pagetitle mb-4">
+    <h1>Meeting Details</h1>
+    <nav>
+        <ol class="breadcrumb flex-nowrap">
+            <li class="breadcrumb-item">
+                <a asp-controller="DashBoard" asp-action="DashBoard">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-controller="Meetings" asp-action="MeetingsList">Meetings</a>
+            </li>
+            <li class="breadcrumb-item active">Meeting Details</li>
+        </ol>
+    </nav>
+</div>
+<!-- PAGE TITLE -->
+<div class="pagetitle mb-4">
+    <h1>Meeting Details</h1>
+    <p class="text-muted">View detailed information about this meeting</p>
+</div>
+
+<!-- MEETING DETAILS CARD -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="card-header d-flex justify-content-between align-items-center text-white"
+         style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);
+                border-radius:16px 16px 0 0;">
+        <div class="fw-semibold">
+            <i class="bi bi-calendar-event me-2"></i> Meeting Details
+        </div>
+
+        <div>
+            <a href="#" class="btn btn-sm btn-outline-warning me-2">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="#" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="row gy-3">
+
+            <div class="col-md-6">
+                <strong>Meeting ID:</strong>
+                <div class="text-muted">15</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Venue:</strong>
+                <div class="text-muted">Board Room</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Date & Time:</strong>
+                <div class="text-muted">December 31, 2025 at 13:13</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Status:</strong><br />
+                <span class="badge bg-success">Completed</span>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Meeting Type:</strong><br />
+                <span class="badge bg-info">Board Meeting</span>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Department:</strong>
+                <div class="text-muted">Finance</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Created:</strong>
+                <div class="text-muted">Dec 30, 2025 13:13</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Modified:</strong>
+                <div class="text-muted">Dec 30, 2025 13:13</div>
+            </div>
+
+            <div class="col-12">
+                <strong>Meeting Description:</strong>
+                <div class="border rounded p-3 mt-1 text-muted bg-light">
+                    High-level strategy discussion for upcoming quarter.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ATTENDANCE INFORMATION -->
+<div class="card border-0 shadow-sm" style="border-radius:16px;">
+    <div class="card-header d-flex justify-content-between align-items-center text-white"
+         style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);
+                border-radius:16px 16px 0 0;">
+        <div class="fw-semibold">
+            <i class="bi bi-people me-2"></i> Attendance Information
+        </div>
+
+        <a href="#" class="btn btn-sm btn-light">
+            <i class="bi bi-pencil-square"></i> Manage Attendance
+        </a>
+    </div>
+
+    <div class="card-body">
+
+        <!-- SUMMARY CARDS -->
+        <div class="row text-center mb-4">
+            <div class="col-md-4">
+                <div class="p-3 border rounded shadow-sm">
+                    <h4 class="fw-bold text-primary">3</h4>
+                    <small class="text-muted">Total Participants</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded shadow-sm">
+                    <h4 class="fw-bold text-success">2</h4>
+                    <small class="text-muted">Present</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded shadow-sm">
+                    <h4 class="fw-bold text-danger">1</h4>
+                    <small class="text-muted">Absent</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATTENDANCE TABLE -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Staff Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Attendance</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td class="fw-semibold">David Martinez</td>
+                        <td>david.m@company.com</td>
+                        <td>555-0303</td>
+                        <td><span class="badge bg-success">Present</span></td>
+                        <td>No remarks</td>
+                    </tr>
+
+                    <tr>
+                        <td class="fw-semibold">James Wilson</td>
+                        <td>james.w@company.com</td>
+                        <td>555-0301</td>
+                        <td><span class="badge bg-success">Present</span></td>
+                        <td>No remarks</td>
+                    </tr>
+
+                    <tr>
+                        <td class="fw-semibold">Jennifer Garcia</td>
+                        <td>jennifer.g@company.com</td>
+                        <td>555-0302</td>
+                        <td><span class="badge bg-danger">Absent</span></td>
+                        <td>No remarks</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

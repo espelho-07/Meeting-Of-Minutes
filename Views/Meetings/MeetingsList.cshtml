@@ -1,11 +1,12 @@
 ﻿@{
-    ViewData["Title"] = "Meetings - Meeting Of Minutes";
+    ViewData["Title"] = "Meetings Management - MOM";
 }
 
-<div class="pagetitle">
+<!-- PAGE TITLE -->
+<div class="pagetitle mb-4">
     <h1>Meetings</h1>
     <nav>
-        <ol class="breadcrumb">
+        <ol class="breadcrumb flex-nowrap">
             <li class="breadcrumb-item">
                 <a asp-controller="DashBoard" asp-action="DashBoard">Home</a>
             </li>
@@ -14,144 +15,230 @@
     </nav>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <p class="text-muted small mb-0">
-        Overview of organizational meetings, venues, and scheduling status.
-    </p>
-    <a asp-action="MeetingsAddEdit"
-       class="btn btn-primary rounded-pill px-4 shadow-sm"
-       style="background-color:#5a52e0;border:none;">
-        <i class="bi bi-calendar-plus me-2"></i>
-        Add Meeting
-    </a>
+<!-- PAGE HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h5 class="fw-bold mb-1">Meetings Management</h5>
+        <p class="text-muted mb-0">
+            Schedule and manage organizational meetings
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="MeetingsAddEdit"
+           class="btn btn-primary rounded-pill px-4 shadow-sm"
+           style="background:#5a52e0;border:none;">
+            <i class="bi bi-plus-circle me-2"></i> Schedule Meeting
+        </a>
+
+        <button class="btn btn-success rounded-pill px-4 shadow-sm">
+            <i class="bi bi-file-earmark-excel me-2"></i> Export
+        </button>
+    </div>
 </div>
 
-<div class="card border-0 shadow-sm" style="border-radius:15px;overflow:hidden;">
+<!-- SEARCH & FILTER -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
+    <div class="card-header text-white"
+         style="background:linear-gradient(45deg,#5a52e0,#8965e0)">
+        <i class="bi bi-funnel me-2"></i> Search & Filters
+    </div>
 
-    <div class="card-header border-0 d-flex justify-content-between align-items-center"
-         style="background:linear-gradient(45deg,#5a52e0,#8965e0);padding:12px 20px;">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Meeting Type</label>
+                <select class="form-select rounded-3">
+                    <option>All Types</option>
+                    <option>Board Meeting</option>
+                    <option>Brainstorming</option>
+                </select>
+            </div>
 
-        <h6 class="mb-0 fw-bold text-white" style="display:flex;align-items:center;">
-            <i class="bi bi-geo-fill me-2"></i>
-            Meeting List
-        </h6>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Department</label>
+                <select class="form-select rounded-3">
+                    <option>All Departments</option>
+                    <option>Finance</option>
+                    <option>Marketing</option>
+                </select>
+            </div>
 
-        <div style="
-            width:260px;
-            height:34px;
-            background:#ffffff;
-            border-radius:999px;
-            display:flex;
-            align-items:center;
-            padding:0 14px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.15);
-        ">
-            <i class="bi bi-search" style="color:#6c757d;font-size:14px;"></i>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Venue</label>
+                <select class="form-select rounded-3">
+                    <option>All Venues</option>
+                    <option>Board Room</option>
+                    <option>Zoom</option>
+                </select>
+            </div>
 
-            <input type="text"
-                   id="meetingSearch"
-                   placeholder="Search meeting..."
-                   style="
-                        border:none;
-                        outline:none;
-                        width:100%;
-                        margin-left:8px;
-                        font-size:13px;
-                        background:transparent;
-                        color:#111827;
-                   " />
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Search</label>
+                <input type="text"
+                       class="form-control rounded-3"
+                       placeholder="Search meetings..." />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Start Date</label>
+                <input type="date" class="form-control rounded-3" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">End Date</label>
+                <input type="date" class="form-control rounded-3" />
+            </div>
+
+            <div class="col-md-6 d-flex align-items-end gap-2">
+                <button class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-filter me-1"></i> Apply Filters
+                </button>
+                <button class="btn btn-light rounded-pill px-4">Clear</button>
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- MEETINGS TABLE -->
+<div class="card border-0 shadow-sm" style="border-radius:15px;">
+    <div class="card-header text-white"
+         style="background:linear-gradient(45deg,#5a52e0,#8965e0)">
+        <i class="bi bi-calendar-event me-2"></i> Scheduled Meetings
     </div>
 
     <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0" id="meetTable">
-            <thead class="bg-light">
-                <tr class="small text-muted text-uppercase">
-                    <th class="ps-4">ID</th>
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light small text-uppercase text-muted">
+                <tr>
+                    <th class="ps-4">#</th>
                     <th>Date & Time</th>
-                    <th>Venue & Dept</th>
+                    <th>Meeting Type</th>
                     <th>Description</th>
-                    <th class="text-center">Cancelled</th>
+                    <th>Department</th>
+                    <th>Venue</th>
+                    <th>Status</th>
                     <th class="text-center">Actions</th>
                 </tr>
             </thead>
+
             <tbody>
+                <!-- ROW 1 -->
                 <tr>
-                    <td class="ps-4">101</td>
-                    <td><div class="fw-bold">2025-11-23</div><div class="small text-muted">13:06</div></td>
-                    <td>Room 101<br /><small>IT Dept</small></td>
-                    <td>Website UI Redesign</td>
-                    <td class="text-center"><span class="badge bg-success rounded-pill px-3">No</span></td>
+                    <td class="ps-4">15</td>
+                    <td>
+                        <div class="fw-bold">Dec 31, 2025</div>
+                        <small class="text-muted">13:13</small>
+                    </td>
+                    <td><span class="badge bg-info">Board Meeting</span></td>
+                    <td>High-level strategy</td>
+                    <td>Finance</td>
+                    <td>Board Room</td>
+                    <td>
+                        <span class="badge bg-success rounded-pill px-3">
+                            Completed
+                        </span>
+                    </td>
                     <td class="text-center">
-                        <a asp-action="MeetingsAddEdit" class="btn btn-sm btn-light border rounded-pill me-1">
-                            <i class="bi bi-pencil text-warning"></i>
+                        <!-- VIEW DETAILS -->
+                        <a asp-controller="Meetings"
+                           asp-action="MeetingsDetails"
+                           asp-route-id="15"
+                           class="btn btn-sm btn-light border rounded-pill me-1"
+                           title="View Details">
+                            <i class="bi bi-eye text-primary"></i>
                         </a>
-                        <a asp-controller="MeetingsMember" asp-action="MeetingsMemberList" class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-people text-primary"></i>
+
+                        <!-- ATTENDANCE -->
+                        <a asp-controller="Attendance"
+                           asp-action="AttendanceList"
+                           asp-route-meetingId="15"
+                           class="btn btn-sm btn-light border rounded-pill"
+                           title="Attendance">
+                            <i class="bi bi-people text-info"></i>
                         </a>
                     </td>
                 </tr>
 
+                <!-- ROW 2 -->
                 <tr>
-                    <td class="ps-4">102</td>
-                    <td><div class="fw-bold">2025-11-25</div><div class="small text-muted">10:00</div></td>
-                    <td>Board Room<br /><small>Management</small></td>
-                    <td>Quarterly Review</td>
-                    <td class="text-center"><span class="badge bg-danger rounded-pill px-3">Yes</span></td>
+                    <td class="ps-4">14</td>
+                    <td>
+                        <div class="fw-bold">Nov 23, 2025</div>
+                        <small class="text-muted">13:06</small>
+                    </td>
+                    <td><span class="badge bg-info">Board Meeting</span></td>
+                    <td>No description</td>
+                    <td>Customer Service</td>
+                    <td>Auditorium</td>
+                    <td>
+                        <span class="badge bg-success rounded-pill px-3">
+                            Completed
+                        </span>
+                    </td>
                     <td class="text-center">
-                        <a asp-action="MeetingsAddEdit" class="btn btn-sm btn-light border rounded-pill me-1">
-                            <i class="bi bi-pencil text-warning"></i>
+                        <a asp-controller="Meetings"
+                           asp-action="MeetingsDetails"
+                           asp-route-id="14"
+                           class="btn btn-sm btn-light border rounded-pill me-1">
+                            <i class="bi bi-eye text-primary"></i>
                         </a>
-                        <a asp-controller="MeetingsMember" asp-action="MeetingsMemberList" class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-people text-primary"></i>
+
+                        <a asp-controller="Attendance"
+                           asp-action="AttendanceList"
+                           asp-route-meetingId="14"
+                           class="btn btn-sm btn-light border rounded-pill">
+                            <i class="bi bi-people text-info"></i>
                         </a>
                     </td>
                 </tr>
 
-                <tr id="noMeetingRow" style="display:none;">
-                    <td colspan="6" class="text-center py-5">
-                        <div class="d-flex flex-column align-items-center justify-content-center text-muted">
-                            <i class="bi bi-emoji-frown display-6 mb-2" style="color: #cbd5e1;"></i>
-                            <h6 class="fw-bold mb-0">No meeting found</h6>
-                            <small>Try adjusting your search criteria</small>
-                        </div>
+                <!-- ROW 3 -->
+                <tr>
+                    <td class="ps-4">13</td>
+                    <td>
+                        <div class="fw-bold">Nov 21, 2025</div>
+                        <small class="text-muted">23:06</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-warning text-dark">
+                            Brainstorming
+                        </span>
+                    </td>
+                    <td>Creative Campaign Ideas</td>
+                    <td>Marketing</td>
+                    <td>Zoom</td>
+                    <td>
+                        <span class="badge bg-success rounded-pill px-3">
+                            Completed
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <a asp-controller="Meetings"
+                           asp-action="MeetingDetails"
+                           asp-route-id="13"
+                           class="btn btn-sm btn-light border rounded-pill me-1">
+                            <i class="bi bi-eye text-primary"></i>
+                        </a>
+
+                        <a asp-controller="Attendance"
+                           asp-action="AttendanceList"
+                           asp-route-meetingId="13"
+                           class="btn btn-sm btn-light border rounded-pill">
+                            <i class="bi bi-people text-info"></i>
+                        </a>
                     </td>
                 </tr>
 
+                <!-- EMPTY STATE -->
+                <tr style="display:none;">
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="bi bi-emoji-frown fs-2 mb-2"></i>
+                        <div class="fw-bold">No meetings found</div>
+                        <small>Try adjusting filters</small>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        document.getElementById("meetingSearch").addEventListener("keyup", function () {
-            var input = this.value.toLowerCase();
-            // Select rows excluding the no-result row
-            var rows = document.querySelectorAll("#meetTable tbody tr:not(#noMeetingRow)");
-            var noRow = document.getElementById("noMeetingRow");
-            var visibleCount = 0;
-
-            rows.forEach(function (row) {
-                var searchableText =
-                    row.cells[1].textContent.toLowerCase() + // Date & Time
-                    row.cells[2].textContent.toLowerCase() + // Venue & Dept
-                    row.cells[3].textContent.toLowerCase();  // Description
-
-                if (searchableText.includes(input)) {
-                    row.style.display = "";
-                    visibleCount++;
-                } else {
-                    row.style.display = "none";
-                }
-            });
-
-            // Toggle empty state
-            if (visibleCount === 0) {
-                noRow.style.display = "table-row";
-            } else {
-                noRow.style.display = "none";
-            }
-        });
-    </script>
-}

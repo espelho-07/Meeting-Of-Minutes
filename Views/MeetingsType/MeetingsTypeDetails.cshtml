@@ -1,0 +1,166 @@
+﻿@{
+    ViewData["Title"] = "Meeting Type Details - MOM";
+    var meetingTypeId = ViewBag.MeetingID ?? 0;
+}
+
+<!-- PAGE TITLE -->
+<div class="pagetitle mb-4">
+    <h1>Meeting Type Details</h1>
+    <p class="text-muted">View detailed information about this meeting type</p>
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT : MEETING TYPE INFO -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <div class="card-header text-white d-flex justify-content-between align-items-center"
+                 style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);
+                        border-radius:16px 16px 0 0;">
+
+                <div class="fw-semibold">
+                    <i class="bi bi-tags me-2"></i> Meeting Type Information
+                </div>
+
+                <div>
+                    <!-- EDIT -->
+                    <a asp-action="MeetingsTypeAddEdit"
+                       asp-route-id="@meetingTypeId"
+                       class="btn btn-sm btn-outline-warning me-2">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+
+                    <!-- DELETE (future) -->
+                    <button class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row gy-4">
+
+                    <div class="col-md-6">
+                        <div class="text-muted small">Meeting Type ID</div>
+                        <div class="fw-bold fs-6">@meetingTypeId</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="text-muted small">Meeting Type Name</div>
+                        <span class="badge bg-primary px-3 py-2 fs-6">
+                            Board Meeting
+                        </span>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="text-muted small">Remarks</div>
+                        <div class="border rounded p-3 bg-light">
+                            Board of directors and governance meetings
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="text-muted small">Created Date</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            2025-11-20 10:45
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="text-muted small">Last Modified</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-clock-history me-1"></i>
+                            2025-11-20 22:37
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT : STATS + ACTIONS -->
+    <div class="col-lg-4">
+
+        <!-- USAGE STATS -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+            <div class="card-header text-white"
+                 style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);
+                        border-radius:16px 16px 0 0;">
+                <i class="bi bi-bar-chart me-2"></i> Usage Statistics
+            </div>
+
+            <div class="card-body text-center">
+                <h2 class="fw-bold text-primary mb-1">12</h2>
+                <div class="text-muted mb-3">Total Meetings</div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <h5 class="fw-bold text-success mb-0">3</h5>
+                        <small class="text-muted">Upcoming</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="fw-bold text-info mb-0">9</h5>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+            <div class="card-header text-white"
+                 style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);
+                        border-radius:16px 16px 0 0;">
+                <i class="bi bi-clock-history me-2"></i> Recent Activity
+            </div>
+
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Q1 Planning Session</span>
+                        <small class="text-muted">2025-01-20</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Team Review Meeting</span>
+                        <small class="text-muted">2025-01-18</small>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Budget Discussion</span>
+                        <small class="text-muted">2025-01-15</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <div class="card-header text-white"
+                 style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);
+                        border-radius:16px 16px 0 0;">
+                <i class="bi bi-lightning-charge me-2"></i> Quick Actions
+            </div>
+
+            <div class="card-body d-grid gap-2">
+                <a asp-controller="Meetings"
+                   asp-action="MeetingList"
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-calendar-event me-1"></i> View All Meetings
+                </a>
+
+                <a asp-controller="Meetings"
+                   asp-action="MeetingsAddEdit"
+                   class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i> Schedule New Meeting
+                </a>
+
+                <a asp-action="MeetingsTypeList"
+                   class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
