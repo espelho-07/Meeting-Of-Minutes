@@ -2,6 +2,11 @@
     ViewData["Title"] = "Meetings Management - MOM";
 }
 
+@model List<MeetingsModel>
+@{
+    int SerialNumber = 1; // For display purposes only, not related to actual department IDs
+}
+
 <!-- PAGE TITLE -->
 <div class="pagetitle mb-4">
     <h1>Meetings</h1>
@@ -123,112 +128,43 @@
             </thead>
 
             <tbody>
-                <!-- ROW 1 -->
-                <tr>
-                    <td class="ps-4">15</td>
-                    <td>
-                        <div class="fw-bold">Dec 31, 2025</div>
-                        <small class="text-muted">13:13</small>
-                    </td>
-                    <td><span class="badge bg-info">Board Meeting</span></td>
-                    <td>High-level strategy</td>
-                    <td>Finance</td>
-                    <td>Board Room</td>
-                    <td>
-                        <span class="badge bg-success rounded-pill px-3">
-                            Completed
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <!-- VIEW DETAILS -->
-                        <a asp-controller="Meetings"
-                           asp-action="MeetingsDetails"
-                           asp-route-id="15"
-                           class="btn btn-sm btn-light border rounded-pill me-1"
-                           title="View Details">
-                            <i class="bi bi-eye text-primary"></i>
-                        </a>
-
-                        <!-- ATTENDANCE -->
-                        <a asp-controller="Attendance"
-                           asp-action="AttendanceList"
-                           asp-route-meetingId="15"
-                           class="btn btn-sm btn-light border rounded-pill"
-                           title="Attendance">
-                            <i class="bi bi-people text-info"></i>
-                        </a>
-                    </td>
-                </tr>
-
-                <!-- ROW 2 -->
-                <tr>
-                    <td class="ps-4">14</td>
-                    <td>
-                        <div class="fw-bold">Nov 23, 2025</div>
-                        <small class="text-muted">13:06</small>
-                    </td>
-                    <td><span class="badge bg-info">Board Meeting</span></td>
-                    <td>No description</td>
-                    <td>Customer Service</td>
-                    <td>Auditorium</td>
-                    <td>
-                        <span class="badge bg-success rounded-pill px-3">
-                            Completed
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <a asp-controller="Meetings"
-                           asp-action="MeetingsDetails"
-                           asp-route-id="14"
-                           class="btn btn-sm btn-light border rounded-pill me-1">
-                            <i class="bi bi-eye text-primary"></i>
-                        </a>
-
-                        <a asp-controller="Attendance"
-                           asp-action="AttendanceList"
-                           asp-route-meetingId="14"
-                           class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-people text-info"></i>
-                        </a>
-                    </td>
-                </tr>
-
-                <!-- ROW 3 -->
-                <tr>
-                    <td class="ps-4">13</td>
-                    <td>
-                        <div class="fw-bold">Nov 21, 2025</div>
-                        <small class="text-muted">23:06</small>
-                    </td>
-                    <td>
-                        <span class="badge bg-warning text-dark">
-                            Brainstorming
-                        </span>
-                    </td>
-                    <td>Creative Campaign Ideas</td>
-                    <td>Marketing</td>
-                    <td>Zoom</td>
-                    <td>
-                        <span class="badge bg-success rounded-pill px-3">
-                            Completed
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <a asp-controller="Meetings"
-                           asp-action="MeetingDetails"
-                           asp-route-id="13"
-                           class="btn btn-sm btn-light border rounded-pill me-1">
-                            <i class="bi bi-eye text-primary"></i>
-                        </a>
-
-                        <a asp-controller="Attendance"
-                           asp-action="AttendanceList"
-                           asp-route-meetingId="13"
-                           class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-people text-info"></i>
-                        </a>
-                    </td>
-                </tr>
+               @foreach (var meeting in Model)
+                {
+                    <tr>
+                        <td class="ps-4">@SerialNumber</td>
+                        <td>
+                            @meeting.MeetingDate
+                        </td>
+                        <td>@meeting.MeetingTypeID</td>
+                        <td>@meeting.MeetingDescription</td>
+                        <td>@meeting.DepartmentID</td>
+                        <td>@meeting.MeetingVenueID
+                        </td>
+                        <td>
+                            @if (meeting.IsCancelled)
+                            {
+                                <span class="badge bg-success">Completed</span>
+                            }
+                            else if (meeting.MeetingDate > DateTime.Now)
+                            {
+                                <span class="badge bg-primary">Scheduled</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="MeetingsAddEdit" asp-route-id="  MeetingID" class="btn btn-sm btn-outline-primary rounded-pill me-1">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    SerialNumber++;
+                }
 
                 <!-- EMPTY STATE -->
                 <tr style="display:none;">

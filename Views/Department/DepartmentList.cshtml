@@ -2,6 +2,11 @@
     ViewData["Title"] = "Departments - Meeting Of Minutes";
 }
 
+@model List<DepartmentModel>
+@{
+    int SerialNumber = 1; // For display purposes only, not related to actual department IDs
+}
+
 <!-- PAGE TITLE -->
 <div class="pagetitle mb-4">
     <h1>Departments</h1>
@@ -71,61 +76,36 @@
             </thead>
 
             <tbody id="deptTable">
-                <tr>
-                    <td>7</td>
-                    <td class="dept-name fw-semibold">Customer Service</td>
-                    <td><span class="badge bg-info">3</span></td>
-                    <td><span class="badge bg-warning text-dark">2</span></td>
-                    <td>2025-11-20</td>
-                    <td>2025-11-20</td>
-                    <td class="text-center">
-                        <a asp-action="DepartmentView"
-                           asp-route-id="7"
-                           class="text-primary me-2"
-                           title="View">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        <a asp-action="DepartmentAddEdit"
-                           asp-route-id="7"
-                           class="text-warning me-2"
-                           title="Edit">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        <a href="#"
-                           class="text-danger"
-                           title="Delete">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>3</td>
-                    <td class="dept-name fw-semibold">Finance</td>
-                    <td><span class="badge bg-info">3</span></td>
-                    <td><span class="badge bg-warning text-dark">2</span></td>
-                    <td>2025-11-20</td>
-                    <td>2025-11-20</td>
-                    <td class="text-center">
-                        <a asp-action="DepartmentView"
-                           asp-route-id="3"
-                           class="text-primary me-2">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        <a asp-action="DepartmentAddEdit"
-                           asp-route-id="3"
-                           class="text-warning me-2">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        <a href="#" class="text-danger">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
+                @foreach (var dept in Model)
+                {
+                    <tr>
+                        <td>@(SerialNumber++)</td>
+                        <td class="dept-name fw-semibold">@dept.DepartmentName</td>
+                        <td class="dept-name fw-semibold">-</td>
+                        <td class="dept-name fw-semibold">-</td>
+                        <td>@dept.Created.ToString("yyyy-MM-dd")</td>
+                        <td>@dept.Modified.ToString("yyyy-MM-dd")</td>
+                        <td class="text-center">
+                            <a asp-action="DepartmentView"
+                               asp-controller="Department"
+                               class="text-primary me-2"
+                               title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="DepartmentAddEdit"
+                               asp-controller="Department"
+                               class="text-warning me-2"
+                               title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="#"
+                               class="text-danger"
+                               title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>

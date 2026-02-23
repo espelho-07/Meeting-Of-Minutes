@@ -1,6 +1,10 @@
 ﻿@{
     ViewData["Title"] = "Staff Members - Meeting Of Minutes";
 }
+@model List<StaffModel>
+@{
+    int SerialNumber = 1; // For display purposes only, not related to actual department IDs
+}
 
 <div class="pagetitle">
     <h1>Staff Members</h1>
@@ -76,37 +80,27 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="ps-4">01</td>
-                    <td><div class="fw-bold">Amanda White</div></td>
-                    <td><span class="badge bg-info-light text-info rounded-pill px-3">Operations</span></td>
-                    <td>+91 98250 12345<br /><small>amanda@company.com</small></td>
-                    <td>2025-10-01</td>
-                    <td class="text-center">
-                        <a asp-action="StaffAddEdit" class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-pencil-square text-warning"></i>
-                        </a>
-                        <button class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-trash3 text-danger"></i>
-                        </button>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td class="ps-4">02</td>
-                    <td><div class="fw-bold">Christopher Lee</div></td>
-                    <td><span class="badge bg-info-light text-info rounded-pill px-3">IT Support</span></td>
-                    <td>+91 98250 12346<br /><small>chris@company.com</small></td>
-                    <td>2025-10-05</td>
-                    <td class="text-center">
-                        <a asp-action="StaffAddEdit" class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-pencil-square text-warning"></i>
-                        </a>
-                        <button class="btn btn-sm btn-light border rounded-pill">
-                            <i class="bi bi-trash3 text-danger"></i>
-                        </button>
-                    </td>
-                </tr>
+                    @foreach (var staff in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">@SerialNumber</td>
+                            <td>
+                                <div class="fw-bold">@staff.StaffName</div>
+                            </td>
+                            <td><span class="badge bg-info-light text-info rounded-pill px-3">Name</span></td>
+                        <td>@staff.MobileNo<br /><small>@staff.EmailAddress</small></td>
+                        <td>@staff.Created.ToString("yyyy-MM-dd")</td>
+                            <td class="text-center">
+                            <a asp-action="StaffAddEdit" asp-route-id="@staff.StaffID" class="btn btn-sm btn-light border rounded-pill">
+                                    <i class="bi bi-pencil-square text-warning"></i>
+                                </a>
+                                <button class="btn btn-sm btn-light border rounded-pill">
+                                    <i class="bi bi-trash3 text-danger"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        SerialNumber++;
+                    }
 
                 <tr id="noStaffRow" style="display:none;">
                     <td colspan="6" class="text-center py-5">
