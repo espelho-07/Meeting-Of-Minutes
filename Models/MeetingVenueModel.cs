@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Meeting_Of_Minutes.Models
 {
@@ -7,10 +7,11 @@ namespace Meeting_Of_Minutes.Models
         public int MeetingVenueID { get; set; }
 
         [Required(ErrorMessage = "Meeting Venue Required")]
-        public string MeetingVenueName { get; set; }
+        public string? MeetingVenueName { get; set; }
 
         public DateTime Created { get; set; }
 
         public DateTime Modified { get; set; }
     }
 }
+

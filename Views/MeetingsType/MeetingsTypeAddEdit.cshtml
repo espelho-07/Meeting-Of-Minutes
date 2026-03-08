@@ -1,4 +1,6 @@
-﻿@model Meeting_Of_Minutes.Models.MeetingTypeModel
+@model Meeting_Of_Minutes.Models.MeetingTypeModel
+
+@await Html.PartialAsync("_AlertMessages")
 @{
     ViewData["Title"] = "Meeting Type Configuration - Meeting Of Minutes";
 }
@@ -7,12 +9,8 @@
     <h1>Meeting Type Edit</h1>
     <nav>
         <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item">
-                <a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i> Home</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a asp-controller="MeetingsType" asp-action="MeetingsTypeList">Meeting Type</a>
-            </li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="MeetingsType" asp-action="MeetingsTypeList">Meeting Type</a></li>
             <li class="breadcrumb-item active">Add Edit</li>
         </ol>
     </nav>
@@ -24,37 +22,34 @@
     </div>
 
     <div class="card-body p-5">
-        <form class="row g-4" asp-action="Save" method="post">
+        <form class="row g-4 js-update-confirm-form" data-id-field="MeetingTypeID" data-update-message="Sure to update this meeting type?" asp-action="Save" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MeetingTypeID" />
             <div class="col-md-12">
-                <label class="form-label small fw-bold text-muted">Meeting Type Name</label> @* Nvarchar(100) *@
+                <label class="form-label small fw-bold text-muted">Meeting Type Name</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-bookmark-star"></i></span>
-                    <input asp-for="MeetingTypeName" type="text" class="form-control border-start-0 ps-0 shadow-none"
-                           placeholder="e.g. Brainstorming, Quarterly Review" maxlength="100" >
-
+                    <input asp-for="MeetingTypeName" type="text" class="form-control border-start-0 ps-0 shadow-none" maxlength="100" >
                 </div>
                 <span asp-validation-for="MeetingTypeName" class=" text-danger"></span>
             </div>
 
             <div class="col-md-12">
-                <label class="form-label small fw-bold text-muted">Remarks</label> @* Nvarchar(100) *@
+                <label class="form-label small fw-bold text-muted">Remarks</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-chat-left-dots"></i></span>
-                    <input type="text" class="form-control border-start-0 ps-0 shadow-none"
-                           placeholder="Brief description of this category" maxlength="100">
-                </div>
-                <div class="form-text x-small text-muted mt-2">
-                    Duplicate TypeNames are prevented[cite: 430]. Max 100 characters allowed.
+                    <input asp-for="Remarks" type="text" class="form-control border-start-0 ps-0 shadow-none" maxlength="100">
                 </div>
             </div>
 
             <div class="text-end mt-5 border-top pt-4">
-                <a asp-action="MeetingTypeList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;">
-                    <i class="bi bi-check2-circle me-2"></i> Save Type
-                </button>
+                <a asp-action="MeetingsTypeList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;"><i class="bi bi-check2-circle me-2"></i> Save Type</button>
             </div>
         </form>
     </div>
 </div>
+
+
+
+

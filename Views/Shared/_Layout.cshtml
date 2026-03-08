@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -165,6 +165,14 @@
             </li>
 
             <li class="nav-item">
+                <a class="nav-link" asp-controller="MeetingMember" asp-action="MeetingMemberList">
+                    <i class="bi bi-person-check"></i>
+                    <span>Meeting Member</span>
+                </a>
+            </li>
+
+
+            <li class="nav-item">
                 <a class="nav-link" asp-controller="MeetingVenue" asp-action="MeetingVenueList">
                     <i class="bi bi-geo-alt"></i>
                     <span>Meeting Venue</span>
@@ -195,6 +203,38 @@
         <i class="bi bi-arrow-up-short"></i>
     </a>
 
+
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="deleteConfirmText">Sure to delete this record?</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="updateConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Update</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="updateConfirmText">Sure to update this record?</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-primary" id="confirmUpdateBtn">Yes, Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Vendor JS Files -->
     <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/assets/vendor/simple-datatables/simple-datatables.js"></script>
@@ -202,7 +242,87 @@
     <!-- Template Main JS -->
     <script src="~/assets/js/main.js"></script>
 
-    @RenderSection("Scripts", required: false)
+
+    <script>
+        (function () {
+            let deleteForm = null;
+            let updateForm = null;
+
+            const deleteModalEl = document.getElementById('deleteConfirmModal');
+            const updateModalEl = document.getElementById('updateConfirmModal');
+            if (!deleteModalEl || !updateModalEl || !window.bootstrap) return;
+
+            const deleteModal = new bootstrap.Modal(deleteModalEl);
+            const updateModal = new bootstrap.Modal(updateModalEl);
+
+            const deleteTextEl = document.getElementById('deleteConfirmText');
+            const updateTextEl = document.getElementById('updateConfirmText');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const confirmUpdateBtn = document.getElementById('confirmUpdateBtn');
+
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!(form instanceof HTMLFormElement)) return;
+
+                if (form.dataset.confirmBypass === '1') {
+                    form.dataset.confirmBypass = '0';
+                    return;
+                }
+
+                if (form.classList.contains('js-delete-form')) {
+                    e.preventDefault();
+                    deleteForm = form;
+                    const msg = form.getAttribute('data-delete-message') || 'Sure to delete this record?';
+                    if (deleteTextEl) deleteTextEl.textContent = msg;
+                    deleteModal.show();
+                    return;
+                }
+
+                if (form.classList.contains('js-update-confirm-form')) {
+                    const idField = form.getAttribute('data-id-field') || '';
+                    if (!idField) return;
+
+                    const idInput = form.querySelector('[name="' + idField + '"]');
+                    if (!idInput) return;
+
+                    const idValue = (idInput.value || '').trim();
+                    if (idValue === '' || idValue === '0') return;
+
+                    e.preventDefault();
+                    updateForm = form;
+                    const msg = form.getAttribute('data-update-message') || 'Sure to update this record?';
+                    if (updateTextEl) updateTextEl.textContent = msg;
+                    updateModal.show();
+                }
+            });
+
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', function () {
+                    if (!deleteForm) return;
+                    const form = deleteForm;
+                    deleteForm = null;
+                    form.dataset.confirmBypass = '1';
+                    form.submit();
+                });
+            }
+
+            if (confirmUpdateBtn) {
+                confirmUpdateBtn.addEventListener('click', function () {
+                    if (!updateForm) return;
+                    const form = updateForm;
+                    updateForm = null;
+                    form.dataset.confirmBypass = '1';
+                    form.submit();
+                });
+            }
+        })();
+    </script>`r`n    @RenderSection("Scripts", required: false)
 
 </body>
 </html>
+
+
+
+
+
+

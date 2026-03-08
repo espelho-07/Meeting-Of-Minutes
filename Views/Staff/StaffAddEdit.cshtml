@@ -1,4 +1,6 @@
-﻿@model Meeting_Of_Minutes.Models.StaffModel
+@model Meeting_Of_Minutes.Models.StaffModel
+
+@await Html.PartialAsync("_AlertMessages")
 @{
     ViewData["Title"] = "Staff Member Configuration - MOM";
 }
@@ -19,37 +21,36 @@
         <h6 class="mb-0 fw-bold"><i class="bi bi-person-plus-fill me-2"></i> Staff Details</h6>
     </div>
     <div class="card-body p-4 pt-5">
-        <form asp-action="Save" class="row g-4" method="post">
+        <form asp-action="Save" class="row g-4 js-update-confirm-form" data-id-field="StaffID" data-update-message="Sure to update this staff?" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="StaffID" />
             <div class="col-md-6">
-                <label class="form-label small fw-bold">Staff Name</label> @* StaffName (Nvarchar 50) *@
-                <input asp-for="StaffName" type="text" class="form-control rounded-3 shadow-none" placeholder="Enter full name" maxlength="50">
+                <label class="form-label small fw-bold">Staff Name</label>
+                <input asp-for="StaffName" type="text" class="form-control rounded-3 shadow-none" maxlength="50">
                 <span asp-validation-for="StaffName" class=" text-danger"></span>
             </div>
-            
+
             <div class="col-md-6">
-                <label class="form-label small fw-bold">Department</label> @* DepartmentID (FK) *@
-                <select class="form-select rounded-3 shadow-none" required>
-                    <option selected disabled>-- Select Department --</option>
-                    <option>Information Technology</option>
-                    <option>Human Resources</option>
+                <label class="form-label small fw-bold">Department</label>
+                <select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select rounded-3 shadow-none">
+                    <option value="">-- Select Department --</option>
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label small fw-bold">Mobile Number</label> @* MobileNo (Nvarchar 20) *@
-                <input asp-for="MobileNo" type="text" class="form-control rounded-3 shadow-none" placeholder="+91 00000 00000" maxlength="20" >
+                <label class="form-label small fw-bold">Mobile Number</label>
+                <input asp-for="MobileNo" type="text" class="form-control rounded-3 shadow-none" maxlength="20">
                 <span asp-validation-for="MobileNo" class=" text-danger"></span>
             </div>
-            
+
             <div class="col-md-6">
-                <label class="form-label small fw-bold">Email Address</label> @* EmailAddress (Nvarchar 50) *@
-                <input asp-for="EmailAddress" type="email" class="form-control rounded-3 shadow-none" placeholder="official@company.com" maxlength="50" >
+                <label class="form-label small fw-bold">Email Address</label>
+                <input asp-for="EmailAddress" type="email" class="form-control rounded-3 shadow-none" maxlength="50">
                 <span asp-validation-for="EmailAddress" class=" text-danger"></span>
             </div>
-            
+
             <div class="col-12">
-                <label class="form-label small fw-bold">Remarks</label> @* Remarks (Nvarchar 250) *@
-                <textarea class="form-control rounded-3 shadow-none" rows="3" maxlength="250" placeholder="Optional notes..."></textarea>
+                <label class="form-label small fw-bold">Remarks</label>
+                <textarea asp-for="Remarks" class="form-control rounded-3 shadow-none" rows="3" maxlength="250"></textarea>
             </div>
             <div class="col-12 text-end border-top pt-4">
                 <a asp-action="StaffList" class="btn btn-light rounded-pill px-4">Cancel</a>
@@ -58,3 +59,7 @@
         </form>
     </div>
 </div>
+
+
+
+

@@ -6,6 +6,7 @@ namespace Meeting_Of_Minutes.Controllers
 {
     public class DashBoardController : Controller
     {
+        #region Actions
         public IActionResult DashBoard()
         {
             return View();
@@ -13,9 +14,15 @@ namespace Meeting_Of_Minutes.Controllers
 
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+        #endregion
     }
 }
+
+
+
+

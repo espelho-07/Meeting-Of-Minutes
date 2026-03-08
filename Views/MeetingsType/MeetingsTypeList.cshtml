@@ -1,62 +1,37 @@
-﻿@{
+@model List<MeetingTypeModel>
+
+@await Html.PartialAsync("_AlertMessages")
+@{
     ViewData["Title"] = "Meeting Types - Meeting Of Minutes";
+    int SerialNumber = 1;
 }
 
-<!-- PAGE TITLE -->
 <div class="pagetitle mb-4">
     <h1>Meeting Categories</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a asp-controller="DashBoard" asp-action="DashBoard">Home</a>
-            </li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
             <li class="breadcrumb-item active">Meeting Type</li>
         </ol>
     </nav>
 </div>
 
-<!-- HEADER + ADD BUTTON -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <p class="text-muted small mb-0">
-        Define meeting categories to structure organizational discussions.
-    </p>
+    <p class="text-muted small mb-0">Define meeting categories to structure organizational discussions.</p>
 
-    <a asp-action="MeetingsTypeAddEdit"
-       class="btn btn-primary rounded-pill px-4 shadow-sm"
-       style="background-color:#5a52e0;border:none;">
+    <a asp-action="MeetingsTypeAddEdit" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background-color:#5a52e0;border:none;">
         <i class="bi bi-tags-fill me-2"></i>
         Add Meeting Type
     </a>
 </div>
 
-<!-- MEETING TYPE LIST -->
 <div class="card border-0 shadow-sm" style="border-radius:15px;overflow:hidden;">
-
-    <!-- HEADER + SEARCH -->
-    <div class="card-header border-0 d-flex justify-content-between align-items-center"
-         style="background:linear-gradient(45deg,#5a52e0,#8965e0);padding:12px 20px;">
-
-        <h6 class="mb-0 fw-bold text-white d-flex align-items-center">
-            <i class="bi bi-tags me-2"></i>
-            Meeting Type List
-        </h6>
-
-        <!-- YOUR SEARCH -->
-        <div style="width:260px;height:34px;background:#fff;border-radius:999px;
-                    display:flex;align-items:center;padding:0 14px;
-                    box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-            <i class="bi bi-search text-muted" style="font-size:14px;"></i>
-            <input type="text"
-                   id="typeSearch"
-                   placeholder="Search meeting type..."
-                   style="border:none;outline:none;width:100%;
-                          margin-left:8px;font-size:13px;background:transparent;" />
-        </div>
+    <div class="card-header border-0" style="background:linear-gradient(45deg,#5a52e0,#8965e0);padding:12px 20px;">
+        <h6 class="mb-0 fw-bold text-white">Meeting Type List</h6>
     </div>
 
-    <!-- TABLE -->
     <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0" id="typeTable">
+        <table class="table table-hover align-middle mb-0">
             <thead class="bg-light">
                 <tr class="text-muted small text-uppercase">
                     <th class="ps-4">#</th>
@@ -65,117 +40,29 @@
                     <th class="text-center">Actions</th>
                 </tr>
             </thead>
-
             <tbody>
-
-                <!-- ROW 1 -->
-                <tr>
-                    <td class="ps-4">7</td>
-                    <td class="fw-bold text-primary">Board Meeting</td>
-                    <td>Board of directors and governance meetings</td>
-                    <td class="text-center">
-                        <a asp-action="MeetingsTypeDetails"
-                           asp-route-id="7"
-                           class="text-primary me-2">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        <a asp-action="MeetingsTypeAddEdit"
-                           asp-route-id="7"
-                           class="text-warning me-2">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        <a href="#" class="text-danger">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-
-                <!-- ROW 2 -->
-                <tr>
-                    <td class="ps-4">8</td>
-                    <td class="fw-bold text-primary">Brainstorming</td>
-                    <td>Creative sessions and idea generation</td>
-                    <td class="text-center">
-                        <a asp-action="MeetingsTypeDetails"
-                           asp-route-id="8"
-                           class="text-primary me-2">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        <a asp-action="MeetingsTypeAddEdit"
-                           asp-route-id="8"
-                           class="text-warning me-2">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        <a href="#" class="text-danger">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-
-                <!-- ROW 3 -->
-                <tr>
-                    <td class="ps-4">5</td>
-                    <td class="fw-bold text-primary">Client Meeting</td>
-                    <td>Client discussions and presentations</td>
-                    <td class="text-center">
-                        <a asp-action="MeetingsTypeDetails"
-                           asp-route-id="5"
-                           class="text-primary me-2">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        <a asp-action="MeetingsTypeAddEdit"
-                           asp-route-id="5"
-                           class="text-warning me-2">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-
-                        <a href="#" class="text-danger">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-
-                <!-- EMPTY STATE -->
-                <tr id="noTypeRow" style="display:none;">
-                    <td colspan="4" class="text-center py-5 text-muted">
-                        <i class="bi bi-emoji-frown display-6 mb-2"></i>
-                        <h6 class="fw-bold mb-0">No meeting type found</h6>
-                        <small>Try adjusting your search</small>
-                    </td>
-                </tr>
-
+                @foreach (var meetingType in Model)
+                {
+                    <tr>
+                        <td class="ps-4">@SerialNumber</td>
+                        <td class="fw-bold text-primary">@meetingType.MeetingTypeName</td>
+                        <td>@meetingType.Remarks</td>
+                        <td class="text-center">
+                            <a asp-action="MeetingsTypeDetails" asp-route-id="@meetingType.MeetingTypeID" class="text-primary me-2"><i class="bi bi-eye"></i></a>
+                            <a asp-action="MeetingsTypeAddEdit" asp-route-id="@meetingType.MeetingTypeID" class="text-warning me-2"><i class="bi bi-pencil"></i></a>
+                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="MeetingTypeID" value="@meetingType.MeetingTypeID" />
+                                <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    SerialNumber++;
+                }
             </tbody>
         </table>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.getElementById("typeSearch").addEventListener("keyup", function () {
-            var value = this.value.toLowerCase();
-            var rows = document.querySelectorAll("#typeTable tbody tr:not(#noTypeRow)");
-            var noRow = document.getElementById("noTypeRow");
-            var visible = 0;
 
-            rows.forEach(function (row) {
-                var text =
-                    row.cells[1].innerText.toLowerCase() +
-                    row.cells[2].innerText.toLowerCase();
 
-                if (text.includes(value)) {
-                    row.style.display = "";
-                    visible++;
-                } else {
-                    row.style.display = "none";
-                }
-            });
-
-            noRow.style.display = visible === 0 ? "table-row" : "none";
-        });
-    </script>
-}

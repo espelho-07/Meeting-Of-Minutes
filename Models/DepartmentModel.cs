@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Meeting_Of_Minutes.Models
 {
@@ -10,10 +10,15 @@ namespace Meeting_Of_Minutes.Models
         [Required(ErrorMessage ="The Field Is Required")]
         [StringLength(50,ErrorMessage ="Department Name Can't Exceed Than 50 Characters")]
         [Display(Name = "Department Name")]
-        public string DepartmentName { get; set; }
+        public string? DepartmentName { get; set; }
+
+        public int StaffCount { get; set; }
+
+        public int MeetingsCount { get; set; }
 
         public DateTime Created { get; set; }
 
         public DateTime Modified { get; set; }
     }
 }
+

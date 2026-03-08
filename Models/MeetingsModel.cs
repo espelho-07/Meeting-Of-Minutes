@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Meeting_Of_Minutes.Models
@@ -24,6 +24,12 @@ namespace Meeting_Of_Minutes.Models
         public string? MeetingDescription { get; set; }
 
         public string? DocumentPath { get; set; }
+
+        public string? MeetingVenueName { get; set; }
+
+        public string? MeetingTypeName { get; set; }
+
+        public string? DepartmentName { get; set; }
 
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime Modified { get; set; } = DateTime.Now;

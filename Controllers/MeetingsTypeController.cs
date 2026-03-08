@@ -1,4 +1,4 @@
-﻿using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -7,53 +7,103 @@ namespace Meeting_Of_Minutes.Controllers
 {
     public class MeetingsTypeController : Controller
     {
-        // LIST
+        #region Actions
         public IActionResult MeetingsTypeList()
         {
-            List<MeetingTypeModel> meetingTypesList = new List<MeetingTypeModel>(); // Create a list to hold the Meeting Type data
+            List<MeetingTypeModel> meetingTypesList = new List<MeetingTypeModel>();
 
-            SqlConnection connection = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");   // Establish a connection to the database
-
-            #region Connection String
-            SqlCommand cmd = new SqlCommand();  // Create a SQL command to select all records from the Meetings table
-            cmd.Connection = connection; // Set the connection for the command
-            cmd.CommandText = "[PR_MeetingType_SelectAll]"; // Set the command text to the stored procedure name
+            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "PR_MeetingType_SelectAll";
             cmd.CommandType = CommandType.StoredProcedure;
-            #endregion
 
-            connection.Open(); // Open the database connection
-
-            SqlDataReader reader = cmd.ExecuteReader(); // Execute the command and get a data reader
+            con.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
 
             while (reader.Read())
             {
                 MeetingTypeModel meeting = new MeetingTypeModel();
                 meeting.MeetingTypeID = Convert.ToInt32(reader["MeetingTypeID"]);
-                meeting.MeetingTypeName = reader["MeetingTypeName"] as string;
-                meeting.Created = Convert.ToDateTime(reader["Created"]);
-                meeting.Modified = Convert.ToDateTime(reader["Modified"]);
+                meeting.MeetingTypeName = reader["MeetingTypeName"].ToString();
+                meeting.Remarks = reader["Remarks"].ToString();
+                meeting.Created = reader["Created"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["Created"]);
+                meeting.Modified = reader["Modified"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["Modified"]);
+                meetingTypesList.Add(meeting);
             }
 
+            reader.Close();
+            con.Close();
 
-            return View();
+            return View(meetingTypesList);
         }
+
 
         public IActionResult MeetingsTypeAddEdit(int? id)
         {
+            MeetingTypeModel model = new MeetingTypeModel();
 
-            
+            if (id.HasValue)
+            {
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = "PR_MeetingType_SelectByPK";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingTypeID", id.Value);
 
-            return View();
+                con.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    model.MeetingTypeID = Convert.ToInt32(reader["MeetingTypeID"]);
+                    model.MeetingTypeName = reader["MeetingTypeName"].ToString();
+                    model.Remarks = reader["Remarks"].ToString();
+                    model.Created = reader["Created"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["Created"]);
+                    model.Modified = reader["Modified"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["Modified"]);
+                }
+
+                reader.Close();
+                con.Close();
+            }
+
+            return View(model);
         }
+
 
         public IActionResult MeetingsTypeDetails(int id)
         {
+            MeetingTypeModel model = new MeetingTypeModel();
 
-            ViewBag.MeetingID = id;
-            return View();
+            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "PR_MeetingType_SelectByPK";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MeetingTypeID", id);
+
+            con.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                model.MeetingTypeID = Convert.ToInt32(reader["MeetingTypeID"]);
+                model.MeetingTypeName = reader["MeetingTypeName"].ToString();
+                model.Remarks = reader["Remarks"].ToString();
+                model.Created = reader["Created"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["Created"]);
+                model.Modified = reader["Modified"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["Modified"]);
+            }
+
+            reader.Close();
+            con.Close();
+
+            return View(model);
         }
 
-        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+
         public IActionResult Save(MeetingTypeModel model)
         {
             if (!ModelState.IsValid)
@@ -61,7 +111,100 @@ namespace Meeting_Of_Minutes.Controllers
                 return View("MeetingsTypeAddEdit", model);
             }
 
+            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            con.Open();
+
+            if (model.MeetingTypeID == 0)
+            {
+                SqlCommand checkCmd = new SqlCommand();
+                checkCmd.Connection = con;
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName";
+                checkCmd.CommandType = CommandType.Text;
+                checkCmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
+
+                int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+                if (count > 0)
+                {
+                    con.Close();
+                    ModelState.AddModelError("MeetingTypeName", "Meeting Type already exists.");
+                    return View("MeetingsTypeAddEdit", model);
+                }
+            }
+            else
+            {
+                SqlCommand checkCmd = new SqlCommand();
+                checkCmd.Connection = con;
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName AND MeetingTypeID <> @MeetingTypeID";
+                checkCmd.CommandType = CommandType.Text;
+                checkCmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
+                checkCmd.Parameters.AddWithValue("@MeetingTypeID", model.MeetingTypeID);
+
+                int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+                if (count > 0)
+                {
+                    con.Close();
+                    ModelState.AddModelError("MeetingTypeName", "Meeting Type already exists.");
+                    return View("MeetingsTypeAddEdit", model);
+                }
+            }
+
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            if (model.MeetingTypeID == 0)
+            {
+                cmd.CommandText = "PR_MeetingType_Insert";
+                cmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
+                cmd.Parameters.AddWithValue("@Remarks", model.Remarks ?? string.Empty);
+                cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+            }
+            else
+            {
+                cmd.CommandText = "PR_MeetingType_UpdateByPK";
+                cmd.Parameters.AddWithValue("@MeetingTypeID", model.MeetingTypeID);
+                cmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
+                cmd.Parameters.AddWithValue("@Remarks", model.Remarks ?? string.Empty);
+            }
+            TempData["SuccessMessage"] = model.MeetingTypeID == 0 ? "Meeting type added successfully." : "Meeting type updated successfully.";
+            cmd.ExecuteNonQuery();
+            con.Close();
+
             return RedirectToAction("MeetingsTypeList");
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int MeetingTypeID)
+        {
+            try
+            {
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = "PR_MeetingType_DeleteByPK";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingTypeID", MeetingTypeID);
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+                con.Close();
+            }
+            catch
+            {
+                TempData["DeleteError"] = "FK violation: linked data exists.";
+            }
+
+            return RedirectToAction("MeetingsTypeList");
+        }
+        #endregion
     }
 }
+
+
+
+
+
+
+
+

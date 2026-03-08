@@ -1,114 +1,39 @@
-﻿@{
+@{
     ViewData["Title"] = "Meetings Management - MOM";
 }
 
 @model List<MeetingsModel>
+
+@await Html.PartialAsync("_AlertMessages")
 @{
-    int SerialNumber = 1; // For display purposes only, not related to actual department IDs
+    int SerialNumber = 1;
 }
 
-<!-- PAGE TITLE -->
 <div class="pagetitle mb-4">
     <h1>Meetings</h1>
     <nav>
         <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item">
-                <a asp-controller="DashBoard" asp-action="DashBoard">Home</a>
-            </li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
             <li class="breadcrumb-item active">Meetings</li>
         </ol>
     </nav>
 </div>
 
-<!-- PAGE HEADER -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h5 class="fw-bold mb-1">Meetings Management</h5>
-        <p class="text-muted mb-0">
-            Schedule and manage organizational meetings
-        </p>
+        <p class="text-muted mb-0">Schedule and manage organizational meetings</p>
     </div>
 
     <div class="d-flex gap-2">
-        <a asp-action="MeetingsAddEdit"
-           class="btn btn-primary rounded-pill px-4 shadow-sm"
-           style="background:#5a52e0;border:none;">
+        <a asp-action="MeetingsAddEdit" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background:#5a52e0;border:none;">
             <i class="bi bi-plus-circle me-2"></i> Schedule Meeting
         </a>
-
-        <button class="btn btn-success rounded-pill px-4 shadow-sm">
-            <i class="bi bi-file-earmark-excel me-2"></i> Export
-        </button>
     </div>
 </div>
 
-<!-- SEARCH & FILTER -->
-<div class="card border-0 shadow-sm mb-4" style="border-radius:15px;">
-    <div class="card-header text-white"
-         style="background:linear-gradient(45deg,#5a52e0,#8965e0)">
-        <i class="bi bi-funnel me-2"></i> Search & Filters
-    </div>
-
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Meeting Type</label>
-                <select class="form-select rounded-3">
-                    <option>All Types</option>
-                    <option>Board Meeting</option>
-                    <option>Brainstorming</option>
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Department</label>
-                <select class="form-select rounded-3">
-                    <option>All Departments</option>
-                    <option>Finance</option>
-                    <option>Marketing</option>
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Venue</label>
-                <select class="form-select rounded-3">
-                    <option>All Venues</option>
-                    <option>Board Room</option>
-                    <option>Zoom</option>
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Search</label>
-                <input type="text"
-                       class="form-control rounded-3"
-                       placeholder="Search meetings..." />
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">Start Date</label>
-                <input type="date" class="form-control rounded-3" />
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label small fw-bold">End Date</label>
-                <input type="date" class="form-control rounded-3" />
-            </div>
-
-            <div class="col-md-6 d-flex align-items-end gap-2">
-                <button class="btn btn-primary rounded-pill px-4">
-                    <i class="bi bi-filter me-1"></i> Apply Filters
-                </button>
-                <button class="btn btn-light rounded-pill px-4">Clear</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MEETINGS TABLE -->
 <div class="card border-0 shadow-sm" style="border-radius:15px;">
-    <div class="card-header text-white"
-         style="background:linear-gradient(45deg,#5a52e0,#8965e0)">
+    <div class="card-header text-white" style="background:linear-gradient(45deg,#5a52e0,#8965e0)">
         <i class="bi bi-calendar-event me-2"></i> Scheduled Meetings
     </div>
 
@@ -128,18 +53,15 @@
             </thead>
 
             <tbody>
-               @foreach (var meeting in Model)
+                @foreach (var meeting in Model)
                 {
                     <tr>
                         <td class="ps-4">@SerialNumber</td>
-                        <td>
-                            @meeting.MeetingDate
-                        </td>
-                        <td>@meeting.MeetingTypeID</td>
+                        <td>@meeting.MeetingDate</td>
+                        <td>@meeting.MeetingTypeName</td>
                         <td>@meeting.MeetingDescription</td>
-                        <td>@meeting.DepartmentID</td>
-                        <td>@meeting.MeetingVenueID
-                        </td>
+                        <td>@meeting.DepartmentName</td>
+                        <td>@meeting.MeetingVenueName</td>
                         <td>
                             @if (meeting.IsCancelled)
                             {
@@ -155,26 +77,24 @@
                             }
                         </td>
                         <td class="text-center">
-                            <a asp-action="MeetingsAddEdit" asp-route-id="  MeetingID" class="btn btn-sm btn-outline-primary rounded-pill me-1">
+                            <a asp-action="MeetingsAddEdit" asp-route-id="@meeting.MeetingID" class="btn btn-sm btn-outline-primary rounded-pill me-1">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
-                            <button class="btn btn-sm btn-outline-danger rounded-pill">
-                                <i class="bi bi-trash"></i> Delete
-                            </button>
+                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="MeetingID" value="@meeting.MeetingID" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     SerialNumber++;
                 }
-
-                <!-- EMPTY STATE -->
-                <tr style="display:none;">
-                    <td colspan="8" class="text-center py-5 text-muted">
-                        <i class="bi bi-emoji-frown fs-2 mb-2"></i>
-                        <div class="fw-bold">No meetings found</div>
-                        <small>Try adjusting filters</small>
-                    </td>
-                </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+
+
