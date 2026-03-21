@@ -90,7 +90,7 @@
                             }
                         </td>
                         <td class="text-center">
-                            <a asp-action="MeetingsAddEdit" asp-route-id="@meeting.MeetingID" class="mom-icon-btn text-warning me-1"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="MeetingsDetails" asp-route-id="@meeting.MeetingID" class="mom-icon-btn text-primary me-1" title="Manage Meeting"><i class="bi bi-card-list"></i></a>
                             <form asp-action="Delete" method="post" class="d-inline js-delete-form">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="MeetingID" value="@meeting.MeetingID" />

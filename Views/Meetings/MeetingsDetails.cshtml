@@ -1,9 +1,10 @@
-@model MeetingsModel
+@model Meeting_Of_Minutes.Models.MeetingDetailsViewModel
 
 @await Html.PartialAsync("_AlertMessages")
 @{
     ViewData["Title"] = "Meeting Details - Meeting Of Minutes";
 }
+
 <div class="pagetitle mb-4">
     <nav>
         <ol class="breadcrumb flex-nowrap">
@@ -14,28 +15,211 @@
     </nav>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h6><i class="bi bi-calendar-event me-2"></i> Meeting Details</h6>
-        <div>
-            <a asp-action="MeetingsAddEdit" asp-route-id="@Model.MeetingID" class="btn btn-sm btn-light me-2"><i class="bi bi-pencil"></i> Edit</a>
-            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="MeetingID" value="@Model.MeetingID" />
-                <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i> Delete</button>
-            </form>
+<div class="mom-page-header">
+    <div>
+        <h1>Meeting Details</h1>
+        <p class="mom-page-subtitle">View meeting information, attendees, and attendance in one place</p>
+    </div>
+    <div class="mom-toolbar">
+        <a asp-action="MeetingsAddEdit" asp-route-id="@Model.Meeting.MeetingID" class="btn btn-primary px-4">
+            <i class="bi bi-pencil-square me-2"></i>Edit Meeting
+        </a>
+        <a asp-action="MeetingsList" class="btn btn-light px-4">Back to List</a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card mom-form-card h-100">
+            <div class="card-header">
+                <h6><i class="bi bi-calendar-event me-2"></i>Meeting Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="mom-detail-block">
+                            <label>Meeting Date & Time</label>
+                            <div>@Model.Meeting.MeetingDate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mom-detail-block">
+                            <label>Status</label>
+                            <div>
+                                @if (Model.Meeting.IsCancelled)
+                                {
+                                    <span class="badge bg-danger">Cancelled</span>
+                                }
+                                else if (Model.Meeting.MeetingDate > DateTime.Now)
+                                {
+                                    <span class="badge bg-primary">Scheduled</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mom-detail-block">
+                            <label>Meeting Type</label>
+                            <div>@Model.Meeting.MeetingTypeName</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mom-detail-block">
+                            <label>Department</label>
+                            <div>@Model.Meeting.DepartmentName</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mom-detail-block">
+                            <label>Venue</label>
+                            <div>@Model.Meeting.MeetingVenueName</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mom-detail-block">
+                            <label>Description</label>
+                            <div>@(string.IsNullOrWhiteSpace(Model.Meeting.MeetingDescription) ? "-" : Model.Meeting.MeetingDescription)</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mom-detail-block">
+                            <label>Document</label>
+                            <div>
+                                @if (!string.IsNullOrWhiteSpace(Model.Meeting.DocumentPath))
+                                {
+                                    <a href="@Model.Meeting.DocumentPath" target="_blank">View Uploaded File</a>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    @if (Model.Meeting.IsCancelled)
+                    {
+                        <div class="col-md-6">
+                            <div class="mom-detail-block">
+                                <label>Cancellation Date & Time</label>
+                                <div>@Model.Meeting.CancellationDateTime</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mom-detail-block">
+                                <label>Cancellation Reason</label>
+                                <div>@Model.Meeting.CancellationReason</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="card-body p-4">
-        <div class="row gy-3">
-            <div class="col-md-6"><strong>Meeting ID:</strong><div class="text-muted">@Model.MeetingID</div></div>
-            <div class="col-md-6"><strong>Venue ID:</strong><div class="text-muted">@Model.MeetingVenueID</div></div>
-            <div class="col-md-6"><strong>Date & Time:</strong><div class="text-muted">@Model.MeetingDate</div></div>
-            <div class="col-md-6"><strong>Status:</strong><div class="text-muted">@(Model.IsCancelled ? "Cancelled" : "Active")</div></div>
-            <div class="col-md-6"><strong>Meeting Type ID:</strong><div class="text-muted">@Model.MeetingTypeID</div></div>
-            <div class="col-md-6"><strong>Department ID:</strong><div class="text-muted">@Model.DepartmentID</div></div>
-            <div class="col-12"><strong>Meeting Description:</strong><div class="border rounded p-3 mt-1 text-muted bg-light">@Model.MeetingDescription</div></div>
+    <div class="col-lg-4">
+        <div class="card mom-form-card h-100">
+            <div class="card-header">
+                <h6><i class="bi bi-people me-2"></i>Add Meeting Member</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="AddMeetingMember" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="NewMember.MeetingID" />
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Staff Member</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <select asp-for="NewMember.StaffID" asp-items="ViewBag.StaffDropDown" class="form-select">
+                                <option value="">-- Select Staff --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Add Member</button>
+                </form>
+            </div>
         </div>
+    </div>
+</div>
+
+<div class="card mom-list-card">
+    <div class="card-header">
+        <h6><i class="bi bi-person-check me-2"></i>Who Is Going To Attend The Meeting</h6>
+    </div>
+    <div class="card-body">
+        @if (Model.Members.Count == 0)
+        {
+            <div class="text-muted">No members added yet.</div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var member in Model.Members)
+                {
+                    <div class="col-lg-6">
+                        <div class="border rounded-4 p-3 h-100 bg-white shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <div class="fw-semibold">@member.StaffName</div>
+                                    <small class="text-muted">Member ID: @member.MeetingMemberID</small>
+                                </div>
+                                @if (member.IsPresent)
+                                {
+                                    <span class="badge bg-success">Present</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Absent</span>
+                                }
+                            </div>
+
+                            <form asp-action="UpdateMeetingMemberAttendance" method="post" class="row g-3 mb-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="MeetingMemberID" value="@member.MeetingMemberID" />
+                                <input type="hidden" name="MeetingID" value="@Model.Meeting.MeetingID" />
+
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold">At Meeting Time</label>
+                                    <select name="IsPresent" class="form-select">
+                                        @if (member.IsPresent)
+                                        {
+                                            <option value="true" selected>Present</option>
+                                            <option value="false">Absent</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="true">Present</option>
+                                            <option value="false" selected>Absent</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="col-md-7">
+                                    <label class="form-label small fw-bold">Remarks</label>
+                                    <input type="text" name="Remarks" value="@member.Remarks" class="form-control" />
+                                </div>
+
+                                <div class="col-12 d-flex justify-content-end gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm px-4">Update</button>
+                                </div>
+                            </form>
+                            <div class="d-flex justify-content-end">
+                                <form asp-action="DeleteMeetingMember" method="post" class="js-delete-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="MeetingMemberID" value="@member.MeetingMemberID" />
+                                    <input type="hidden" name="MeetingID" value="@Model.Meeting.MeetingID" />
+                                    <button type="submit" class="btn btn-light text-danger btn-sm px-3">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>

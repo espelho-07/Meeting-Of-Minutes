@@ -21,7 +21,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             if (HttpContext.Session.GetString("UserName") != null)
             {
-                return RedirectToAction("DepartmentList", "Department");
+                return RedirectToAction("DashBoard", "DashBoard");
             }
 
             return View(new UserModel());
@@ -71,7 +71,7 @@ namespace Meeting_Of_Minutes.Controllers
                     TempData.Remove("SucessMessage");
                     HttpContext.Session.SetInt32("UserID", userId);
                     HttpContext.Session.SetString("UserName", userName);
-                    return RedirectToAction("DepartmentList", "Department");
+                    return RedirectToAction("DashBoard", "DashBoard");
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
@@ -89,7 +89,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             if (HttpContext.Session.GetString("UserName") != null)
             {
-                return RedirectToAction("DepartmentList", "Department");
+                return RedirectToAction("DashBoard", "DashBoard");
             }
 
             return View(new RegisterModel());

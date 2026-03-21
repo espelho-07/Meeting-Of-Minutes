@@ -129,6 +129,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         public IActionResult MeetingsDetails(int id)
         {
+            MeetingDetailsViewModel viewModel = new MeetingDetailsViewModel();
             MeetingsModel model = new MeetingsModel();
 
             SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
@@ -153,12 +154,140 @@ namespace Meeting_Of_Minutes.Controllers
                 model.IsCancelled = reader["IsCancelled"] == DBNull.Value ? false : Convert.ToBoolean(reader["IsCancelled"]);
                 model.CancellationDateTime = reader["CancellationDateTime"] as DateTime?;
                 model.CancellationReason = reader["CancellationReason"].ToString();
+                model.DepartmentName = GetSelectedText(FillDepartmentDropDown(), model.DepartmentID);
+                model.MeetingTypeName = GetSelectedText(FillMeetingTypeDropDown(), model.MeetingTypeID);
+                model.MeetingVenueName = GetSelectedText(FillMeetingVenueDropdown(), model.MeetingVenueID);
+            }
+
+            reader.Close();
+            cmd.Parameters.Clear();
+            cmd.CommandText = "PR_MeetingMember_SelectAll";
+            cmd.CommandType = CommandType.StoredProcedure;
+            reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                if (Convert.ToInt32(reader["MeetingID"]) == id)
+                {
+                    MeetingMemberModel member = new MeetingMemberModel();
+                    member.MeetingMemberID = Convert.ToInt32(reader["MeetingMemberID"]);
+                    member.MeetingID = Convert.ToInt32(reader["MeetingID"]);
+                    member.StaffID = Convert.ToInt32(reader["StaffID"]);
+                    member.MeetingDescription = reader["MeetingDescription"].ToString();
+                    member.StaffName = reader["StaffName"].ToString();
+                    member.IsPresent = Convert.ToBoolean(reader["IsPresent"]);
+                    member.Remarks = reader["Remarks"].ToString();
+                    viewModel.Members.Add(member);
+                }
             }
 
             reader.Close();
             con.Close();
 
-            return View(model);
+            viewModel.Meeting = model;
+            viewModel.NewMember.MeetingID = id;
+            ViewBag.StaffDropDown = FillStaffDropDown(model.DepartmentID);
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AddMeetingMember(MeetingDetailsViewModel viewModel)
+        {
+            if (viewModel.NewMember.MeetingID == 0)
+            {
+                TempData["ErrorMessage"] = "Meeting not found.";
+                return RedirectToAction("MeetingsList");
+            }
+
+            if (viewModel.NewMember.StaffID == 0)
+            {
+                TempData["ErrorMessage"] = "Please select staff.";
+                return RedirectToAction("MeetingsDetails", new { id = viewModel.NewMember.MeetingID });
+            }
+
+            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            con.Open();
+
+            SqlCommand checkCmd = new SqlCommand();
+            checkCmd.Connection = con;
+            checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingMember WHERE MeetingID = @MeetingID AND StaffID = @StaffID";
+            checkCmd.CommandType = CommandType.Text;
+            checkCmd.Parameters.AddWithValue("@MeetingID", viewModel.NewMember.MeetingID);
+            checkCmd.Parameters.AddWithValue("@StaffID", viewModel.NewMember.StaffID);
+
+            int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+            if (count > 0)
+            {
+                con.Close();
+                TempData["ErrorMessage"] = "Same staff already added in this meeting.";
+                return RedirectToAction("MeetingsDetails", new { id = viewModel.NewMember.MeetingID });
+            }
+
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "PR_MeetingMember_Insert";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MeetingID", viewModel.NewMember.MeetingID);
+            cmd.Parameters.AddWithValue("@StaffID", viewModel.NewMember.StaffID);
+            cmd.Parameters.AddWithValue("@IsPresent", false);
+            cmd.Parameters.AddWithValue("@Remarks", string.Empty);
+            cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+            cmd.ExecuteNonQuery();
+            con.Close();
+
+            TempData["SuccessMessage"] = "Meeting member added successfully.";
+            return RedirectToAction("MeetingsDetails", new { id = viewModel.NewMember.MeetingID });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateMeetingMemberAttendance(int MeetingMemberID, int MeetingID, bool IsPresent, string Remarks)
+        {
+            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "PR_MeetingMember_UpdateByPK";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@MeetingMemberID", MeetingMemberID);
+            cmd.Parameters.AddWithValue("@IsPresent", IsPresent);
+            cmd.Parameters.AddWithValue("@Remarks", Remarks ?? string.Empty);
+
+            con.Open();
+            cmd.ExecuteNonQuery();
+            con.Close();
+
+            TempData["SuccessMessage"] = "Attendance updated successfully.";
+            return RedirectToAction("MeetingsDetails", new { id = MeetingID });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteMeetingMember(int MeetingMemberID, int MeetingID)
+        {
+            try
+            {
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = "PR_MeetingMember_DeleteByPK";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingMemberID", MeetingMemberID);
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+                con.Close();
+
+                TempData["SuccessMessage"] = "Meeting member deleted successfully.";
+            }
+            catch
+            {
+                TempData["DeleteError"] = "Delete failed.";
+            }
+
+            return RedirectToAction("MeetingsDetails", new { id = MeetingID });
         }
 
         public IActionResult ExportToExcel()
@@ -431,6 +560,69 @@ namespace Meeting_Of_Minutes.Controllers
             sdr.Close();
             con.Close();
             return list;
+        }
+
+        public List<SelectListItem> FillStaffDropDown(int? departmentId = null)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "PR_Staff_SelectAll";
+            cmd.CommandType = CommandType.StoredProcedure;
+            con.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                if (departmentId.HasValue)
+                {
+                    int staffDepartmentId = reader["DepartmentID"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DepartmentID"]);
+                    if (staffDepartmentId != departmentId.Value)
+                    {
+                        continue;
+                    }
+                }
+
+                string value = reader["StaffID"].ToString();
+                bool exists = false;
+                foreach (var item in list)
+                {
+                    if (item.Value == value)
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists)
+                {
+                    list.Add(new SelectListItem
+                    {
+                        Value = value,
+                        Text = reader["StaffName"].ToString()
+                    });
+                }
+            }
+            reader.Close();
+            con.Close();
+            return list;
+        }
+
+        public string GetSelectedText(List<SelectListItem> list, int? id)
+        {
+            if (!id.HasValue)
+            {
+                return string.Empty;
+            }
+
+            foreach (SelectListItem item in list)
+            {
+                if (item.Value == id.Value.ToString())
+                {
+                    return item.Text;
+                }
+            }
+
+            return string.Empty;
         }
         #endregion
     }
