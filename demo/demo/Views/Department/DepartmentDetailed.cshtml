@@ -1,0 +1,465 @@
+﻿@model DepartmentModel
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f7;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .card-custom {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-header-purple {
+            background: linear-gradient(135deg, #4527cc, #9b59b6);
+            padding: 14px 20px;
+        }
+
+            .card-header-purple h5 {
+                margin: 0;
+                font-weight: 700;
+                color: #fff;
+                font-size: 1rem;
+            }
+
+            .card-header-purple .bi {
+                color: #fff;
+                margin-right: 8px;
+            }
+
+        .header-action {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-left: 16px;
+        }
+
+            .header-action:hover {
+                opacity: 0.85;
+                color: #fff;
+            }
+
+            .header-action.text-green {
+                color: #90ee90;
+            }
+
+            .header-action.text-yellow {
+                color: #ffd700;
+            }
+
+            .header-action.text-red {
+                color: #ff6b6b;
+            }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #888;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 0.95rem;
+            color: #1e2a3a;
+            font-weight: 600;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4527cc;
+        }
+
+            .stat-number.green {
+                color: #27ae60;
+            }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(69, 39, 204, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4527cc;
+            flex-shrink: 0;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e2a3a;
+            margin: 0;
+        }
+
+        .activity-desc {
+            font-size: 0.82rem;
+            color: #888;
+            margin: 0;
+        }
+
+        .activity-date {
+            font-size: 0.78rem;
+            color: #aaa;
+            margin: 0;
+        }
+
+        .staff-item {
+            padding: 12px 12px;
+            transition: all 0.5s ease;
+        }
+
+            .staff-item:hover {
+                background: rgba(69, 39, 204, 0.1);
+                cursor: pointer;
+                border-radius: 20px;
+            }
+
+            .staff-item:last-child {
+                border-bottom: none;
+            }
+
+        .staff-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e2a3a;
+            margin: 0;
+        }
+
+        .staff-role {
+            font-size: 0.82rem;
+            color: #888;
+            margin: 0;
+        }
+
+        .staff-email {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin: 0;
+        }
+
+        .btn-add-staff {
+            background: #4527cc;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 10px 0;
+            width: 100%;
+        }
+
+            .btn-add-staff:hover {
+                background: #3720a8;
+                color: #fff;
+            }
+
+        .link-purple {
+            color: #4527cc;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+            .link-purple:hover {
+                text-decoration: underline;
+                color: #4527cc;
+            }
+    </style>
+</head>
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+<body>
+    <div class="container py-5">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="#" class="text-decoration-none"><i class="bi bi-house"></i></a>
+                </li>
+                <li class="breadcrumb-item active fw-semibold">Department Details</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            <!-- Left Column -->
+            <div class="col-lg-8">
+
+                <!-- Department Information -->
+                <div class="card-custom mb-4">
+                    <div class="card-header-purple d-flex align-items-center justify-content-between">
+                        <h5><i class="bi bi-grid-3x3-gap"></i> Department Information</h5>
+                        <div>
+                            @* <a href="#" class="header-action text-green"><i class="bi bi-people me-1"></i>View Staff</a>
+                            <a href="#" class="header-action text-yellow"><i class="bi bi-pencil me-1"></i>Edit</a>
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteDepartment", new { deptid = Model.DepartmentID })')"><i class="bi bi-trash me-1"></i>Delete</a> *@
+                            <!-- EDIT -->
+                            <a href="@Url.Action("DepartmentAddEdit", new { deptid = Model.DepartmentID })">
+                                <span class="rounded-pill px-2 py-1 bg-warning-subtle text-warning">Edit</span>
+                            </a>
+                            <!-- DELETE -->
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteDepartment", new { deptid = Model.DepartmentID })')">
+                                <span class="rounded-pill px-2 py-1 bg-danger-subtle text-danger">Delete</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="p-4 text-center">
+                        <div class="row mb-4">
+                            <div class="col-4">
+                                <div class="info-label">Department ID</div>
+                                <div class="info-value">@Model.DepartmentID</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="info-label">Department Name</div>
+                                <span class="badge bg-success">@Model.DepartmentName</span>
+                                @* <img src="@Model.DepartmentLogo" alt="Add Logo" width="100" height="50" /> *@
+                            </div>
+                            <div class="col-4">
+                                <div class="info-label">Department Logo</div>
+                                @* <span class="dept-badge">@Model.DepartmentName</span> *@
+                                @if (!string.IsNullOrEmpty(Model.DepartmentLogo))
+                                {
+                                    <img src="@Model.DepartmentLogo" style="height:60px; width:auto;" />
+                                }
+                                else
+                                {
+                                    <div class="alert alert-danger text-center">
+                                        <a href="@Url.Action("DepartmentAddEdit", new { deptid = Model.DepartmentID })"
+                                           class="text-decoration-none text-danger">
+                                            Click here
+                                        </a>
+                                        to Add Logo !
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="info-label">Created Date</div>
+                                <div class="info-value">
+                                    <i class="bi bi-calendar3 me-2 text-muted"></i>
+                                    @Model.Created
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="info-label">Last Modified</div>
+                                <div class="info-value">
+                                    <i class="bi bi-calendar3 me-2 text-muted"></i>
+                                    @Model.Modified
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Department Activity -->
+                <div class="card-custom">
+                    <div class="card-header-purple">
+                        <h5><i class="bi bi-clock-history"></i> Recent Department Activity</h5>
+                    </div>
+                    <div class="p-4">
+                        <!-- Activity 1 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="activity-icon"><i class="bi bi-arrow-up-right"></i></div>
+                            <div>
+                                <p class="activity-title">New staff member added</p>
+                                <p class="activity-desc">Emily Davis joined as Developer</p>
+                                <p class="activity-date">2025-01-20</p>
+                            </div>
+                        </div>
+                        <!-- Activity 2 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="activity-icon"><i class="bi bi-arrow-up-right"></i></div>
+                            <div>
+                                <p class="activity-title">Meeting scheduled</p>
+                                <p class="activity-desc">Q1 Planning Session - Jan 25</p>
+                                <p class="activity-date">2025-01-18</p>
+                            </div>
+                        </div>
+                        <!-- Activity 3 -->
+                        <div class="d-flex gap-3">
+                            <div class="activity-icon"><i class="bi bi-arrow-up-right"></i></div>
+                            <div>
+                                <p class="activity-title">Department updated</p>
+                                <p class="activity-desc">Contact information changed</p>
+                                <p class="activity-date">2025-01-15</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+
+                <!-- Department Statistics -->
+                <div class="card-custom mb-4">
+                    <div class="card-header-purple">
+                        <h5><i class="bi bi-bar-chart"></i> Department Statistics</h5>
+                    </div>
+                    <div class="p-4 text-center">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label mb-3">Total Staff Members</div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="stat-number" style="font-size:1.5rem;">2</div>
+                                <div class="stat-label">Total Meetings</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number green" style="font-size:1.5rem;">0</div>
+                                <div class="stat-label">Upcoming</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Staff Members -->
+                <div class="card-custom mb-4">
+                    <div class="card-header-purple">
+                        <h5><i class="bi bi-people"></i> Staff Members</h5>
+                    </div>
+                    <div class="px-4 pt-2 pb-3">
+                        <a href="">
+                            <div class="staff-item border-bottom border-black d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="staff-name">John Smith</p>
+                                    <p class="staff-role">Manager</p>
+                                    <p class="staff-email">john.smith@company.com</p>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted"></i>
+                            </div>
+                        </a>
+                        <div class="staff-item border-bottom border-black d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="staff-name">Sarah Johnson</p>
+                                <p class="staff-role">Senior Developer</p>
+                                <p class="staff-email">sarah.j@company.com</p>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted"></i>
+                        </div>
+                        <div class="staff-item border-bottom border-black d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="staff-name">Mike Chen</p>
+                                <p class="staff-role">Developer</p>
+                                <p class="staff-email">mike.chen@company.com</p>
+                            </div>
+                            <i class="bi bi-chevron-right text-muted"></i>
+                        </div>
+                        <div class="text-center mt-2">
+                            <a href="#" class="link-purple text-decoration-none">View All Staff</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card-custom">
+                    <div class="card-header-purple">
+                        <h5><i class="bi bi-lightning"></i> Quick Actions</h5>
+                    </div>
+                    <div class="p-4 text-center">
+                        <a href="#" class="link-purple text-decoration-none d-block mb-3">
+                            <i class="bi bi-people me-1"></i> Manage Staff
+                            Members
+                        </a>
+                        <button class="btn-add-staff"><i class="bi bi-person-plus me-2"></i>Add Staff Member</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This department will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // NEW: Show cancellation message
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Department deletion has been cancelled.',
+                    icon: 'success',
+                    confirmButtonColor: 'green'
+                });
+
+            }
+        });
+    }
+</script>

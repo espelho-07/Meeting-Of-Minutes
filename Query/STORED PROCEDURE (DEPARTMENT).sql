@@ -6,6 +6,9 @@
 -- 1 -> SelectAll Procedure [For List Page]
 GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_Department_SelectAll]
+(
+    @searchtext NVARCHAR(100) = NULL
+)
 AS
 BEGIN
     SELECT
@@ -16,6 +19,7 @@ BEGIN
     FROM MOM_Department d
     LEFT JOIN (SELECT DepartmentID, COUNT(*) AS StaffCount FROM MOM_Staff GROUP BY DepartmentID) s ON d.DepartmentID = s.DepartmentID
     LEFT JOIN (SELECT DepartmentID, COUNT(*) AS MeetingsCount FROM MOM_Meetings GROUP BY DepartmentID) m ON d.DepartmentID = m.DepartmentID
+    WHERE @searchtext IS NULL OR d.DepartmentName LIKE '%' + @searchtext + '%'
     ORDER BY d.DepartmentID DESC;
 END;
 GO
@@ -94,21 +98,6 @@ BEGIN
     WHERE [dbo].[MOM_Department].[DepartmentID] = @DepartmentID;
 END;
 GO
-
-
-
-INSERT INTO [dbo].[MOM_Department]
-(
-    DepartmentName,
-    Created,
-    Modified
-)
-VALUES
-('Human Resources',     GETDATE(), GETDATE()),
-('Information Technology', GETDATE(), GETDATE()),
-('Finance',             GETDATE(), GETDATE()),
-('Marketing',           GETDATE(), GETDATE()),
-('Customer Support',    GETDATE(), GETDATE());
 
 -- 6 -> SelectAll With Counts [Department + StaffCount + MeetingsCount]
 GO

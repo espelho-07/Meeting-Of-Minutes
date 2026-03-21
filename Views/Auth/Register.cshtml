@@ -1,0 +1,145 @@
+@model Meeting_Of_Minutes.Models.RegisterModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up | Meetings Of Minutes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { min-height: 100vh; background: linear-gradient(135deg, #4538d6 0%, #4935d8 50%, #4338ca 100%); }
+        .card-box { background: #fff; border-radius: 20px; box-shadow: 0 30px 60px rgba(21, 25, 71, 0.22); overflow: hidden; }
+        .card-head { padding: 32px 32px 12px; background: linear-gradient(180deg, #f6f7ff 0%, #ffffff 100%); }
+        .card-body-wrap { padding: 18px 32px 28px; }
+        .btn-main { background: linear-gradient(90deg, #6674f4, #7a4db8); border: none; color: #fff; border-radius: 10px; font-weight: 700; }
+        .input-group-text { cursor: pointer; background: #eef4ff; border-color: #d9e2f2; }
+        .form-control { background: #eef4ff; border-color: #d9e2f2; min-height: 48px; }
+        .rule { font-size: 13px; color: #6c757d; }
+        .rule.ok { color: #198754; font-weight: 600; }
+        .auth-link { color: #6165f0; text-decoration: none; font-weight: 700; }
+    </style>
+</head>
+<body class="d-flex justify-content-center align-items-center py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card-box">
+                    <div class="card-head text-center">
+                        <i class="bi bi-person-plus-fill fs-1" style="color:#5f62ee;"></i>
+                        <h3 class="fw-bold mb-1" style="color:#5f62ee;">Create Account</h3>
+                        <p class="text-muted mb-0">Sign up to start using MOM system</p>
+                    </div>
+                    <div class="card-body-wrap">
+                        <form method="post" asp-controller="Auth" asp-action="Register">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="UserName" class="form-label fw-semibold">Username</label>
+                                <input asp-for="UserName" class="form-control" placeholder="Enter username" />
+                                <span asp-validation-for="UserName" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label fw-semibold">Password</label>
+                                <div class="input-group">
+                                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" id="passwordField" />
+                                    <span class="input-group-text" id="togglePassword"><i class="bi bi-eye"></i></span>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label fw-semibold">Confirm Password</label>
+                                <div class="input-group">
+                                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm password" id="confirmPasswordField" />
+                                    <span class="input-group-text" id="toggleConfirmPassword"><i class="bi bi-eye"></i></span>
+                                </div>
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3 p-3 rounded" style="background:#f8f9ff; border:1px solid #ecebff;">
+                                <div class="fw-semibold mb-2" style="color:#4e54c8;">Password must contain:</div>
+                                <div class="rule" id="ruleLength"><i class="bi bi-dot"></i> Minimum 8 characters</div>
+                                <div class="rule" id="ruleUpper"><i class="bi bi-dot"></i> At least 1 uppercase letter (A-Z)</div>
+                                <div class="rule" id="ruleLower"><i class="bi bi-dot"></i> At least 1 lowercase letter (a-z)</div>
+                                <div class="rule" id="ruleDigit"><i class="bi bi-dot"></i> At least 1 number (0-9)</div>
+                                <div class="rule" id="ruleSpecial"><i class="bi bi-dot"></i> At least 1 special character (!#@@$...)</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-main w-100 py-2 fw-semibold">Sign Up</button>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <a asp-controller="Auth" asp-action="Login" class="auth-link">Back to Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const passwordField = document.getElementById('passwordField');
+            const confirmPasswordField = document.getElementById('confirmPasswordField');
+            const togglePassword = document.getElementById('togglePassword');
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+            function toggleInput(input, iconWrap) {
+                const icon = iconWrap.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'bi bi-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'bi bi-eye';
+                }
+            }
+
+            if (togglePassword) {
+                togglePassword.addEventListener('click', function () {
+                    toggleInput(passwordField, togglePassword);
+                });
+            }
+
+            if (toggleConfirmPassword) {
+                toggleConfirmPassword.addEventListener('click', function () {
+                    toggleInput(confirmPasswordField, toggleConfirmPassword);
+                });
+            }
+
+            function setRule(id, ok) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (ok) {
+                    el.classList.add('ok');
+                } else {
+                    el.classList.remove('ok');
+                }
+            }
+
+            function validatePasswordUI() {
+                const value = passwordField ? passwordField.value : '';
+                setRule('ruleLength', value.length >= 8);
+                setRule('ruleUpper', /[A-Z]/.test(value));
+                setRule('ruleLower', /[a-z]/.test(value));
+                setRule('ruleDigit', /\d/.test(value));
+                setRule('ruleSpecial', /[^A-Za-z0-9]/.test(value));
+            }
+
+            if (passwordField) {
+                passwordField.addEventListener('input', validatePasswordUI);
+                validatePasswordUI();
+            }
+        })();
+    </script>
+</body>
+</html>

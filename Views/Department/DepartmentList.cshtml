@@ -10,35 +10,52 @@
 }
 
 <div class="pagetitle mb-4">
-    <h1>Departments</h1>
     <nav>
         <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
             <li class="breadcrumb-item active">Departments</li>
         </ol>
     </nav>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="mom-page-header">
     <div>
-        <h5 class="fw-bold mb-1">Departments</h5>
-        <p class="text-muted mb-0">Manage organizational departments and their staff members</p>
+        <h1>Departments</h1>
+        <p class="mom-page-subtitle">Manage organizational departments and their staff members</p>
     </div>
-
-    <a asp-action="DepartmentAddEdit" class="btn btn-primary rounded-pill px-4" style="background:#6a5ae0;border:none;">
-        <i class="bi bi-plus-circle me-1"></i> Add Department
-    </a>
+    <div class="mom-toolbar">
+        <a asp-action="DepartmentAddEdit" class="btn btn-primary px-4">
+            <i class="bi bi-plus-circle me-1"></i> Add Department
+        </a>
+        <a asp-action="ExportToExcel" class="btn btn-success px-4">
+            <i class="bi bi-file-earmark-excel me-1"></i> Export
+        </a>
+    </div>
 </div>
 
-<div class="card border-0 shadow-sm" style="border-radius:16px;">
-    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);border-radius:16px 16px 0 0;">
-        <div class="fw-semibold"><i class="bi bi-building me-2"></i> Departments List</div>
+<div class="mom-search-card">
+    <form class="mom-search-form" asp-action="DepartmentList" asp-controller="Department" method="post">
+        @Html.AntiForgeryToken()
+        <div class="mom-search-input">
+            <span><i class="bi bi-search"></i></span>
+            <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search departments..." />
+        </div>
+        <button class="btn btn-primary px-4" type="submit">Search</button>
+        <a href="@Url.Action("DepartmentList", "Department")" class="btn btn-light px-4">Clear</a>
+    </form>
+    <div class="mom-stat-chip">Total Departments: @Model.Count</div>
+</div>
+
+<div class="card mom-list-card">
+    <div class="card-header">
+        <h6><i class="bi bi-building"></i> Departments List</h6>
     </div>
 
     <div class="card-body p-0">
         <table class="table align-middle mb-0">
-            <thead class="bg-light small text-uppercase text-muted">
+            <thead>
                 <tr>
+                    <th style="width:44px;"></th>
                     <th style="width:60px;">#</th>
                     <th>Department Name</th>
                     <th>Staff Count</th>
@@ -51,17 +68,18 @@
                 @foreach (var dept in Model)
                 {
                     <tr>
+                        <td><input type="checkbox" class="form-check-input" /></td>
                         <td>@(SerialNumber++)</td>
                         <td class="fw-semibold">@dept.DepartmentName</td>
-                        <td>@dept.StaffCount</td>
-                        <td>@dept.MeetingsCount</td>
+                        <td><span class="mom-count-pill staff"><i class="bi bi-people"></i> @dept.StaffCount</span></td>
+                        <td><span class="mom-count-pill meeting"><i class="bi bi-calendar-event"></i> @dept.MeetingsCount</span></td>
                         <td class="text-center">
-                            <a asp-action="DepartmentView" asp-route-id="@dept.DepartmentID" class="text-primary me-2" title="View"><i class="bi bi-eye"></i></a>
-                            <a asp-action="DepartmentAddEdit" asp-route-id="@dept.DepartmentID" class="text-warning me-2" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="DepartmentView" asp-route-id="@dept.DepartmentID" class="mom-icon-btn text-primary me-1" title="View"><i class="bi bi-eye"></i></a>
+                            <a asp-action="DepartmentAddEdit" asp-route-id="@dept.DepartmentID" class="mom-icon-btn text-warning me-1" title="Edit"><i class="bi bi-pencil"></i></a>
                             <form asp-action="Delete" method="post" class="d-inline js-delete-form">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="DepartmentID" value="@dept.DepartmentID" />
-                                <button type="submit" class="btn btn-link text-danger p-0" title="Delete"><i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-link mom-icon-btn text-danger p-0" title="Delete"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -70,10 +88,3 @@
         </table>
     </div>
 </div>
-
-
-
-
-
-
-

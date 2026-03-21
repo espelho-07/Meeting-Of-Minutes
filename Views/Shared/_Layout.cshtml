@@ -1,5 +1,21 @@
+@using Microsoft.AspNetCore.Http
 <!DOCTYPE html>
 <html lang="en">
+@{
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+
+    string NavClass(string controller, string action = "")
+    {
+        bool isActive = currentController.Equals(controller, StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(action))
+        {
+            isActive = isActive && currentAction.Equals(action, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return isActive ? "nav-link active" : "nav-link collapsed";
+    }
+}
 
 <head>
     <meta charset="utf-8">
@@ -26,6 +42,658 @@
 
     <!-- Template Main CSS -->
     <link href="~/assets/css/style.css" rel="stylesheet">
+    <style>
+        :root {
+            --mom-primary: #5b5ce6;
+            --mom-primary-dark: #1f255f;
+            --mom-primary-mid: #2a3178;
+            --mom-accent: #6d4bc3;
+            --mom-success: #198754;
+            --mom-surface: #ffffff;
+            --mom-bg: #f4f7fb;
+            --mom-border: #e8edf5;
+            --mom-muted: #6f7d95;
+            --mom-shadow: 0 14px 35px rgba(26, 27, 72, 0.10);
+            --mom-radius: 18px;
+        }
+
+        body {
+            background: var(--mom-bg);
+            color: #162033;
+        }
+
+        .header {
+            background: #ffffff;
+            box-shadow: 0 1px 0 rgba(17, 24, 39, 0.08);
+            height: 74px;
+            padding: 0 20px;
+        }
+
+        .header .logo {
+            min-width: 220px;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .header .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            padding: 8px;
+            background: #5b5ce6;
+            box-shadow: none;
+        }
+
+        .header .logo span {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #172033;
+        }
+
+        .header .logo small {
+            display: block;
+            line-height: 1;
+            margin-top: 2px;
+            color: #7b8798;
+            font-size: 0.70rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .header-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toggle-sidebar-btn {
+            color: #6e7894;
+            font-size: 1.15rem;
+            margin-left: 14px;
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .header-nav .nav-icon,
+        .header-nav .nav-profile {
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            border-radius: 14px;
+            padding: 8px 12px;
+            box-shadow: none;
+        }
+
+        .header-nav .nav-icon i {
+            color: #5b647a;
+        }
+
+        .header-nav .badge-number {
+            top: -6px;
+            right: -6px;
+            background: #ff5b63;
+        }
+
+        .header-nav .nav-profile img {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #eef2f7;
+        }
+
+        .header-nav .nav-profile span {
+            color: #253147;
+            font-weight: 700;
+        }
+
+        .sidebar {
+            background: #232862;
+            box-shadow: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 88px;
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .sidebar-nav .nav-heading {
+            color: rgba(255, 255, 255, 0.34);
+            font-size: 0.70rem;
+            font-weight: 700;
+            letter-spacing: 0.11em;
+            margin: 24px 10px 12px;
+        }
+
+        .sidebar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.76);
+            background: transparent;
+            border-radius: 12px;
+            margin: 4px 0;
+            padding: 12px 14px;
+            font-weight: 700;
+            position: relative;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-nav .nav-link i {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 1rem;
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active {
+            background: #4f46c9;
+            color: #fff;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .sidebar-nav .nav-link:hover i,
+        .sidebar-nav .nav-link.active i {
+            color: #fff;
+        }
+
+        .sidebar-nav .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            border-radius: 0 999px 999px 0;
+            background: #8bd2ff;
+            box-shadow: none;
+        }
+
+        .main {
+            background: var(--mom-bg);
+            min-height: calc(100vh - 72px);
+            padding: 28px 26px 34px;
+        }
+
+        .pagetitle {
+            margin-bottom: 28px;
+        }
+
+        .pagetitle h1,
+        .pagetitle h4,
+        .pagetitle h5 {
+            color: #14213a;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .pagetitle p,
+        .pagetitle + p,
+        .text-muted {
+            color: var(--mom-muted) !important;
+        }
+
+        .breadcrumb {
+            margin-bottom: 0;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb-item a {
+            color: var(--mom-muted);
+        }
+
+        .card {
+            border: 1px solid rgba(228, 235, 245, 0.9) !important;
+            border-radius: var(--mom-radius) !important;
+            box-shadow: var(--mom-shadow) !important;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, #6573f0 0%, #7a4cb4 100%) !important;
+            color: #fff !important;
+            border-bottom: 0 !important;
+            padding: 1.15rem 1.4rem !important;
+            font-weight: 800;
+        }
+
+        .card-body {
+            background: #fff;
+        }
+
+        .btn {
+            border-radius: 12px;
+            font-weight: 700;
+            box-shadow: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #5962e8, #6e46b3);
+            border: 0;
+        }
+
+        .btn-success {
+            background: #178b57;
+            border: 0;
+        }
+
+        .btn-light {
+            border-color: var(--mom-border);
+            background: #fff;
+        }
+
+        .rounded-pill {
+            border-radius: 12px !important;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            font-size: 0.82rem;
+            text-transform: none !important;
+            color: #44516c !important;
+            font-weight: 800;
+            background: #fff !important;
+            border-bottom: 1px solid #e9eef6;
+            padding: 1rem 1.15rem;
+        }
+
+        .table tbody td {
+            padding: 1rem 1.15rem;
+            vertical-align: middle;
+            border-bottom-color: #edf1f7;
+        }
+
+        .table-hover tbody tr:hover {
+            background: #fafbff;
+        }
+
+        .form-control,
+        .form-select,
+        .input-group-text {
+            border-color: #dce4f1;
+            min-height: 46px;
+            box-shadow: none !important;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 12px !important;
+            box-shadow: none !important;
+        }
+
+        .input-group {
+            flex-wrap: nowrap;
+            align-items: stretch;
+        }
+
+        .input-group-text {
+            background: #f8faff;
+            color: #7b88a3;
+            min-width: 52px;
+            justify-content: center;
+            border-top-left-radius: 12px !important;
+            border-bottom-left-radius: 12px !important;
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            border-right: 0;
+        }
+
+        .input-group > .form-control,
+        .input-group > .form-select,
+        .input-group > textarea.form-control {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-top-right-radius: 12px !important;
+            border-bottom-right-radius: 12px !important;
+            border-left: 0;
+        }
+
+        .input-group > textarea.form-control {
+            padding-top: 12px;
+        }
+
+        textarea.form-control {
+            min-height: 110px;
+        }
+
+        .badge {
+            border-radius: 999px;
+            font-weight: 700;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .footer {
+            background: transparent;
+            border-top: 0;
+            padding-top: 10px;
+        }
+
+        .profile .dropdown-header h6,
+        .notifications .dropdown-header {
+            font-weight: 800;
+        }
+
+        .dropdown-menu {
+            border: 1px solid #e9edf6;
+            border-radius: 18px;
+            box-shadow: 0 16px 36px rgba(17, 24, 39, 0.10);
+            padding: 10px;
+        }
+
+        .dropdown-menu .dropdown-item {
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .dropdown-menu .dropdown-item:hover {
+            background: #f5f7ff;
+        }
+
+        .mom-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .mom-page-subtitle {
+            color: var(--mom-muted);
+            margin-bottom: 0;
+        }
+
+        .mom-toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .mom-search-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 18px 20px;
+            background: #fff;
+            border: 1px solid var(--mom-border);
+            border-radius: 18px;
+            box-shadow: var(--mom-shadow);
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .mom-search-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 680px;
+            flex-wrap: wrap;
+        }
+
+        .mom-search-input {
+            flex: 1 1 420px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #dce4f1;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            min-height: 48px;
+        }
+
+        .mom-search-input span {
+            width: 44px;
+            text-align: center;
+            color: #7d8aa3;
+        }
+
+        .mom-search-input input {
+            border: 0 !important;
+            box-shadow: none !important;
+            min-height: 46px;
+        }
+
+        .mom-stat-chip {
+            color: #5e6b84;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .mom-list-card .card-header h6 {
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mom-icon-btn {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #7b879d;
+        }
+
+        .mom-icon-btn:hover {
+            background: #f4f7ff;
+        }
+
+        .mom-form-wrap {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .mom-form-card .card-body {
+            padding: 30px 28px;
+        }
+
+        .mom-form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 20px;
+            margin-top: 12px;
+            border-top: 1px solid #edf1f7;
+            flex-wrap: wrap;
+        }
+
+        .mom-detail-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+        }
+
+        .mom-detail-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .mom-stat-card {
+            background: #fff;
+            border: 1px solid var(--mom-border);
+            border-radius: 18px;
+            box-shadow: var(--mom-shadow);
+            overflow: hidden;
+        }
+
+        .mom-stat-card-head {
+            background: linear-gradient(90deg, #6573f0 0%, #7a4cb4 100%);
+            color: #fff;
+            padding: 12px 16px;
+            font-weight: 800;
+        }
+
+        .mom-stat-card-body {
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .mom-count-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 4px 8px;
+        }
+
+        .mom-count-pill.staff {
+            background: #e8f8ff;
+            color: #0ea5e9;
+        }
+
+        .mom-count-pill.meeting {
+            background: #fff4d8;
+            color: #f59e0b;
+        }
+
+        .mom-topbar-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 18px;
+        }
+
+        .mom-topbar-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: #f8fafc;
+            color: #67748a;
+            border: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 0.88rem;
+        }
+
+        .mom-sidebar-foot {
+            margin-top: 24px;
+            padding: 16px 14px;
+            border-radius: 18px;
+            background: #2e357f;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.82);
+        }
+
+        .mom-sidebar-foot .small {
+            color: rgba(255,255,255,0.55) !important;
+        }
+
+        .mom-confirm-modal .modal-content {
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+        }
+
+        .mom-confirm-modal .modal-header {
+            border: 0;
+            padding: 1rem 1.25rem 0;
+        }
+
+        .mom-confirm-modal .modal-body {
+            padding: 0 1.5rem 1.25rem;
+            text-align: center;
+        }
+
+        .mom-confirm-modal .modal-footer {
+            border: 0;
+            justify-content: center;
+            padding: 0 1.5rem 1.5rem;
+            gap: 10px;
+        }
+
+        .mom-confirm-icon {
+            width: 74px;
+            height: 74px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+        }
+
+        .mom-delete-icon {
+            background: linear-gradient(135deg, #ffe5e5, #ffd7d7);
+            color: #dc3545;
+        }
+
+        .mom-update-icon {
+            background: linear-gradient(135deg, #e6f0ff, #dbeafe);
+            color: #2563eb;
+        }
+
+        .mom-confirm-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #1f2937;
+            margin-bottom: 0.35rem;
+        }
+
+        .mom-confirm-text {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        .mom-confirm-btn {
+            min-width: 120px;
+            border-radius: 12px;
+            padding: 0.65rem 1.25rem;
+            font-weight: 600;
+        }
+
+        @@media (max-width: 991px) {
+            .header {
+                padding: 0 10px;
+            }
+
+            .header .logo {
+                min-width: auto;
+                padding: 0;
+            }
+
+            .sidebar {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .main {
+                padding: 20px 14px 28px;
+            }
+
+            .mom-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -35,10 +703,18 @@
 
         <div class="d-flex align-items-center justify-content-between">
             <a asp-controller="Dashboard" asp-action="Dashboard" class="logo d-flex align-items-center">
-                <img src="~/assets/img/logo.png" alt="">
-                <span class="d-none d-lg-block">Meeting Of Minutes</span>
+                <div class="header-brand">
+                    <img src="~/assets/img/logo.png" alt="">
+                    <div class="header-brand-text d-none d-lg-block">
+                        <span>MOM</span>
+                        <small>Management</small>
+                    </div>
+                </div>
             </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>
+            <div class="mom-topbar-meta d-none d-xl-flex">
+                <div class="mom-topbar-chip"><i class="bi bi-lightning-charge"></i> MOM Admin Panel</div>
+            </div>
         </div>
 
         <nav class="header-nav ms-auto">
@@ -69,13 +745,13 @@
 
                     <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
                         <img src="~/assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-                        <span class="d-none d-md-block dropdown-toggle ps-2">K. Anderson</span>
+                        <span class="d-none d-md-block dropdown-toggle ps-2">@Context.Session.GetString("UserName")</span>
                     </a><!-- End Profile Iamge Icon -->
 
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                         <li class="dropdown-header">
-                            <h6>Kevin Anderson</h6>
-                            <span>Web Designer</span>
+                            <h6>@Context.Session.GetString("UserName")</h6>
+                            <span>Admin</span>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
@@ -112,7 +788,7 @@
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center" href="#">
+                            <a class="dropdown-item d-flex align-items-center" asp-controller="Auth" asp-action="Logout">
                                 <i class="bi bi-box-arrow-right"></i>
                                 <span>Sign Out</span>
                             </a>
@@ -130,56 +806,71 @@
         <ul class="sidebar-nav" id="sidebar-nav">
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Dashboard" asp-action="Dashboard">
+                <a class="@NavClass("DashBoard", "DashBoard")" asp-controller="Dashboard" asp-action="Dashboard">
                     <i class="bi bi-grid"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="Meetings" asp-action="MeetingsList">
-                    <i class="bi bi-calendar-event"></i>
-                    <span>Meetings</span>
-                </a>
-            </li>
+            <li class="nav-heading">MASTER DATA</li>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Department" asp-action="DepartmentList">
-                    <i class="bi bi-building"></i>
-                    <span>Department</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="MeetingsType" asp-action="MeetingsTypeList">
+                <a class="@NavClass("MeetingsType")" asp-controller="MeetingsType" asp-action="MeetingsTypeList">
                     <i class="bi bi-tags"></i>
                     <span>Meeting Types</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="Staff" asp-action="StaffList">
-                    <i class="bi bi-people"></i>
-                    <span>Staff</span>
+                <a class="@NavClass("Department")" asp-controller="Department" asp-action="DepartmentList">
+                    <i class="bi bi-building"></i>
+                    <span>Departments</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" asp-controller="MeetingMember" asp-action="MeetingMemberList">
-                    <i class="bi bi-person-check"></i>
-                    <span>Meeting Member</span>
-                </a>
-            </li>
-
-
-            <li class="nav-item">
-                <a class="nav-link" asp-controller="MeetingVenue" asp-action="MeetingVenueList">
+                <a class="@NavClass("MeetingVenue")" asp-controller="MeetingVenue" asp-action="MeetingVenueList">
                     <i class="bi bi-geo-alt"></i>
-                    <span>Meeting Venue</span>
+                    <span>Venues</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="@NavClass("Staff")" asp-controller="Staff" asp-action="StaffList">
+                    <i class="bi bi-people"></i>
+                    <span>Staff Members</span>
+                </a>
+            </li>
+
+            <li class="nav-heading">MEETINGS</li>
+
+            <li class="nav-item">
+                <a class="@NavClass("Meetings", "MeetingsList")" asp-controller="Meetings" asp-action="MeetingsList">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>All Meetings</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="@NavClass("Meetings", "MeetingsAddEdit")" asp-controller="Meetings" asp-action="MeetingsAddEdit">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Schedule Meeting</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="@NavClass("MeetingMember")" asp-controller="MeetingMember" asp-action="MeetingMemberList">
+                    <i class="bi bi-person-check"></i>
+                    <span>Attendance</span>
                 </a>
             </li>
 
         </ul>
+
+        <div class="mom-sidebar-foot">
+            <div class="fw-bold mb-1"><i class="bi bi-stars me-2"></i>Meeting Workspace</div>
+            <div class="small">Manage meetings, staff, attendance and reports from one place.</div>
+        </div>
 
     </aside>
     <!-- End Sidebar -->
@@ -204,33 +895,43 @@
     </a>
 
 
-    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade mom-confirm-modal" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirm Delete</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="deleteConfirmText">Sure to delete this record?</div>
+                <div class="modal-body">
+                    <div class="mom-confirm-icon mom-delete-icon">
+                        <i class="bi bi-trash3-fill"></i>
+                    </div>
+                    <div class="mom-confirm-title">Delete Record?</div>
+                    <p class="mom-confirm-text" id="deleteConfirmText">Sure to delete this record?</p>
+                </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+                    <button type="button" class="btn btn-light border mom-confirm-btn" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-danger mom-confirm-btn" id="confirmDeleteBtn">Yes, Delete</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="updateConfirmModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <div class="modal fade mom-confirm-modal" id="updateConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirm Update</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="updateConfirmText">Sure to update this record?</div>
+                <div class="modal-body">
+                    <div class="mom-confirm-icon mom-update-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div class="mom-confirm-title">Update Record?</div>
+                    <p class="mom-confirm-text" id="updateConfirmText">Sure to update this record?</p>
+                </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-primary" id="confirmUpdateBtn">Yes, Update</button>
+                    <button type="button" class="btn btn-light border mom-confirm-btn" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-primary mom-confirm-btn" id="confirmUpdateBtn">Yes, Update</button>
                 </div>
             </div>
         </div>
@@ -316,10 +1017,12 @@
                 });
             }
         })();
-    </script>`r`n    @RenderSection("Scripts", required: false)
+    </script>
+    @RenderSection("Scripts", required: false)
 
 </body>
 </html>
+
 
 
 

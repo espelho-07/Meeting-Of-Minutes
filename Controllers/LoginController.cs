@@ -7,11 +7,12 @@ namespace Meeting_Of_Minutes.Controllers
         #region Actions
         public IActionResult Login()
         {
-            return View();
+            return RedirectToAction("Login", "Auth");
         }
         #endregion
     }
 }
+
 
 
 

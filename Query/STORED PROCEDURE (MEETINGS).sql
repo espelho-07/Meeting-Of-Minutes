@@ -6,6 +6,9 @@
 -- 1 -> SelectAll Procedure [For List Page]
 GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_Meetings_SelectAll]
+(
+    @searchtext NVARCHAR(100) = NULL
+)
 AS
 BEGIN
     SELECT
@@ -28,6 +31,11 @@ BEGIN
         ON [dbo].[MOM_MeetingVenue].[MeetingVenueID] = [dbo].[MOM_Meetings].[MeetingVenueID]
     INNER JOIN [dbo].[MOM_Department]
         ON [dbo].[MOM_Department].[DepartmentID] = [dbo].[MOM_Meetings].[DepartmentID]
+    WHERE @searchtext IS NULL
+       OR [dbo].[MOM_MeetingType].[MeetingTypeName] LIKE '%' + @searchtext + '%'
+       OR [dbo].[MOM_Department].[DepartmentName] LIKE '%' + @searchtext + '%'
+       OR [dbo].[MOM_MeetingVenue].[MeetingVenueName] LIKE '%' + @searchtext + '%'
+       OR [dbo].[MOM_Meetings].[MeetingDescription] LIKE '%' + @searchtext + '%'
     ORDER BY [dbo].[MOM_Meetings].[MeetingID] DESC;
 END;
 GO
@@ -143,33 +151,6 @@ BEGIN
     WHERE [dbo].[MOM_Meetings].[MeetingID] = @MeetingID;
 END;
 GO
-
-
-INSERT INTO [dbo].[MOM_Meetings]
-(
-    MeetingDate,
-    MeetingTypeID,
-    MeetingVenueID,
-    DepartmentID,
-    MeetingDescription,
-    DocumentPath,
-    IsCancelled,
-    CancellationDateTime,
-    CancellationReason,
-    Created,
-    Modified
-)
-VALUES
-('2026-02-01', 1, 1, 1, 'IT Planning Meeting', '/docs/it.pdf', 0, NULL, NULL, GETDATE(), GETDATE()),
-
-('2026-02-02', 2, 2, 2, 'HR External Discussion', '/docs/hr.pdf', 0, NULL, NULL, GETDATE(), GETDATE()),
-
-('2026-02-03', 3, 3, 3, 'Finance Review Meeting', '/docs/finance.pdf', 1, GETDATE(), 'Budget Issue', GETDATE(), GETDATE()),
-
-('2026-02-04', 4, 4, 4, 'Marketing Strategy Planning', '/docs/marketing.pdf', 0, NULL, NULL, GETDATE(), GETDATE()),
-
-('2026-02-05', 5, 5, 5, 'Operations Emergency Meeting', '/docs/ops.pdf', 1, GETDATE(), 'Urgent Issue', GETDATE(), GETDATE());
-
 
 -- DROPDOWN LISTS
 go

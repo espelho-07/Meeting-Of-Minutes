@@ -2,13 +2,37 @@ using Meeting_Of_Minutes.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using ClosedXML.Excel;
 
 namespace Meeting_Of_Minutes.Controllers
 {
     public class MeetingsTypeController : Controller
     {
         #region Actions
+        [HttpGet]
         public IActionResult MeetingsTypeList()
+        {
+            List<MeetingTypeModel> meetingTypesList = GetAllMeetingTypes(null);
+            return View(meetingTypesList);
+        }
+
+        [HttpPost]
+        public IActionResult MeetingsTypeList(IFormCollection formdata)
+        {
+            string searchtext = formdata["searchtext"].ToString();
+
+            if (string.IsNullOrWhiteSpace(searchtext))
+            {
+                searchtext = null;
+            }
+
+            ViewBag.searchtext = searchtext;
+
+            List<MeetingTypeModel> meetingTypesList = GetAllMeetingTypes(searchtext);
+            return View(meetingTypesList);
+        }
+
+        public List<MeetingTypeModel> GetAllMeetingTypes(string searchtext)
         {
             List<MeetingTypeModel> meetingTypesList = new List<MeetingTypeModel>();
 
@@ -17,6 +41,15 @@ namespace Meeting_Of_Minutes.Controllers
             cmd.Connection = con;
             cmd.CommandText = "PR_MeetingType_SelectAll";
             cmd.CommandType = CommandType.StoredProcedure;
+
+            if (searchtext != null)
+            {
+                cmd.Parameters.AddWithValue("@searchtext", searchtext);
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
+            }
 
             con.Open();
             SqlDataReader reader = cmd.ExecuteReader();
@@ -35,7 +68,7 @@ namespace Meeting_Of_Minutes.Controllers
             reader.Close();
             con.Close();
 
-            return View(meetingTypesList);
+            return meetingTypesList;
         }
 
 
@@ -69,6 +102,61 @@ namespace Meeting_Of_Minutes.Controllers
             }
 
             return View(model);
+        }
+
+        public IActionResult ExportToExcel()
+        {
+            try
+            {
+                DataTable dt = new DataTable();
+
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "PR_MeetingType_SelectAll";
+                cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+                dr.Close();
+                con.Close();
+
+                using (XLWorkbook workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("MeetingTypes");
+
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = dt.Columns[i].ColumnName;
+                        worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    }
+
+                    for (int row = 0; row < dt.Rows.Count; row++)
+                    {
+                        for (int col = 0; col < dt.Columns.Count; col++)
+                        {
+                            worksheet.Cell(row + 2, col + 1).Value = dt.Rows[row][col]?.ToString();
+                        }
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        byte[] content = stream.ToArray();
+
+                        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MeetingTypeList.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                return RedirectToAction("MeetingsTypeList");
+            }
         }
 
 
@@ -189,6 +277,7 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                TempData["SuccessMessage"] = "Meeting type deleted successfully.";
             }
             catch
             {

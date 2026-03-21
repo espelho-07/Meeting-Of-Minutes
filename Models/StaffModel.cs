@@ -10,12 +10,14 @@ namespace Meeting_Of_Minutes.Models
 
         public int DepartmentID { get; set; }
 
+        public string? DepartmentName { get; set; }
+
         [Required]
         [StringLength(50, ErrorMessage = "Staff Name Can't Exceed Than 50 Characters")]
         public string? StaffName { get; set; }
 
         [Required]
-        [RegularExpression(@"^\(?([0-9]{2})[-. ]?([0-9]{4})[-. ]?([0-9]{3})[-. ]?([0-9]{3})$", ErrorMessage = "Not a valid Phone number")]
+        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter valid 10 digit mobile number")]
         public string? MobileNo { get; set; }
 
         [Required]

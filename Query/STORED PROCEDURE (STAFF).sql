@@ -6,19 +6,29 @@
 -- 1 -> SelectAll Procedure [For List Page]
 GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_Staff_SelectAll]
+(
+    @searchtext NVARCHAR(100) = NULL
+)
 AS
 BEGIN
     SELECT
-        [dbo].[MOM_Staff].[StaffID],
-        [dbo].[MOM_Staff].[DepartmentID],
-        [dbo].[MOM_Staff].[StaffName],
-        [dbo].[MOM_Staff].[MobileNo],
-        [dbo].[MOM_Staff].[EmailAddress],
-        [dbo].[MOM_Staff].[Remarks],
-        [dbo].[MOM_Staff].[Created],
-        [dbo].[MOM_Staff].[Modified]
-    FROM [dbo].[MOM_Staff]
-    ORDER BY [dbo].[MOM_Staff].[StaffID] DESC
+        s.[StaffID],
+        s.[DepartmentID],
+        d.[DepartmentName],
+        s.[StaffName],
+        s.[MobileNo],
+        s.[EmailAddress],
+        s.[Remarks],
+        s.[Created],
+        s.[Modified]
+    FROM [dbo].[MOM_Staff] s
+    INNER JOIN [dbo].[MOM_Department] d
+        ON s.[DepartmentID] = d.[DepartmentID]
+    WHERE @searchtext IS NULL
+       OR s.[StaffName] LIKE '%' + @searchtext + '%'
+       OR d.[DepartmentName] LIKE '%' + @searchtext + '%'
+       OR s.[EmailAddress] LIKE '%' + @searchtext + '%'
+    ORDER BY s.[StaffID] DESC
 END;
 GO
 
@@ -118,21 +128,4 @@ BEGIN
     WHERE [dbo].[MOM_Staff].[StaffID] = @StaffID;
 END;
 GO
-
-INSERT INTO [dbo].[MOM_Staff]
-(
-    DepartmentID,
-    StaffName,
-    MobileNo,
-    EmailAddress,
-    Remarks,
-    Created,
-    Modified
-)
-VALUES
-(1, 'Rahul Sharma', '9876543210', 'rahul.sharma@gmail.com', 'HR Staff', GETDATE(), GETDATE()),
-(2, 'Priya Patel', '9123456780', 'priya.patel@gmail.com', 'Finance Staff', GETDATE(), GETDATE()),
-(3, 'Amit Verma', '9988776655', 'amit.verma@gmail.com', 'IT Support', GETDATE(), GETDATE()),
-(1, 'Neha Singh', '9090909090', 'neha.singh@gmail.com', 'Recruiter', GETDATE(), GETDATE()),
-(4, 'Suresh Mehta', '9012345678', 'suresh.mehta@gmail.com', 'Admin Staff', GETDATE(), GETDATE());
 

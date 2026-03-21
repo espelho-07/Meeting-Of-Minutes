@@ -1,0 +1,206 @@
+﻿@model demo.Models.MeetingsModel
+
+@{
+    Layout = "_Layout";
+}
+
+<div class="container">
+    <h3>
+        @(Model != null && Model.MeetingID > 0
+                ? "Edit Meeting"
+                : "Schedule New Meeting")
+    </h3>
+
+    <div class="d-flex justify-content-center p-1">
+        <div class="cardtable rounded-4">
+
+            <header class="tableheader rounded-top-4 p-3">
+                <span><i class="bi bi-calendar-plus"></i></span>
+                @(Model != null && Model.MeetingID > 0
+                                ? "Edit Meeting"
+                                : "Schedule New Meeting")
+            </header>
+
+            <form asp-action="Save"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="p-4">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="MeetingID" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                 <div class="row">
+                    <div class="col">
+                        <label class="mb-2">
+                            <span class="text-danger">*</span> Meeting Name
+                        </label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input asp-for="MeetingName"
+                                   class="form-control"
+                                   placeholder="Enter meeting name" />
+                        </div>
+                        <span asp-validation-for="MeetingName"
+                              class="text-danger"></span>
+                    </div>
+                 </div>
+
+                <!-- Row 1 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="mb-2">Meeting Type</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-tag"></i>
+                            </span>
+                            <select asp-for="MeetingTypeID"
+                                    asp-items="ViewBag.MeetingTypeList"
+                                    class="form-select">
+                                <option value="">-- Select Meeting Type --</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="MeetingTypeID"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="mb-2">Department</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-building"></i>
+                            </span>
+                            <select asp-for="DepartmentID"
+                                    asp-items="ViewBag.DepartmentList"
+                                    class="form-select">
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="DepartmentID"
+                              class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="mb-2">Venue</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-geo-alt"></i>
+                            </span>
+                            <select asp-for="MeetingVenueID"
+                                    asp-items="ViewBag.MeetingVenueList"
+                                    class="form-select">
+                                <option value="">-- Select Venue --</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="MeetingVenueID"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">
+                            Meeting Date & Time
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-calendar text-secondary"></i>
+                            </span>
+                            <input asp-for="MeetingDate"
+                                   type="datetime-local"
+                                   class="form-control" />
+                        </div>
+                        <span asp-validation-for="MeetingDate"
+                              class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="mb-2">Meeting Description</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-chat-text"></i>
+                        </span>
+                        <textarea asp-for="MeetingDescription"
+                                  rows="4"
+                                  placeholder="Enter meeting description and agenda"
+                                  class="form-control"></textarea>
+                    </div>
+                    <span asp-validation-for="MeetingDescription"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- File Upload -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Meeting Document (Optional)
+                    </label>
+                    <input asp-for="DocumentPath"
+                           type="text"
+                           placeholder="Enter document path"
+                           class="form-control" />
+                    <span asp-validation-for="DocumentPath"
+                          class="text-danger"></span>
+
+                    <label class="text-secondary">
+                        Upload agenda/minutes (PDF, DOC, DOCX, TXT - Max 5MB)
+                    </label>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mb-5">
+                    <button type="submit"
+                            class="btn btn-primary float-end">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Save
+                    </button>
+
+                    <a asp-controller="Meeting"
+                       asp-action="MeetingList"
+                       class="btn btn-white float-end me-2">
+                        <span class="me-1">&#x2190;</span>
+                        Back to Meetings
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    a {
+        text-decoration: none;
+    }
+
+    .bg-theme {
+        background: linear-gradient(90deg, #4e54c8, #b700ff);
+    }
+
+    .tableheader {
+        background: linear-gradient(90deg, #4e54c8, #b700ff);
+        color: white;
+    }
+
+    .cardtable {
+        box-shadow: 10px 10px 50px #4e54c8;
+        width: 100%;
+    }
+
+    .bi {
+        border-radius: 5px;
+        padding: 3px;
+        cursor: pointer;
+    }
+</style>

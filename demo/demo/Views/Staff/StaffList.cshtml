@@ -1,0 +1,138 @@
+﻿@model List<StaffModel>
+@{
+    int sr_no = 1;
+}
+
+<div class="pagetitle">
+    <h1>Staff Table</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Staff</a></li>
+            <li class="breadcrumb-item">Tables</li>
+            <li class="breadcrumb-item active">Data</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+<div class="cardtable table-responsive p-4 rounded-4 mb-5">
+    <form class="mb-3" asp-action="StaffList" asp-controller="Staff" method="post">
+        <input class="me-2 p-2 rounded-pill text-center" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="search here..." />
+        <button class="btn btn-outline-success me-2" type="submit"><span><i class="bi bi-search me-1"></i>Search</span></button>
+        <a href="@Url.Action("StaffList", "Staff")" class="btn btn-outline-primary">Reset</a>
+    </form>
+    @if (Model != null && Model.Count > 0)
+    {
+        <table class="table border border-3 border-dark text-center">
+            <header class="tableheader p-3 rounded-top-4">
+                Staff
+                <a asp-controller="Staff" asp-action="StaffAddEdit">
+                    <button class="bg-primary float-end rounded-pill text-white border-0 ps-2 pe-2">
+                        <i class="bi bi-plus-circle"></i> Add Staff
+                    </button>
+                </a>
+            </header>
+            <thead>
+                <tr>
+                    <th class="text-center">Staff Name</th>
+                    <th class="text-center">Department Name</th>
+                    <th class="text-center">Mobile No</th>
+                    <th class="text-center">Email Address</th>
+                    <th class="text-center">Created</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var staff in Model)
+                {
+                    <tr>
+                        <td>@staff.StaffName</td>
+                        <td>@staff.DepartmentName</td>
+                        <td>@staff.MobileNo</td>
+                        <td>@staff.EmailAddress</td>
+                        <td>@staff.Created</td>
+                        <td>
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteStaff", new { staffid = staff.StaffID })')">
+                                <i class="bi bi-trash3 bg-danger-subtle text-danger"></i>
+                            </a>
+                            <a href="@Url.Action("StaffAddEdit", new { staffid = staff.StaffID})">
+                                <i class="bi bi-pencil bg-warning-subtle text-warning"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No staffs or departments found. Click "Add New Staff" to create one.
+        </div>
+    }
+</div>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This department will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // NEW: Show cancellation message
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Department deletion has been cancelled.',
+                    icon: 'success',
+                    confirmButtonColor: 'green'
+                });
+
+            }
+        });
+    }
+</script>

@@ -5,45 +5,45 @@
     ViewData["Title"] = "Department Add - Meeting Of Minutes";
 }
 
-<div class="pagetitle">
-    <h1>Department Configuration</h1>
+<div class="pagetitle mb-4">
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
-            <li class="breadcrumb-item"><a asp-controller="Department" asp-action="DepartmentList">Department</a></li>
-            <li class="breadcrumb-item active">Add/Edit</li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item"><a asp-controller="Department" asp-action="DepartmentList">Departments</a></li>
+            <li class="breadcrumb-item active">Add Edit</li>
         </ol>
     </nav>
 </div>
 
-<div class="card border-0 shadow-sm col-lg-7 mx-auto" style="border-radius: 15px; margin-top: 3rem;">
-    <div class="card-header border-0 py-3 text-white" style="background: #5a52e0;">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i> Department Details</h6>
+<div class="mom-form-wrap">
+    <div class="mb-4">
+        <h1>@(Model.DepartmentID == 0 ? "Add Department" : "Edit Department")</h1>
+        <p class="mom-page-subtitle">Configure department information</p>
     </div>
 
-    <div class="card-body p-5">
-        <form class="row g-4 js-update-confirm-form" data-id-field="DepartmentID" data-update-message="Sure to update this department?" asp-action="Save" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="DepartmentID" />
-            <div class="col-md-12">
-                <label asp-for="DepartmentName" class="form-label small fw-bold text-muted"></label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-building"></i></span>
-                    <input asp-for="DepartmentName" type="text" class="form-control" placeholder="Enter name (e.g. IT Department)" maxlength="100">
-                </div>
-                <span asp-validation-for="DepartmentName" class="text-danger"></span>
-            </div>
+    <div class="card mom-form-card col-lg-8 mx-auto">
+        <div class="card-header">
+            <h6><i class="bi bi-building me-2"></i> Department Details</h6>
+        </div>
 
-            <div class="col-12 text-end mt-5 border-top pt-4">
-                <a asp-action="DepartmentList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;">
-                    <i class="bi bi-save me-2"></i> Save Changes
-                </button>
-            </div>
-        </form>
+        <div class="card-body">
+            <form class="row g-4 js-update-confirm-form" data-id-field="DepartmentID" data-update-message="Sure to update this department?" asp-action="Save" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="DepartmentID" />
+                <div class="col-md-12">
+                    <label asp-for="DepartmentName" class="form-label small fw-bold text-muted"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                        <input asp-for="DepartmentName" type="text" class="form-control" placeholder="Enter department name" maxlength="100">
+                    </div>
+                    <span asp-validation-for="DepartmentName" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 mom-form-actions">
+                    <a asp-action="DepartmentList" class="btn btn-light px-4">Back to List</a>
+                    <button type="submit" class="btn btn-primary px-5"><i class="bi bi-check-circle me-2"></i>Save Department</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
-
-
-

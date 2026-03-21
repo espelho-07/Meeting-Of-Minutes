@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using ClosedXML.Excel;
 
 namespace Meeting_Of_Minutes.Controllers
 {
@@ -64,6 +65,8 @@ namespace Meeting_Of_Minutes.Controllers
                 model.MeetingMemberID = Convert.ToInt32(reader["MeetingMemberID"]);
                 model.MeetingID = Convert.ToInt32(reader["MeetingID"]);
                 model.StaffID = Convert.ToInt32(reader["StaffID"]);
+                model.MeetingDescription = reader["MeetingDescription"].ToString();
+                model.StaffName = reader["StaffName"].ToString();
                 model.IsPresent = Convert.ToBoolean(reader["IsPresent"]);
                 model.Remarks = reader["Remarks"].ToString();
                 list.Add(model);
@@ -73,6 +76,60 @@ namespace Meeting_Of_Minutes.Controllers
             con.Close();
 
             return View(list);
+        }
+
+        public IActionResult ExportToExcel()
+        {
+            try
+            {
+                DataTable dt = new DataTable();
+
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "PR_MeetingMember_SelectAll";
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+                dr.Close();
+                con.Close();
+
+                using (XLWorkbook workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("MeetingMembers");
+
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = dt.Columns[i].ColumnName;
+                        worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    }
+
+                    for (int row = 0; row < dt.Rows.Count; row++)
+                    {
+                        for (int col = 0; col < dt.Columns.Count; col++)
+                        {
+                            worksheet.Cell(row + 2, col + 1).Value = dt.Rows[row][col]?.ToString();
+                        }
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        byte[] content = stream.ToArray();
+
+                        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MeetingMemberList.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                return RedirectToAction("MeetingMemberList");
+            }
         }
 
         [HttpPost]
@@ -141,16 +198,24 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int MeetingMemberID)
         {
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = con;
-            cmd.CommandText = "PR_MeetingMember_DeleteByPK";
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.AddWithValue("@MeetingMemberID", MeetingMemberID);
+            try
+            {
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandText = "PR_MeetingMember_DeleteByPK";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingMemberID", MeetingMemberID);
 
-            con.Open();
-            cmd.ExecuteNonQuery();
-            con.Close();
+                con.Open();
+                cmd.ExecuteNonQuery();
+                con.Close();
+                TempData["SuccessMessage"] = "Meeting member deleted successfully.";
+            }
+            catch
+            {
+                TempData["DeleteError"] = "Delete failed.";
+            }
 
             return RedirectToAction("MeetingMemberList");
         }
@@ -184,7 +249,7 @@ namespace Meeting_Of_Minutes.Controllers
                     list.Add(new SelectListItem
                     {
                         Value = value,
-                        Text = "Meeting " + value
+                        Text = reader["MeetingDescription"].ToString()
                     });
                 }
             }

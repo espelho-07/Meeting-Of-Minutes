@@ -5,51 +5,47 @@
     ViewData["Title"] = "Meeting Type Configuration - Meeting Of Minutes";
 }
 
-<div class="pagetitle">
-    <h1>Meeting Type Edit</h1>
+<div class="pagetitle mb-4">
     <nav>
         <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
             <li class="breadcrumb-item"><a asp-controller="MeetingsType" asp-action="MeetingsTypeList">Meeting Type</a></li>
             <li class="breadcrumb-item active">Add Edit</li>
         </ol>
     </nav>
 </div>
 
-<div class="card border-0 shadow-sm col-lg-8 mx-auto mt-4" style="border-radius: 15px;">
-    <div class="card-header border-0 py-3 text-white" style="background: linear-gradient(45deg, #5a52e0, #8965e0);">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-tags-fill me-2"></i> Category Details</h6>
+<div class="mom-form-wrap">
+    <div class="mb-4">
+        <h1>@(Model.MeetingTypeID == 0 ? "Add New Meeting Type" : "Edit Meeting Type")</h1>
+        <p class="mom-page-subtitle">Configure meeting category information</p>
     </div>
 
-    <div class="card-body p-5">
-        <form class="row g-4 js-update-confirm-form" data-id-field="MeetingTypeID" data-update-message="Sure to update this meeting type?" asp-action="Save" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="MeetingTypeID" />
-            <div class="col-md-12">
-                <label class="form-label small fw-bold text-muted">Meeting Type Name</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-bookmark-star"></i></span>
-                    <input asp-for="MeetingTypeName" type="text" class="form-control border-start-0 ps-0 shadow-none" maxlength="100" >
-                </div>
-                <span asp-validation-for="MeetingTypeName" class=" text-danger"></span>
-            </div>
+    <div class="card mom-form-card col-lg-8 mx-auto">
+        <div class="card-header">
+            <h6><i class="bi bi-tags-fill me-2"></i> Category Details</h6>
+        </div>
 
-            <div class="col-md-12">
-                <label class="form-label small fw-bold text-muted">Remarks</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-chat-left-dots"></i></span>
-                    <input asp-for="Remarks" type="text" class="form-control border-start-0 ps-0 shadow-none" maxlength="100">
+        <div class="card-body">
+            <form class="row g-4 js-update-confirm-form" data-id-field="MeetingTypeID" data-update-message="Sure to update this meeting type?" asp-action="Save" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MeetingTypeID" />
+                <div class="col-md-12">
+                    <label class="form-label small fw-bold text-muted">Meeting Type Name</label>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-bookmark-star"></i></span><input asp-for="MeetingTypeName" type="text" class="form-control" maxlength="100"></div>
+                    <span asp-validation-for="MeetingTypeName" class=" text-danger"></span>
                 </div>
-            </div>
 
-            <div class="text-end mt-5 border-top pt-4">
-                <a asp-action="MeetingsTypeList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;"><i class="bi bi-check2-circle me-2"></i> Save Type</button>
-            </div>
-        </form>
+                <div class="col-md-12">
+                    <label class="form-label small fw-bold text-muted">Remarks</label>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-chat-left-dots"></i></span><input asp-for="Remarks" type="text" class="form-control" maxlength="100"></div>
+                </div>
+
+                <div class="col-12 mom-form-actions">
+                    <a asp-action="MeetingsTypeList" class="btn btn-light px-4">Back to List</a>
+                    <button type="submit" class="btn btn-primary px-5"><i class="bi bi-check2-circle me-2"></i> Save Type</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
-
-
-

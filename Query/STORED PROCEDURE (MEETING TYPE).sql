@@ -6,6 +6,9 @@
 -- 1 -> SelectAll Procedure [For List Page]
 GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_MeetingType_SelectAll]
+(
+    @searchtext NVARCHAR(100) = NULL
+)
 AS
 BEGIN
     SELECT
@@ -15,6 +18,9 @@ BEGIN
         [dbo].[MOM_MeetingType].[Created],
         [dbo].[MOM_MeetingType].[Modified]
     FROM [dbo].[MOM_MeetingType]
+    WHERE @searchtext IS NULL
+       OR [dbo].[MOM_MeetingType].[MeetingTypeName] LIKE '%' + @searchtext + '%'
+       OR [dbo].[MOM_MeetingType].[Remarks] LIKE '%' + @searchtext + '%'
     ORDER BY [dbo].[MOM_MeetingType].[MeetingTypeID] DESC;
 END;
 GO

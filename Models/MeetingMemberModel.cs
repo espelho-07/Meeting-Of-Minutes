@@ -13,6 +13,10 @@ namespace Meeting_Of_Minutes.Models
         [Required]
         public int StaffID { get; set; }
 
+        public string? StaffName { get; set; }
+
+        public string? MeetingDescription { get; set; }
+
         [Required]
         public bool IsPresent { get; set; }
 

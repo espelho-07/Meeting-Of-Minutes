@@ -1,0 +1,144 @@
+﻿@model List<DepartmentModel>
+
+<div class="pagetitle">
+    <h1>Department Table</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a>Department</a></li>
+            <li class="breadcrumb-item">Tables</li>
+            <li class="breadcrumb-item active">Data</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+
+<div class="cardtable table-responsive p-4 rounded-4">
+    <form class="mb-3" asp-action="DepartmentList" asp-controller="Department" method="post">
+        <input class="me-2 p-2 rounded-pill text-center" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="search here..." />
+        <button class="btn btn-outline-success me-2" type="submit"><span><i class="bi bi-search me-1"></i>Search</span></button>
+        <a href="@Url.Action("DepartmentList", "Department")" class="btn btn-outline-primary">Reset</a>
+    </form>
+    <header class="tableheader p-3 rounded-top-4">
+        Department
+        <button class="bg-primary float-end rounded-pill text-white border-0 ps-2 pe-2">
+            <a class="text-white" asp-controller="Department" asp-action="DepartmentAddEdit">
+                <i class="bi bi-plus-circle"></i> Add Department
+            </a>
+        </button>
+    </header>
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <table class="table border border-3 border-dark text-center">
+            <thead>
+                <tr>
+                    <th class="text-center">Department Name</th>
+                    <th class="text-center">Staff Count</th>
+                    <th class="text-center">Meeting Count</th>
+                    <th class="text-center">Created</th>
+                    <th class="text-center">Modified</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var department in Model)
+                {
+                    <tr>
+                        <td>@department.DepartmentName</td>
+                        <td><span class="badge rounded-pill bg-info"><i class="bi bi-person me-1"></i>@department.StaffCount</span></td>
+                        <td><span class="badge rounded-pill bg-warning"><i class="bi bi-calendar-event me-1"></i>@department.MeetingCount</span></td>
+                        @* <td>@department.MeetingCount</td> *@
+                        <td>@department.Created.ToString("dd-MM-yyyy")</td>
+                        <td>@department.Modified.ToString("dd-MM-yyyy")</td>
+                        <td>
+                            <!-- VIEW -->
+                            <a href="@Url.Action("DepartmentDetailed", new { deptid = department.DepartmentID })">
+                                <i class="bi bi-eye bg-info-subtle text-info"></i>
+                            </a>
+                            <!-- EDIT -->
+                            <a href="@Url.Action("DepartmentAddEdit", new { deptid = department.DepartmentID })">
+                                <i class="bi bi-pencil bg-warning-subtle text-warning"></i>
+                            </a>
+                            <!-- DELETE -->
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteDepartment", new { deptid = department.DepartmentID })')">
+                                <i class="bi bi-trash3 bg-danger-subtle text-danger"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No departments found. Click "Add New Department" to create one.
+        </div>
+    }
+</div>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This department will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // NEW: Show cancellation message
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Department deletion has been cancelled.',
+                    icon: 'success',
+                    confirmButtonColor: 'green'
+                });
+
+            }
+        });
+    }
+</script>

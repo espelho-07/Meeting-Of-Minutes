@@ -5,17 +5,22 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Meeting_Of_Minutes</RootNamespace>
-    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**;demo\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="artifacts\**" />
+    <Compile Remove="demo\**" />
     <Content Remove="artifacts\**" />
+    <Content Remove="demo\**" />
     <None Remove="artifacts\**" />
+    <None Remove="demo\**" />
     <EmbeddedResource Remove="artifacts\**" />
+    <EmbeddedResource Remove="demo\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>

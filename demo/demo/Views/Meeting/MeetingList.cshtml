@@ -1,0 +1,152 @@
+﻿@model List<MeetingsModel>
+@{
+    int sr_no = 1;
+}
+
+<div class="pagetitle">
+    <h1>Meetings Table</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Meetings</a></li>
+            <li class="breadcrumb-item">Tables</li>
+            <li class="breadcrumb-item active">Data</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+
+<div class="cardtable table-responsive p-4 rounded-4 mb-5">
+    @if (Model != null && Model.Count > 0)
+    {
+        <table class="table border border-3 border-dark text-center">
+            <header class="tableheader p-3 rounded-top-4">
+                Meetings
+                <button class="bg-primary float-end rounded-pill text-white border-0 ps-2 pe-2">
+                    <a asp-controller="Meeting" asp-action="MeetingAddEdit" class="text-white">
+                        <i class="bi bi-plus-circle"></i> Add Meetings
+                    </a>
+                </button>
+            </header>
+            <thead>
+
+                <tr>
+                    <th class="text-center align-middle">Meeting Date</th>
+                    <th class="text-center align-middle">Meeting Type</th>
+                    <th class="text-center align-middle">Description</th>
+                    <th class="text-center align-middle">Department</th>
+                    <th class="text-center align-middle">Meeting Venue</th>
+                    <th class="text-center align-middle">Status</th>
+                    <th class="text-center align-middle">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var meeting in Model)
+                {
+                    <tr>
+                        <td><span class="fw-semibold">@meeting.MeetingDate.ToString("MMM dd - yyyy")</span>
+                            <br/>
+                            <span>@meeting.MeetingDate.ToString("hh:mm tt")</span>
+                        </td>
+                        <td><span class="badge rounded-pill bg-info">@meeting.MeetingTypeName</span></td>
+                        <td>@meeting.MeetingDescription</td>
+                        <td>@meeting.DepartmentName</td>
+                        <td>@meeting.MeetingVenueName</td>
+                        <td>
+                            @if (meeting.MeetingDate >= DateTime.Now)
+                            {
+                                <span class="badge bg-warning">Upcoming</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Completed</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteMeeting", new { meetingid = meeting.MeetingID })')">
+                                <i class="bi bi-trash3 bg-danger-subtle text-danger"></i>
+                            </a>
+                            <a href="@Url.Action("MeetingAddEdit", new { meetingid = meeting.MeetingID })">
+                                <i class="bi bi-pencil bg-warning-subtle text-warning"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    sr_no++;
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No meetings found. Click "Add New Meeting" to create one.
+        </div>
+    }
+</div>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This meeting will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            }else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // NEW: Show cancellation message
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Department deletion has been cancelled.',
+                    icon: 'success',
+                    confirmButtonColor: 'green'
+                });
+
+            }
+        });
+    }
+</script>

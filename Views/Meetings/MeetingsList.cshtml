@@ -10,37 +10,49 @@
 }
 
 <div class="pagetitle mb-4">
-    <h1>Meetings</h1>
     <nav>
         <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
             <li class="breadcrumb-item active">Meetings</li>
         </ol>
     </nav>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="mom-page-header">
     <div>
-        <h5 class="fw-bold mb-1">Meetings Management</h5>
-        <p class="text-muted mb-0">Schedule and manage organizational meetings</p>
+        <h1>Meetings</h1>
+        <p class="mom-page-subtitle">Schedule and manage organizational meetings</p>
     </div>
 
-    <div class="d-flex gap-2">
-        <a asp-action="MeetingsAddEdit" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background:#5a52e0;border:none;">
-            <i class="bi bi-plus-circle me-2"></i> Schedule Meeting
-        </a>
+    <div class="mom-toolbar">
+        <a asp-action="MeetingsAddEdit" class="btn btn-primary px-4"><i class="bi bi-plus-circle me-2"></i> Schedule Meeting</a>
+        <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-2"></i> Export</a>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm" style="border-radius:15px;">
-    <div class="card-header text-white" style="background:linear-gradient(45deg,#5a52e0,#8965e0)">
-        <i class="bi bi-calendar-event me-2"></i> Scheduled Meetings
+<div class="mom-search-card">
+    <form class="mom-search-form" asp-action="MeetingsList" asp-controller="Meetings" method="post">
+        @Html.AntiForgeryToken()
+        <div class="mom-search-input">
+            <span><i class="bi bi-search"></i></span>
+            <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search meetings..." />
+        </div>
+        <button class="btn btn-primary px-4" type="submit">Search</button>
+        <a href="@Url.Action("MeetingsList", "Meetings")" class="btn btn-light px-4">Clear</a>
+    </form>
+    <div class="mom-stat-chip">Total Records: @Model.Count</div>
+</div>
+
+<div class="card mom-list-card">
+    <div class="card-header">
+        <h6><i class="bi bi-calendar-event"></i> Scheduled Meetings</h6>
     </div>
 
     <div class="card-body p-0">
         <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light small text-uppercase text-muted">
+            <thead>
                 <tr>
+                    <th style="width:44px;"></th>
                     <th class="ps-4">#</th>
                     <th>Date & Time</th>
                     <th>Meeting Type</th>
@@ -56,6 +68,7 @@
                 @foreach (var meeting in Model)
                 {
                     <tr>
+                        <td><input type="checkbox" class="form-check-input" /></td>
                         <td class="ps-4">@SerialNumber</td>
                         <td>@meeting.MeetingDate</td>
                         <td>@meeting.MeetingTypeName</td>
@@ -65,7 +78,7 @@
                         <td>
                             @if (meeting.IsCancelled)
                             {
-                                <span class="badge bg-success">Completed</span>
+                                <span class="badge bg-danger">Cancelled</span>
                             }
                             else if (meeting.MeetingDate > DateTime.Now)
                             {
@@ -73,19 +86,15 @@
                             }
                             else
                             {
-                                <span class="badge bg-warning text-dark">Pending</span>
+                                <span class="badge bg-success">Completed</span>
                             }
                         </td>
                         <td class="text-center">
-                            <a asp-action="MeetingsAddEdit" asp-route-id="@meeting.MeetingID" class="btn btn-sm btn-outline-primary rounded-pill me-1">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
+                            <a asp-action="MeetingsAddEdit" asp-route-id="@meeting.MeetingID" class="mom-icon-btn text-warning me-1"><i class="bi bi-pencil"></i></a>
                             <form asp-action="Delete" method="post" class="d-inline js-delete-form">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="MeetingID" value="@meeting.MeetingID" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
-                                    <i class="bi bi-trash"></i> Delete
-                                </button>
+                                <button type="submit" class="btn btn-sm btn-link mom-icon-btn text-danger p-0"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -95,6 +104,3 @@
         </table>
     </div>
 </div>
-
-
-

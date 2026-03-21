@@ -4,56 +4,106 @@
 @model List<MeetingVenueModel>
 
 @await Html.PartialAsync("_AlertMessages")
-@{
-    int SerialNumber = 1;
-}
 
 <div class="pagetitle mb-4">
-    <h1>Meeting Venues</h1>
-    <p class="text-muted">Manage meeting rooms and virtual meeting locations</p>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item active">Meeting Venues</li>
+        </ol>
+    </nav>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <a asp-action="MeetingVenueAddEdit" class="btn btn-primary rounded-pill px-4" style="background:#5a52e0; border:none;">
-        <i class="bi bi-plus-circle me-1"></i> Add Venue
-    </a>
-</div>
-
-<div class="card border-0 shadow-sm" style="border-radius:15px;overflow:hidden;">
-    <div class="card-header border-0" style="background:linear-gradient(45deg,#5a52e0,#8965e0);padding:12px 20px;">
-        <h6 class="mb-0 fw-bold text-white">Meeting Venue List</h6>
+<div class="mom-page-header">
+    <div>
+        <h1>Meeting Venues</h1>
+        <p class="mom-page-subtitle">Manage meeting rooms and virtual meeting locations</p>
     </div>
-
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-                <tr class="small text-muted text-uppercase">
-                    <th class="ps-4">#</th>
-                    <th>Venue Name</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var v in Model)
-                {
-                    <tr>
-                        <td class="ps-4">@SerialNumber</td>
-                        <td>@v.MeetingVenueName</td>
-                        <td class="text-center">
-                            <a asp-action="MeetingVenueAddEdit" asp-route-id="@v.MeetingVenueID" class="btn btn-sm btn-light border rounded-pill"><i class="bi bi-pencil text-warning"></i></a>
-                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="MeetingVenueID" value="@v.MeetingVenueID" />
-                                <button type="submit" class="btn btn-sm btn-light border rounded-pill"><i class="bi bi-trash text-danger"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    SerialNumber++;
-                }
-            </tbody>
-        </table>
+    <div class="mom-toolbar">
+        <a asp-action="MeetingVenueAddEdit" class="btn btn-primary px-4"><i class="bi bi-plus-circle me-1"></i> Add Venue</a>
+        <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-1"></i> Export</a>
     </div>
 </div>
 
+<div class="mom-search-card">
+    <div class="mom-search-form">
+        <div class="mom-search-input">
+            <span><i class="bi bi-search"></i></span>
+            <input id="venueSearchInput" class="form-control" type="text" placeholder="Search venues..." onkeyup="filterVenueCards()" />
+        </div>
+        <button type="button" class="btn btn-primary px-4" onclick="filterVenueCards()">Search</button>
+        <button type="button" class="btn btn-light px-4" onclick="resetVenueSearch()">Clear</button>
+    </div>
+    <div class="mom-stat-chip">Total Venues: @Model.Count</div>
+</div>
 
+<div class="row g-3" id="venueCardGrid">
+    @foreach (var venue in Model)
+    {
+        <div class="col-lg-4 col-md-6 venue-card-item" data-venue-name="@venue.MeetingVenueName">
+            <div class="card border-0 shadow-sm h-100" style="overflow:hidden;">
+                <div class="card-header d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold fs-5">@venue.MeetingVenueName</div>
+                        <div class="small text-white-50"><i class="bi bi-geo-alt me-1"></i> Venue ID #@venue.MeetingVenueID</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <a asp-action="MeetingVenueAddEdit" asp-route-id="@venue.MeetingVenueID" class="mom-icon-btn text-white" title="Edit"><i class="bi bi-pencil"></i></a>
+                        <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="MeetingVenueID" value="@venue.MeetingVenueID" />
+                            <button type="submit" class="btn btn-link mom-icon-btn text-white p-0" title="Delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
 
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <div class="border rounded-4 text-center p-3 bg-light">
+                                <div class="small text-muted fw-bold">VENUE TYPE</div>
+                                <div class="fs-5 fw-bold text-primary">General</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded-4 text-center p-3 bg-light">
+                                <div class="small text-muted fw-bold">STATUS</div>
+                                <div class="fs-5 fw-bold text-success">Active</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="small text-muted fw-bold">VENUE CODE</div>
+                        <span class="badge bg-light text-dark border">MV-@venue.MeetingVenueID</span>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a asp-controller="Meetings" asp-action="MeetingsAddEdit" class="btn btn-success flex-fill">
+                            <i class="bi bi-plus-circle me-1"></i> Schedule Meeting
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    function filterVenueCards() {
+        var input = document.getElementById("venueSearchInput");
+        var filter = input.value.toUpperCase();
+        var cards = document.querySelectorAll(".venue-card-item");
+
+        cards.forEach(function (card) {
+            var venueName = (card.getAttribute("data-venue-name") || "").toUpperCase();
+            card.style.display = venueName.indexOf(filter) > -1 ? "" : "none";
+        });
+    }
+
+    function resetVenueSearch() {
+        var input = document.getElementById("venueSearchInput");
+        input.value = "";
+        filterVenueCards();
+    }
+</script>

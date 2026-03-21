@@ -6,27 +6,33 @@
 }
 
 <div class="pagetitle mb-4">
-    <h1>Meeting Type Details</h1>
+    <nav>
+        <ol class="breadcrumb flex-nowrap">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item"><a asp-controller="MeetingsType" asp-action="MeetingsTypeList">Meeting Types</a></li>
+            <li class="breadcrumb-item active">Details</li>
+        </ol>
+    </nav>
 </div>
 
-<div class="card border-0 shadow-sm" style="border-radius:16px;">
-    <div class="card-header text-white d-flex justify-content-between align-items-center" style="background:linear-gradient(90deg,#6a5ae0,#7f6ae6);border-radius:16px 16px 0 0;">
-        <div class="fw-semibold"><i class="bi bi-tags me-2"></i> Meeting Type Information</div>
+<div class="card border-0 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6><i class="bi bi-tags me-2"></i> Meeting Type Information</h6>
         <div>
-            <a asp-action="MeetingsTypeAddEdit" asp-route-id="@Model.MeetingTypeID" class="btn btn-sm btn-outline-warning me-2"><i class="bi bi-pencil"></i> Edit</a>
+            <a asp-action="MeetingsTypeAddEdit" asp-route-id="@Model.MeetingTypeID" class="btn btn-sm btn-light me-2"><i class="bi bi-pencil"></i> Edit</a>
             <form asp-action="Delete" method="post" class="d-inline js-delete-form">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="MeetingTypeID" value="@Model.MeetingTypeID" />
-                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
+                <button type="submit" class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i> Delete</button>
             </form>
         </div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body p-4">
         <div class="row gy-4">
             <div class="col-md-6">
                 <div class="text-muted small">Meeting Type ID</div>
-                <div class="fw-bold fs-6">@Model.MeetingTypeID</div>
+                <div class="fw-bold fs-5">@Model.MeetingTypeID</div>
             </div>
 
             <div class="col-md-6">
@@ -41,6 +47,3 @@
         </div>
     </div>
 </div>
-
-
-

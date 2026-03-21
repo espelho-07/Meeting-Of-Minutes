@@ -1,130 +1,119 @@
 @{
     ViewData["Title"] = "Dashboard - Meeting Of Minutes";
+    var recentMeetings = ViewBag.RecentMeetings as List<MeetingsModel>;
 }
 
-<div class="pagetitle d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="fw-bold mb-0" style="color: #012970;">Good Morning, Mom! ??</h1>
-        <p class="text-muted small mb-0">
-            Today is @DateTime.Now.ToString("dd MMM yyyy") |
-            <span class="badge rounded-pill bg-primary-light text-primary px-3">
-                <i class="bi bi-clock-history"></i> @DateTime.Now.ToString("hh:mm tt")
-            </span>
-        </p>
-    </div>
-    <div class="d-flex gap-2">
-        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="location.reload();">
-            <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
-        <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
-            <i class="bi bi-file-earmark-arrow-down"></i> Export Report
-        </button>
-    </div>
+@await Html.PartialAsync("_AlertMessages")
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb flex-nowrap">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+    </nav>
 </div>
 
 <section class="section dashboard">
+    <div class="alert alert-success border-0 mb-4" style="border-left:4px solid #16c47f;background:linear-gradient(90deg,#ddfae8,#d5f7e2);border-radius:16px;">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="fw-bold text-success"><i class="bi bi-check-circle-fill me-2"></i>Welcome back, @Context.Session.GetString("UserName")!</div>
+            <button type="button" class="btn-close" onclick="this.closest('.alert').remove()"></button>
+        </div>
+    </div>
+
+    <div class="mom-page-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p class="mom-page-subtitle">Meeting management overview and analytics</p>
+        </div>
+        <div class="mom-toolbar">
+            <button class="btn btn-light" onclick="location.reload();"><i class="bi bi-arrow-clockwise me-1 text-primary"></i> Refresh</button>
+            <button class="btn btn-success"><i class="bi bi-download me-1"></i> Export Report</button>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card info-card border-0 shadow-sm" style="border-radius: 24px; background: linear-gradient(135deg, #f0f4ff 0%, #eef2fbee 100%); overflow: hidden;">
+            <div class="card border-0" style="border-left:4px solid #5f58f4;background: linear-gradient(135deg, #f1f3ff 0%, #eef2ff 100%);">
                 <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #5a52e0; color: white;">
-                        <i class="bi bi-calendar-event fs-4"></i>
-                    </div>
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #5a52e0; color: white;"><i class="bi bi-calendar-event fs-4"></i></div>
                     <h2 class="fw-bold mb-1" style="font-size: 2.2rem; color: #1e2125;">14</h2>
-                    <p class="text-uppercase fw-bold mb-3 small text-muted">Total Meetings</p>
+                    <p class="text-uppercase fw-bold mb-2 small text-muted">Total Meetings</p>
+                    <span class="badge" style="background:#ddfae8;color:#10b981;">12% from last month</span>
                 </div>
             </div>
         </div>
 
         <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card info-card border-0 shadow-sm" style="border-radius: 24px; background: linear-gradient(135deg, #e6fffa 0%, #f0fff4 100%); overflow: hidden;">
+            <div class="card border-0" style="border-left:4px solid #19bf84;background: linear-gradient(135deg, #e9fff7 0%, #f3fff8 100%);">
                 <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #38a169; color: white;">
-                        <i class="bi bi-calendar-plus fs-4"></i>
-                    </div>
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #18b981; color: white;"><i class="bi bi-calendar-plus fs-4"></i></div>
                     <h2 class="fw-bold mb-1" style="font-size: 2.2rem;">1</h2>
-                    <p class="text-uppercase fw-bold mb-3 small text-muted">Upcoming</p>
+                    <p class="text-uppercase fw-bold mb-2 small text-muted">Upcoming</p>
+                    <span class="badge" style="background:#ddfae8;color:#10b981;">8% from last week</span>
                 </div>
             </div>
         </div>
 
         <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card info-card border-0 shadow-sm" style="border-radius: 20px; background: linear-gradient(135deg, #ebf8ff 0%, #f0f9ff 100%);">
+            <div class="card border-0" style="border-left:4px solid #3d86ff;background: linear-gradient(135deg, #eff5ff 0%, #f5f8ff 100%);">
                 <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #3182ce; color: white;">
-                        <i class="bi bi-calendar-check fs-4"></i>
-                    </div>
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #3182ce; color: white;"><i class="bi bi-calendar-check fs-4"></i></div>
                     <h2 class="fw-bold mb-1" style="font-size: 2.2rem;">8</h2>
-                    <p class="text-uppercase fw-bold mb-3 small text-muted">Completed</p>
+                    <p class="text-uppercase fw-bold mb-2 small text-muted">Completed</p>
+                    <span class="badge" style="background:#ddfae8;color:#10b981;">15% completion rate</span>
                 </div>
             </div>
         </div>
 
         <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card info-card border-0 shadow-sm" style="border-radius: 24px; background: linear-gradient(135deg, #fffaf0 0%, #fff5f5 100%);">
+            <div class="card border-0" style="border-left:4px solid #f5a000;background: linear-gradient(135deg, #fff9e6 0%, #fff7ee 100%);">
                 <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #dd6b20; color: white;">
-                        <i class="bi bi-calendar-x fs-4"></i>
-                    </div>
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #f59e0b; color: white;"><i class="bi bi-calendar-x fs-4"></i></div>
                     <h2 class="fw-bold mb-1" style="font-size: 2.2rem;">5</h2>
-                    <p class="text-uppercase fw-bold mb-3 small text-muted">Cancelled</p>
+                    <p class="text-uppercase fw-bold mb-2 small text-muted">Cancelled</p>
+                    <span class="badge" style="background:#ffe2e5;color:#ef4444;">3% cancellation rate</span>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-lg-5 mb-4">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold pt-3 mb-4 text-secondary">Quick Actions</h5>
-                    <div class="row g-3 text-center">
-                        <div class="col-6">
-                            <a asp-controller="Meetings" asp-action="MeetingsAddEdit" class="btn btn-light w-100 py-4 shadow-sm border-0 action-card" style="border-radius: 20px;">
-                                <i class="bi bi-plus-circle-fill fs-1 text-primary"></i>
-                                <div class="fw-bold mt-2">New MOM</div>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a asp-controller="Staff" asp-action="StaffAddEdit" class="btn btn-light w-100 py-4 shadow-sm border-0 action-card" style="border-radius: 20px;">
-                                <i class="bi bi-person-plus-fill fs-1 text-success"></i>
-                                <div class="fw-bold mt-2">Add Staff</div>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a asp-controller="Analytics" asp-action="Analytics" class="btn btn-light w-100 py-4 shadow-sm border-0 action-card" style="border-radius: 20px;">
-                                <i class="bi bi-file-earmark-bar-graph fs-1 text-info"></i>
-                                <div class="fw-bold mt-2">Analytics</div>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a asp-controller="Profile" asp-action="Profile" class="btn btn-light w-100 py-4 shadow-sm border-0 action-card" style="border-radius: 20px;">
-                                <i class="bi bi-person-circle fs-1 text-secondary"></i>
-                                <div class="fw-bold mt-2">Profile</div>
-                            </a>
-                        </div>
-                    </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center"><h6>Meetings by Type</h6><div><i class="bi bi-arrow-clockwise text-primary me-3"></i><i class="bi bi-download text-secondary"></i></div></div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height:320px;">
+                    <div class="text-center text-muted">Chart area</div>
                 </div>
             </div>
         </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center"><h6>Meetings by Department</h6><div><i class="bi bi-arrow-clockwise text-primary me-3"></i><i class="bi bi-download text-secondary"></i></div></div>
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height:320px;">
+                    <div class="text-center text-muted">Chart area</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <div class="col-lg-7 mb-4">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                         <h5 class="card-title fw-bold mb-0">Recent Meetings Logs</h5>
-
-                        <div class="input-group w-50">
-                            <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
-                            <input type="text" id="meetingSearchInput" onkeyup="searchTable()" class="form-control bg-light border-0" placeholder="Search meeting title...">
+                        <div class="mom-search-input" style="max-width:320px;">
+                            <span><i class="bi bi-search"></i></span>
+                            <input type="text" id="meetingSearchInput" onkeyup="searchTable()" class="form-control" placeholder="Search meeting title...">
                         </div>
                     </div>
 
                     <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
-                        <table class="table table-hover table-borderless align-middle" id="meetingTable">
-                            <thead class="table-light position-sticky top-0">
-                                <tr class="text-muted">
+                        <table class="table table-hover align-middle" id="meetingTable">
+                            <thead>
+                                <tr>
                                     <th>Meeting Title</th>
                                     <th>Department</th>
                                     <th>Date</th>
@@ -132,30 +121,31 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td class="fw-bold">Website UI Redesign</td>
-                                    <td>IT Dept</td>
-                                    <td>25 Dec 2025</td>
-                                    <td class="text-center"><span class="badge bg-success-light text-success px-3 py-2 rounded-pill">Completed</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Monthly Strategy Sync</td>
-                                    <td>Management</td>
-                                    <td>28 Dec 2025</td>
-                                    <td class="text-center"><span class="badge bg-warning-light text-warning px-3 py-2 rounded-pill">Upcoming</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Faculty Meeting</td>
-                                    <td>Education</td>
-                                    <td>30 Dec 2025</td>
-                                    <td class="text-center"><span class="badge bg-danger-light text-danger px-3 py-2 rounded-pill">Cancelled</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Annual Function Plan</td>
-                                    <td>Arts Dept</td>
-                                    <td>02 Jan 2026</td>
-                                    <td class="text-center"><span class="badge bg-primary-light text-primary px-3 py-2 rounded-pill">Draft</span></td>
-                                </tr>
+                                @if (recentMeetings != null && recentMeetings.Count > 0)
+                                {
+                                    @foreach (var meeting in recentMeetings)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@meeting.MeetingDescription</td>
+                                            <td>@meeting.DepartmentName</td>
+                                            <td>@meeting.MeetingDate?.ToString("dd MMM yyyy")</td>
+                                            <td class="text-center">
+                                                @if (meeting.IsCancelled)
+                                                {
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                }
+                                                else if (meeting.MeetingDate > DateTime.Now)
+                                                {
+                                                    <span class="badge bg-warning text-dark">Upcoming</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">Completed</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -163,227 +153,20 @@
             </div>
         </div>
     </div>
-
-    <h5 class="fw-bold mt-2 mb-3 text-secondary ps-2">Administrative Overview</h5>
-
-    <div class="row">
-
-        <div class="col-lg-8">
-            <div class="row">
-
-                <div class="col-xxl-4 col-md-6">
-                    <div class="card info-card sales-card shadow-sm border-0" style="border-radius: 20px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Pending Action Items <span>| Priority</span></h5>
-                            <div class="d-flex align-items-center">
-                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-light text-primary">
-                                    <i class="bi bi-list-task"></i>
-                                </div>
-                                <div class="ps-3">
-                                    <h6>145</h6>
-                                    <span class="text-danger small pt-1 fw-bold">12</span> <span class="text-muted small pt-2 ps-1">overdue</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xxl-4 col-md-6">
-                    <div class="card info-card revenue-card shadow-sm border-0" style="border-radius: 20px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Budget Utilized <span>| This Month</span></h5>
-                            <div class="d-flex align-items-center">
-                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-light text-success">
-                                    <i class="bi bi-currency-rupee"></i>
-                                </div>
-                                <div class="ps-3">
-                                    <h6>?32,000</h6>
-                                    <span class="text-success small pt-1 fw-bold">8%</span> <span class="text-muted small pt-2 ps-1">remaining</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xxl-4 col-xl-12">
-                    <div class="card info-card customers-card shadow-sm border-0" style="border-radius: 20px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Active Staff <span>| Online</span></h5>
-                            <div class="d-flex align-items-center">
-                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-light text-warning">
-                                    <i class="bi bi-people"></i>
-                                </div>
-                                <div class="ps-3">
-                                    <h6>12</h6>
-                                    <span class="text-muted small pt-2 ps-1">members available</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12">
-                    <div class="card shadow-sm border-0" style="border-radius: 20px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Meeting Activity <span>/ Week</span></h5>
-                            <div id="reportsChart"></div>
-                            <script>
-                                document.addEventListener("DOMContentLoaded", () => {
-                                  new ApexCharts(document.querySelector("#reportsChart"), {
-                                    series: [{
-                                      name: 'Internal',
-                                      data: [4, 6, 2, 5, 3, 1, 0],
-                                    }, {
-                                      name: 'External',
-                                      data: [1, 2, 0, 1, 1, 0, 0]
-                                    }],
-                                    chart: {
-                                      height: 350,
-                                      type: 'area',
-                                      toolbar: { show: false },
-                                    },
-                                    markers: { size: 4 },
-                                    colors: ['#4154f1', '#2eca6a'],
-                                    fill: {
-                                      type: "gradient",
-                                      gradient: {
-                                        shadeIntensity: 1,
-                                        opacityFrom: 0.3,
-                                        opacityTo: 0.4,
-                                        stops: [0, 90, 100]
-                                      }
-                                    },
-                                    dataLabels: { enabled: false },
-                                    stroke: { curve: 'smooth', width: 2 },
-                                    xaxis: {
-                                      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                                    },
-                                  }).render();
-                                });
-                            </script>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12">
-                    <div class="card recent-sales overflow-auto shadow-sm border-0" style="border-radius: 20px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Pending Action Items <span>| High Priority</span></h5>
-                            <table class="table table-borderless datatable">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">ID</th>
-                                        <th scope="col">Assignee</th>
-                                        <th scope="col">Task Description</th>
-                                        <th scope="col">Deadline</th>
-                                        <th scope="col">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><th scope="row"><a href="#">#2457</a></th><td>Brandon J.</td><td><span class="text-dark">Update Faculty List</span></td><td>26 Dec</td><td><span class="badge bg-warning">Pending</span></td></tr>
-                                    <tr><th scope="row"><a href="#">#2147</a></th><td>Bridie K.</td><td><span class="text-dark">Send Circular to Parents</span></td><td>27 Dec</td><td><span class="badge bg-success">Done</span></td></tr>
-                                    <tr><th scope="row"><a href="#">#2049</a></th><td>Ashleigh L.</td><td><span class="text-dark">Prepare Annual Budget</span></td><td>30 Dec</td><td><span class="badge bg-danger">Overdue</span></td></tr>
-                                    <tr><th scope="row"><a href="#">#2644</a></th><td>Angus G.</td><td><span class="text-dark">Review Exam Papers</span></td><td>02 Jan</td><td><span class="badge bg-primary">In Progress</span></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-        <div class="col-lg-4">
-
-            <div class="card shadow-sm border-0" style="border-radius: 20px;">
-                <div class="card-body">
-                    <h5 class="card-title">Audit Log <span>| Today</span></h5>
-                    <div class="activity">
-                        <div class="activity-item d-flex"><div class="activite-label">32 min</div><i class='bi bi-circle-fill activity-badge text-success align-self-start'></i><div class="activity-content">Meeting <a href="#" class="fw-bold text-dark">#124 created</a> by Admin</div></div>
-                        <div class="activity-item d-flex"><div class="activite-label">56 min</div><i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i><div class="activity-content">Task #44 marked as Overdue</div></div>
-                        <div class="activity-item d-flex"><div class="activite-label">2 hrs</div><i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i><div class="activity-content">Minutes sent to all staff</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0" style="border-radius: 20px;">
-                <div class="card-body pb-0">
-                    <h5 class="card-title">Dept. Budget <span>| Report</span></h5>
-                    <div id="budgetChart" style="min-height: 400px;" class="echart"></div>
-                    <script>
-                        document.addEventListener("DOMContentLoaded", () => {
-                          var budgetChart = echarts.init(document.querySelector("#budgetChart")).setOption({
-                            legend: { data: ['Allocated', 'Spent'], bottom: 0 },
-                            radar: {
-                              indicator: [
-                                { name: 'Admin', max: 6500 },
-                                { name: 'IT', max: 16000 },
-                                { name: 'Arts', max: 30000 },
-                                { name: 'Science', max: 38000 },
-                                { name: 'Sports', max: 52000 }
-                              ]
-                            },
-                            series: [{
-                              name: 'Budget vs Spending',
-                              type: 'radar',
-                              data: [
-                                { value: [4200, 3000, 20000, 35000, 50000], name: 'Allocated' },
-                                { value: [5000, 14000, 28000, 26000, 42000], name: 'Spent' }
-                              ]
-                            }]
-                          });
-                        });
-                    </script>
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0" style="border-radius: 20px;">
-                <div class="card-body pb-0">
-                    <h5 class="card-title">Notice Board <span>| Upcoming</span></h5>
-                    <div class="news">
-                        <div class="post-item clearfix">
-                            <img src="assets/img/news-1.jpg" alt="" style="border-radius: 8px;">
-                            <h4><a href="#">Annual Sports Day</a></h4>
-                            <p>Scheduled for next Friday. All staff mandatory attendance...</p>
-                        </div>
-                        <div class="post-item clearfix">
-                            <img src="assets/img/news-2.jpg" alt="" style="border-radius: 8px;">
-                            <h4><a href="#">New Exam Guidelines</a></h4>
-                            <p>Ministry has released new format for Term 2 exams...</p>
-                        </div>
-                        <div class="post-item clearfix">
-                            <img src="assets/img/news-3.jpg" alt="" style="border-radius: 8px;">
-                            <h4><a href="#">Staff Picnic</a></h4>
-                            <p>Registration closes tomorrow for the staff outing...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
 </section>
 
 <script>
     function searchTable() {
-      // 1. Input element se value lo
       var input = document.getElementById("meetingSearchInput");
       var filter = input.value.toUpperCase();
-
-      // 2. Table aur rows select karo
       var table = document.getElementById("meetingTable");
       var tr = table.getElementsByTagName("tr");
 
-      // 3. Loop through all rows
       for (var i = 0; i < tr.length; i++) {
-        // First column (Title) check karo
         var td = tr[i].getElementsByTagName("td")[0];
         if (td) {
           var txtValue = td.textContent || td.innerText;
-          if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            tr[i].style.display = ""; // Show
-          } else {
-            tr[i].style.display = "none"; // Hide
-          }
+          tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
         }
       }
     }

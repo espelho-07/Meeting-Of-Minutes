@@ -6,19 +6,29 @@
     ViewData["Title"] = "Schedule New Meeting";
 }
 
-<div class="container-fluid mt-4">
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb flex-nowrap">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item"><a asp-controller="Meetings" asp-action="MeetingsList">Meetings</a></li>
+            <li class="breadcrumb-item active">Add Edit</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="mom-form-wrap">
     <div class="mb-4">
-        <h4 class="fw-bold">Schedule New Meeting</h4>
-        <p class="text-muted mb-0">Create and schedule a new organizational meeting</p>
+        <h1>@(Model.MeetingID == 0 ? "Schedule New Meeting" : "Edit Meeting")</h1>
+        <p class="mom-page-subtitle">Create and schedule a new organizational meeting</p>
     </div>
 
-    <div class="card border-0 shadow-sm col-lg-8 mx-auto" style="border-radius:14px;">
-        <div class="card-header text-white border-0" style="background:linear-gradient(90deg,#6a6fdc,#7b5be6);border-radius:14px 14px 0 0;">
-            <i class="bi bi-calendar-plus me-2"></i> Schedule New Meeting
+    <div class="card mom-form-card col-lg-9 mx-auto">
+        <div class="card-header">
+            <h6><i class="bi bi-calendar-plus me-2"></i> Schedule New Meeting</h6>
         </div>
 
-        <div class="card-body p-4">
-            <form asp-action="Save" method="post" class="row g-4 js-update-confirm-form" data-id-field="MeetingID" data-update-message="Sure to update this meeting?">
+        <div class="card-body">
+            <form asp-action="Save" method="post" enctype="multipart/form-data" class="row g-4 js-update-confirm-form" data-id-field="MeetingID" data-update-message="Sure to update this meeting?">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="MeetingID" />
 
@@ -28,71 +38,51 @@
 
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Meeting Type</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-tags"></i></span>
-                        <select asp-for="MeetingTypeID" asp-items="ViewBag.MeetingTypeDropDown" class="form-select">
-                            <option value="">-- Select Meeting Type --</option>
-                        </select>
-                    </div>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-tags"></i></span><select asp-for="MeetingTypeID" asp-items="ViewBag.MeetingTypeDropDown" class="form-select"><option value="">-- Select Meeting Type --</option></select></div>
                     <span asp-validation-for="MeetingTypeID" class="text-danger small"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Department</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
-                        <select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select">
-                            <option value="">-- Select Department --</option>
-                        </select>
-                    </div>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-building"></i></span><select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select"><option value="">-- Select Department --</option></select></div>
                     <span asp-validation-for="DepartmentID" class="text-danger small"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Venue</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                        <select asp-for="MeetingVenueID" asp-items="ViewBag.MeetingVenueDropDown" class="form-select">
-                            <option value="">-- Select Venue --</option>
-                        </select>
-                    </div>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-geo-alt"></i></span><select asp-for="MeetingVenueID" asp-items="ViewBag.MeetingVenueDropDown" class="form-select"><option value="">-- Select Venue --</option></select></div>
                     <span asp-validation-for="MeetingVenueID" class="text-danger small"></span>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label small fw-semibold">Meeting Date & Time</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-calendar-event"></i></span>
-                        <input asp-for="MeetingDate" type="datetime-local" class="form-control" />
-                    </div>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-calendar-event"></i></span><input asp-for="MeetingDate" type="datetime-local" class="form-control" /></div>
                     <span asp-validation-for="MeetingDate" class="text-danger small"></span>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label small fw-semibold">Meeting Description</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white align-items-start"><i class="bi bi-text-paragraph mt-1"></i></span>
-                        <textarea asp-for="MeetingDescription" class="form-control" rows="3" maxlength="250" placeholder="Enter meeting description and agenda"></textarea>
-                    </div>
+                    <div class="input-group"><span class="input-group-text"><i class="bi bi-text-paragraph"></i></span><textarea asp-for="MeetingDescription" class="form-control" rows="3" maxlength="250" placeholder="Enter meeting description and agenda"></textarea></div>
                     <span asp-validation-for="MeetingDescription" class="text-danger small"></span>
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label small fw-semibold">Document Path (Optional)</label>
-                    <input asp-for="DocumentPath" type="text" class="form-control" placeholder="/docs/meeting.pdf" />
+                    <label class="form-label small fw-semibold">Meeting Document (Optional)</label>
+                    <input asp-for="DocumentFile" type="file" class="form-control" />
+                    <span asp-validation-for="DocumentFile" class="text-danger small"></span>
+                    <label class="text-secondary mt-2">Upload agenda/minutes</label>
                 </div>
 
-                <div class="col-12 d-flex justify-content-between mt-3">
-                    <a asp-action="MeetingsList" class="btn btn-link text-decoration-none">? Back to Meetings</a>
-                    <button type="submit" class="btn text-white px-4" style="background:#4f46e5;border-radius:10px;">
-                        <i class="bi bi-check-circle me-1"></i> Save Meeting
-                    </button>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold">Document Path</label>
+                    <input asp-for="DocumentPath" type="text" class="form-control" placeholder="Enter document path" />
+                </div>
+
+                <div class="col-12 mom-form-actions">
+                    <a asp-action="MeetingsList" class="btn btn-light px-4">Back to Meetings</a>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i> Save Meeting</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-
-
-

@@ -3,12 +3,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using ClosedXML.Excel;
 
 namespace Meeting_Of_Minutes.Controllers
 {
     public class MeetingsController : Controller
     {
-        #region Actions
+        private readonly IWebHostEnvironment _env;
+
+        public MeetingsController(IWebHostEnvironment env)
+        {
+            _env = env;
+        }
+
+        #region AddEdit
         public IActionResult MeetingsAddEdit(int? id)
         {
             ViewBag.DepartmentDropDown = FillDepartmentDropDown();
@@ -51,7 +59,30 @@ namespace Meeting_Of_Minutes.Controllers
         }
 
 
+        [HttpGet]
         public IActionResult MeetingsList()
+        {
+            List<MeetingsModel> meetingsList = GetAllMeetings(null);
+            return View(meetingsList);
+        }
+
+        [HttpPost]
+        public IActionResult MeetingsList(IFormCollection formdata)
+        {
+            string searchtext = formdata["searchtext"].ToString();
+
+            if (string.IsNullOrWhiteSpace(searchtext))
+            {
+                searchtext = null;
+            }
+
+            ViewBag.searchtext = searchtext;
+
+            List<MeetingsModel> meetingsList = GetAllMeetings(searchtext);
+            return View(meetingsList);
+        }
+
+        public List<MeetingsModel> GetAllMeetings(string searchtext)
         {
             List<MeetingsModel> meetingsList = new List<MeetingsModel>();
 
@@ -60,6 +91,15 @@ namespace Meeting_Of_Minutes.Controllers
             cmd.Connection = con;
             cmd.CommandText = "PR_Meetings_SelectAll";
             cmd.CommandType = CommandType.StoredProcedure;
+
+            if (searchtext != null)
+            {
+                cmd.Parameters.AddWithValue("@searchtext", searchtext);
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
+            }
 
             con.Open();
             SqlDataReader reader = cmd.ExecuteReader();
@@ -83,7 +123,7 @@ namespace Meeting_Of_Minutes.Controllers
             reader.Close();
             con.Close();
 
-            return View(meetingsList);
+            return meetingsList;
         }
 
 
@@ -121,6 +161,61 @@ namespace Meeting_Of_Minutes.Controllers
             return View(model);
         }
 
+        public IActionResult ExportToExcel()
+        {
+            try
+            {
+                DataTable dt = new DataTable();
+
+                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = con;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "PR_Meetings_SelectAll";
+                cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
+
+                con.Open();
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+                dr.Close();
+                con.Close();
+
+                using (XLWorkbook workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Meetings");
+
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        worksheet.Cell(1, i + 1).Value = dt.Columns[i].ColumnName;
+                        worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                    }
+
+                    for (int row = 0; row < dt.Rows.Count; row++)
+                    {
+                        for (int col = 0; col < dt.Columns.Count; col++)
+                        {
+                            worksheet.Cell(row + 2, col + 1).Value = dt.Rows[row][col]?.ToString();
+                        }
+                    }
+
+                    worksheet.Columns().AdjustToContents();
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        byte[] content = stream.ToArray();
+
+                        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MeetingsList.xlsx");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                return RedirectToAction("MeetingsList");
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
 
@@ -132,6 +227,28 @@ namespace Meeting_Of_Minutes.Controllers
                 ViewBag.MeetingTypeDropDown = FillMeetingTypeDropDown();
                 ViewBag.MeetingVenueDropDown = FillMeetingVenueDropdown();
                 return View("MeetingsAddEdit", model);
+            }
+
+            string filePath = model.DocumentPath ?? string.Empty;
+
+            if (model.DocumentFile != null)
+            {
+                string folder = Path.Combine(_env.WebRootPath, "uploads");
+
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                string fileName = Guid.NewGuid() + Path.GetExtension(model.DocumentFile.FileName);
+                string fullPath = Path.Combine(folder, fileName);
+
+                using (FileStream stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    model.DocumentFile.CopyTo(stream);
+                }
+
+                filePath = "/uploads/" + fileName;
             }
 
             SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
@@ -172,7 +289,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.Parameters.AddWithValue("@MeetingTypeID", model.MeetingTypeID);
                 cmd.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
                 cmd.Parameters.AddWithValue("@MeetingDescription", model.MeetingDescription ?? string.Empty);
-                cmd.Parameters.AddWithValue("@DocumentPath", model.DocumentPath ?? string.Empty);
+                cmd.Parameters.AddWithValue("@DocumentPath", filePath);
                 cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
             }
             else
@@ -184,7 +301,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.Parameters.AddWithValue("@MeetingTypeID", model.MeetingTypeID);
                 cmd.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
                 cmd.Parameters.AddWithValue("@MeetingDescription", model.MeetingDescription ?? string.Empty);
-                cmd.Parameters.AddWithValue("@DocumentPath", model.DocumentPath ?? string.Empty);
+                cmd.Parameters.AddWithValue("@DocumentPath", filePath);
             }
             TempData["SuccessMessage"] = model.MeetingID == 0 ? "Meeting added successfully." : "Meeting updated successfully.";
             cmd.ExecuteNonQuery();
@@ -209,6 +326,7 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                TempData["SuccessMessage"] = "Meeting deleted successfully.";
             }
             catch
             {

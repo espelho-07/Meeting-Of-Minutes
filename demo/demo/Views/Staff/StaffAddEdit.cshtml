@@ -1,0 +1,174 @@
+﻿@model demo.Models.StaffModel
+
+<div class="container">
+    <h3>
+        @(Model != null && Model.StaffID > 0
+                ? "Edit Staff Member"
+                : "Add New Staff Member")
+    </h3>
+    <p>Register a new staff member.</p>
+
+    <div class="d-flex justify-content-center p-3">
+        <div class="cardtable rounded-4">
+
+            <header class="tableheader rounded-top-4 p-3">
+                <span><i class="bi bi-person-plus"></i></span>
+                @(Model != null && Model.StaffID > 0
+                                ? "Edit Staff Member"
+                                : "Add New Staff Member")
+            </header>
+
+            @if (TempData["DDLerror"] != null)
+            {
+                <div class="alert alert-danger">
+                    <p>@TempData["DDLerror"]</p>
+                </div>
+            }
+
+            <form asp-action="SaveStaff" method="post" class="p-4">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="StaffID" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
+                <!-- Row 1 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="mb-2">
+                            <span class="text-danger">*</span> Staff Name
+                        </label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input asp-for="StaffName"
+                                   class="form-control"
+                                   placeholder="Enter staff name" />
+                        </div>
+                        <span asp-validation-for="StaffName"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="mb-2">
+                            <span class="text-danger">*</span> Department
+                        </label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-building"></i>
+                            </span>
+                            <select asp-for="DepartmentID" asp-items="ViewBag.DepartmentList" class="form-select">
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="DepartmentID" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="mb-2">
+                            <span class="text-danger">*</span> Email
+                        </label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input asp-for="EmailAddress"
+                                   type="email"
+                                   class="form-control"
+                                   placeholder="Enter email address" />
+                        </div>
+                        <span asp-validation-for="EmailAddress"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="mb-2">
+                            <span class="text-danger">*</span> Mobile Number
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-phone"></i>
+                            </span>
+                            <input asp-for="MobileNo"
+                                   class="form-control"
+                                   placeholder="Enter mobile number" />
+                        </div>
+                        <span asp-validation-for="MobileNo"
+                              class="text-danger"></span>
+                        <p class="text-secondary">
+                            Example: +91 72840 68350
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Remarks -->
+                <div class="mb-3">
+                    <label class="mb-2">Remarks</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-chat-text"></i>
+                        </span>
+                        <textarea asp-for="Remarks"
+                                  rows="4"
+                                  placeholder="Enter any additional remarks (optional)"
+                                  class="form-control"></textarea>
+                    </div>
+                    <span asp-validation-for="Remarks"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mb-5">
+                    <button type="submit"
+                            class="btn btn-primary float-end">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Save
+                    </button>
+
+                    <a asp-controller="Staff"
+                       asp-action="StaffList"
+                       class="btn btn-white float-end me-2">
+                        <span class="me-1">&#x2190;</span>
+                        Back to Staff List
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    a {
+        text-decoration: none;
+    }
+
+    .bg-theme {
+        background: linear-gradient(90deg, #4e54c8, #b700ff);
+    }
+
+    .tableheader {
+        background: linear-gradient(90deg, #4e54c8, #b700ff);
+        color: white;
+    }
+
+    .cardtable {
+        box-shadow: 10px 10px 50px #4e54c8;
+        width: 100%;
+    }
+
+    .bi {
+        border-radius: 5px;
+        padding: 3px;
+        cursor: pointer;
+    }
+</style>

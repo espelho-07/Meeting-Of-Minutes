@@ -1,0 +1,124 @@
+﻿@model List<MeetingMemberModel>
+@{
+    int sr_no = 1;
+}
+
+<div class="pagetitle">
+    <h1>Meeting Members Table</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Meeting Members</a></li>
+            <li class="breadcrumb-item">Tables</li>
+            <li class="breadcrumb-item active">Data</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+
+<div class="cardtable table-responsive p-4 rounded-4 mb-5">
+            <header class="tableheader p-3 rounded-top-4">
+                Meeting Members
+                <a asp-controller="MeetingMember" asp-action="MeetingMembersAddEdit">
+                    <button class="bg-primary float-end rounded-pill text-white border-0 ps-2 pe-2">
+                        <i class="bi bi-plus-circle"></i> Add Meeting Member
+                    </button>
+                </a>
+            </header>
+    @if (Model != null && Model.Count > 0)
+    {
+        <table class="table border border-3 border-dark text-center">
+            <thead>
+                <tr>
+                    <th class="text-center">Sr no.</th>
+                    <th class="text-center">Meeting Member ID</th>
+                    <th class="text-center">Meeting ID</th>
+                    <th class="text-center">Staff ID</th>
+                    <th class="text-center">Is Present</th>
+                    <th class="text-center">Remarks</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var member in Model)
+                {
+                    <tr>
+                        <th>@(sr_no++)</th>
+                        <td>@member.MeetingMemberId</td>
+                        <td>@member.MeetingID</td>
+                        <td>@member.StaffID</td>
+                        <td>@member.IsPresent</td>
+                        <td>@member.Remarks</td>
+                        <td>
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteMeetingMember", new { memberid = member.MeetingMemberId })')">
+                                <i class="bi bi-trash3 bg-danger-subtle text-danger"></i>
+                            </a>
+                            <a href="@Url.Action("MeetingMembersAddEdit", new { memberid = member.MeetingMemberId })">
+                                <i class="bi bi-pencil bg-warning-subtle text-warning"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <h1>hello</h1>
+    }
+</div>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This member will be removed from meeting!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting meeting member...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            }
+        });
+    }
+</script>

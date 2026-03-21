@@ -1,0 +1,22 @@
+﻿/* Search container */
+.dataTables_filter {
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+    /* Search input */
+    .dataTables_filter input {
+        width: 250px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background:black;
+    }
+
+        /* Focus effect */
+        .dataTables_filter input:focus {
+            border-color: #4154f1; /* NiceAdmin primary color */
+            box-shadow: 0 0 0 0.2rem rgba(65, 84, 241, 0.25);
+        }

@@ -1,0 +1,101 @@
+﻿@model demo.Models.MeetingVenueModel
+
+@{
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <h3>
+        @(Model != null && Model.MeetingVenueID > 0
+                ? "Edit Meeting Venue"
+                : "Add New Meeting Venue")
+    </h3>
+    <p>Create a new meeting venue.</p>
+
+    <div class="d-flex justify-content-center p-3">
+        <div class="cardtable rounded-4">
+
+            <header class="tableheader rounded-top-4 p-3">
+                <span><i class="bi bi-geo-alt"></i></span>
+                @(Model != null && Model.MeetingVenueID > 0
+                                ? "Edit Meeting Venue"
+                                : "Add New Meeting Venue")
+            </header>
+
+            <form asp-action="Save" method="post" class="p-4">
+                @Html.AntiForgeryToken()
+
+                <!-- Hidden ID for Edit -->
+                <input type="hidden" asp-for="MeetingVenueID" />
+
+                <!-- Validation Summary -->
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <!-- Venue Name -->
+                <div class="mb-3">
+                    <label class="mb-2">
+                        <span class="text-danger">*</span> Venue Name
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-geo-alt"></i>
+                        </span>
+                        <input asp-for="MeetingVenueName"
+                               class="form-control"
+                               placeholder="Enter meeting venue name" />
+                    </div>
+                    <span asp-validation-for="MeetingVenueName" class="text-danger"></span>
+                    <p class="text-secondary">
+                        e.g., Conference Room A, Board Room, Virtual (Zoom), Auditorium
+                    </p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mb-5">
+                    <button type="submit" class="btn btn-primary float-end">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Save
+                    </button>
+
+                    <a asp-controller="MeetingVenue"
+                       asp-action="MeetingVenueList"
+                       class="btn btn-white float-end me-2">
+                        <span class="me-1">&#x2190;</span> Back to List
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    a {
+        text-decoration: none;
+    }
+
+    .bg-theme {
+        background: linear-gradient(90deg, #4e54c8, #b700ff);
+    }
+
+    .tableheader {
+        background: linear-gradient(90deg, #4e54c8, #b700ff);
+        color: white;
+    }
+
+    .cardtable {
+        box-shadow: 10px 10px 50px #4e54c8;
+        width: 100%;
+    }
+
+    .bi {
+        border-radius: 5px;
+        padding: 3px;
+        cursor: pointer;
+    }
+</style>

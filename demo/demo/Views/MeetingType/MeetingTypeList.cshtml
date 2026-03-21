@@ -1,0 +1,134 @@
+﻿@model List<MeetingTypeModel>
+@{
+    int sr_no = 1;
+}
+
+<div class="pagetitle">
+    <h1>Meeting Type Table</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Meeting Type</a></li>
+            <li class="breadcrumb-item">Tables</li>
+            <li class="breadcrumb-item active">Data</li>
+        </ol>
+    </nav>
+</div><!-- End Page Title -->
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+<!-- Table with stripped rows -->
+<div class="cardtable table-responsive p-4 rounded-4 mb-5">
+
+    <header class="tableheader p-3 rounded-top-4">
+        Meeting Type
+        <button class="bg-primary float-end rounded-pill text-white border-0 ps-2 pe-2">
+            <a class="text-white" asp-controller="MeetingType" asp-action="MeetingTypeAddEdit">
+                <i class="bi bi-plus-circle"></i> Add Meeting Type
+            </a>
+        </button>
+    </header>
+    @if (Model != null && Model.Count > 0)
+    {
+        <table class="table table-responsive border border-3 border-dark text-center">
+            <thead>
+                <tr>
+                    <th class="text-center">Meeting Type Name</th>
+                    <th class="text-center">Remarks</th>
+                    <th class="text-center">Created</th>
+                    <th class="text-center">Modified</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var mt in Model)
+                {
+
+                    <tr>
+                        <td>@mt.MeetingTypeName</td>
+                        <td>@mt.Remarks</td>
+                        <td>@mt.Created.ToString("MMM dd" + "," + " yyyy")</td>
+                        <td>@mt.Modified.ToString("MMM dd - yyyy HH:mm")</td>
+                        <td>
+                            <a href="javascript:void(0);"
+                               onclick="confirmDelete('@Url.Action("DeleteMeetingType", new { meetingtypeid = mt.MeetingTypeID })')">
+                                <i class="bi bi-trash3 bg-danger-subtle text-danger"></i>
+                            </a>
+                            <a href="@Url.Action("MeetingTypeAddEdit", new { meetingtypeid = mt.MeetingTypeID })">
+                                <i class="bi bi-pencil bg-warning-subtle text-warning"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No meeting type found. Click "Add New Meeting Type" to create one.
+        </div>
+    }
+</div>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This department will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // NEW: Show cancellation message
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Department deletion has been cancelled.',
+                    icon: 'success',
+                    confirmButtonColor: 'green'
+                });
+
+            }
+        });
+    }
+</script>

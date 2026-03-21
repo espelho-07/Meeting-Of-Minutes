@@ -91,16 +91,3 @@ BEGIN
     WHERE [dbo].[MOM_MeetingVenue].[MeetingVenueID] = @MeetingVenueID;
 END;
 GO
-
-INSERT INTO [dbo].[MOM_MeetingVenue]
-(
-    MeetingVenueName,
-    Created,
-    Modified
-)
-VALUES
-('Conference Room A', GETDATE(), GETDATE()),
-('Conference Room B', GETDATE(), GETDATE()),
-('Main Hall', GETDATE(), GETDATE()),
-('Zoom Meeting', GETDATE(), GETDATE()),
-('Board Room', GETDATE(), GETDATE());

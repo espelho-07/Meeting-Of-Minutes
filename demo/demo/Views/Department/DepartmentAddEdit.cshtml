@@ -1,0 +1,130 @@
+﻿@model demo.Models.DepartmentModel;
+@{
+
+    Layout = "_Layout";
+}
+
+
+
+<style>
+    body {
+        background-color: #f4f6fb;
+        font-family: "Segoe UI", sans-serif;
+    }
+
+    .page-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #0d2b5c;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0d2b5c;
+    }
+
+    label {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+    .btn-save:hover {
+        background-color: blue;
+    }
+
+    .btn-cancel:hover {
+        background: rgb(205,0,0);
+    }
+
+    .btn-save {
+        background-color: #0d6efd;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .btn-cancel {
+        background-color: red;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="container-fluid p-4">
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-lg-7 col-md-9 col-sm-12">
+
+            <div class="card">
+                <div class="card-body p-4">
+
+                    <h5 class="card-title mb-4">
+                        @(Model != null && Model.DepartmentID > 0 ? "Edit Department" : "Add Department")
+                    </h5>
+
+                    <form asp-action="Save" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        @* <h6 class="mb-5">* indicates required field.</h6> *@
+
+                        <input type="hidden" asp-for="DepartmentID" />
+
+                        <div class="mb-3">
+                            @* <span class="text-danger">*</span> *@
+                            <label asp-for="DepartmentName" class="form-label"></label>
+                            <input asp-for="DepartmentName" type="text" class="form-control" placeholder="Department Name">
+                            <span asp-validation-for="DepartmentName" class="text-danger"></span>
+                        </div>
+
+                        <label asp-for="LogoFile" class="form-label"></label><br />
+                        @if (!string.IsNullOrEmpty(Model.DepartmentLogo))
+                        {
+                            <img src="@Model.DepartmentLogo" width="100" height="75" class="mb-3"/>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger w-25 text-center" style="border:2px dashed red;">Add Logo</div>
+                        }
+                        <div class="mb-3">
+                            @* <span class="text-danger">*</span> *@
+                            <input asp-for="LogoFile" type="file" class="form-control" placeholder="Department Logo">
+                            <span asp-validation-for="LogoFile" class="text-danger"></span>
+                        </div>
+
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-controller="Department" asp-action="DepartmentList" class="btn btn-cancel text-white">Cancel</a>
+                            <button type="submit"
+                                    class="btn btn-save text-white">
+                                Save
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

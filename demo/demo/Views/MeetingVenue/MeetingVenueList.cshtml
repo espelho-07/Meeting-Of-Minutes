@@ -1,0 +1,330 @@
+﻿@model List<MeetingVenueModel>
+
+
+@if (TempData["SuccessMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Deleted!',
+            text: '@TempData["SuccessMsg"]',
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+    </script>
+}
+@if (TempData["ErrMsg"] != null)
+{
+    <script>
+        Swal.fire({
+            title: 'Cannot Delete!',
+            text: '@TempData["ErrMsg"]',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    </script>
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Venues</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .venue-card {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .venue-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .venue-title {
+            width: 130px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .venue-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .venue-header .venue-id {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .venue-header .actions button {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.75);
+            padding: 4px 6px;
+            cursor: pointer;
+        }
+
+            .venue-header .actions button:hover {
+                /* background: rgba(255, 255, 255, 0.2); */
+                color: white;
+                text-shadow: white 2px 2px 10px;
+            }
+
+        .actions {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .grad-purple {
+            background: linear-gradient(135deg, #4527cc, #9b59b6);
+        }
+
+        .grad-green {
+            background: linear-gradient(135deg, #4527cc, #9b59b6);
+        }
+
+        .grad-blue {
+            background: linear-gradient(135deg, #4527cc, #9b59b6);
+        }
+
+        .stat-box {
+            background: #f0f0f5;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+            .stat-box .label {
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: #888;
+                letter-spacing: 0.5px;
+            }
+
+            .stat-box .value {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #1e2a3a;
+            }
+
+                .stat-box .value.accent {
+                    color: #27ae60;
+                }
+
+        .this-week-badge {
+            background: rgba(39, 174, 96, 0.12);
+            color: #27ae60;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 2px 14px;
+            border-radius: 20px;
+        }
+
+        .util-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #f0f0f5;
+            overflow: hidden;
+        }
+
+            .util-bar .fill {
+                height: 100%;
+                border-radius: 4px;
+                background: #27ae60;
+                transition: width 0.3s;
+            }
+
+        .btn-schedule {
+            border: 2px solid #4527cc;
+            color: #4527cc;
+            background: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 8px 0;
+            flex: 1;
+            transition: all 0.5s ease;
+        }
+
+            .btn-schedule:hover {
+                background: #4527cc;
+                color: white;
+            }
+
+        .btn-meeting {
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 8px 0;
+            flex: 1;
+            transition: all 0.5s ease;
+        }
+
+            .btn-meeting:hover {
+                background-color: white;
+                color: #27ae60;
+                border: 1px solid #27ae60;
+            }
+
+        .card-footer-custom {
+            padding: 12px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #888;
+            background-color: #f0f0f5;
+        }
+
+            .card-footer-custom .date {
+                color: #1e2a3a;
+                font-weight: 500;
+            }
+
+            .card-footer-custom .created {
+                color: #1e2a3a;
+                font-weight: 500;
+            }
+    </style>
+</head>
+
+<body>
+    <div class="container py-5">
+        <h2 class="fw-bold mb-1">Meeting Venues</h2>
+        <p class="text-muted mb-4">Manage meeting rooms and virtual meeting locations</p>
+        <a asp-controller="MeetingVenue" asp-action="MeetingVenueAddEdit">
+            <button class="bg-primary  rounded-pill text-white border-0 p-2 mb-3">
+                <i class="bi bi-plus-circle"></i> Add Meeting Venue
+            </button>
+        </a>
+        <div class="row g-4">
+            @foreach (var mv in Model)
+            {
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="venue-card">
+                        <div class="venue-header grad-purple">
+                            <div class="venue-title">
+                                <h5>@mv.MeetingVenueName</h5>
+                                <span class="venue-id"><i class="bi bi-geo-alt"></i> Venue ID #@mv.MeetingVenueID</span>
+                            </div>
+                            <div class="actions">
+                                <button><a href="" class="text-white"><i class="bi bi-eye mx-1"></i></a></button>
+                                <button class="border-start"><a href="" class="text-white mx-1"><i class="bi bi-calendar"></i></a></button>
+                                <button class="border-start"><a href="@Url.Action("MeetingVenueAddEdit", new { meetingvenueid = mv.MeetingVenueID })" class="text-white mx-1"><i class="bi bi-pencil"></i></a></button>
+                                <button class="border-start">
+                                    <a href="javascript:void(0);"
+                                       onclick="confirmDelete('@Url.Action("DeleteMeetingVenue", new { meetingvenueid = mv.MeetingVenueID })')" class="text-white mx-1">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <div class="stat-box">
+                                        <div class="label">Total Meetings</div>
+                                        <div class="value">@mv.MeetingCount</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-box">
+                                        <div class="label">Upcoming</div>
+                                        <div class="value accent">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted small fw-semibold">THIS WEEK</span>
+                                <span class="this-week-badge">0</span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small text-muted fw-medium mb-1">
+                                    <span>UTILIZATION RATE</span><span>0% UTILIZATION</span>
+                                </div>
+                                <div class="util-bar">
+                                    <div class="fill" style="width:0%"></div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <button class="btn-schedule"><i class="bi bi-calendar3 me-1"></i> View Schedule</button>
+                                <button class="btn-meeting"><i class="bi bi-plus-circle me-1"></i> Schedule Meeting</button>
+                            </div>
+                        </div>
+                        <div class="card-footer-custom"><span class="created">Created</span><span class="date">2025-11-20</span></div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    function confirmDelete(deleteUrl) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This venue will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // Show deleting animation
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Redirect after small delay
+                setTimeout(() => {
+                    window.location.href = deleteUrl;
+                }, 1000);
+
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+
+                // NEW: Show cancellation message
+                Swal.fire({
+                    title: 'Cancelled',
+                    text: 'Venue deletion cancelled.',
+                    icon: 'success',
+                    confirmButtonColor: 'green'
+                });
+
+            }
+        });
+    }
+</script>
