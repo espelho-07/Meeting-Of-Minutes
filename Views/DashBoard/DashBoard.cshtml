@@ -1,6 +1,16 @@
+@using System.Text.Json
 @{
     ViewData["Title"] = "Dashboard - Meeting Of Minutes";
-    var recentMeetings = ViewBag.RecentMeetings as List<MeetingsModel>;
+    var recentMeetings = ViewBag.RecentMeetings as List<MeetingsModel> ?? new List<MeetingsModel>();
+    var typeLabels = ViewBag.TypeLabels as List<string> ?? new List<string>();
+    var typeValues = ViewBag.TypeValues as List<int> ?? new List<int>();
+    var departmentLabels = ViewBag.DepartmentLabels as List<string> ?? new List<string>();
+    var departmentValues = ViewBag.DepartmentValues as List<int> ?? new List<int>();
+    var adminNotifications = ViewBag.AdminNotifications as List<AdminNotificationModel> ?? new List<AdminNotificationModel>();
+    var pendingProfileRequests = ViewBag.PendingProfileRequests as List<ProfileUpdateRequestModel> ?? new List<ProfileUpdateRequestModel>();
+    var pendingTransferRequests = ViewBag.PendingTransferRequests as List<StaffTransferRequestModel> ?? new List<StaffTransferRequestModel>();
+    var nextMeeting = ViewBag.NextMeeting as MeetingsModel;
+    bool isAdminUser = (Context.Session.GetString("UserRole") ?? string.Empty).Equals("Admin", StringComparison.OrdinalIgnoreCase);
 }
 
 @await Html.PartialAsync("_AlertMessages")
@@ -14,160 +24,780 @@
     </nav>
 </div>
 
-<section class="section dashboard">
-    <div class="alert alert-success border-0 mb-4" style="border-left:4px solid #16c47f;background:linear-gradient(90deg,#ddfae8,#d5f7e2);border-radius:16px;">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="fw-bold text-success"><i class="bi bi-check-circle-fill me-2"></i>Welcome back, @Context.Session.GetString("UserName")!</div>
-            <button type="button" class="btn-close" onclick="this.closest('.alert').remove()"></button>
+<style>
+    .mom-hero-band {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 20px;
+        padding: 24px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #171f46 0%, #24306d 42%, #5563ea 100%);
+        color: #fff;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 18px 40px rgba(31, 41, 88, 0.14);
+    }
+
+    .mom-hero-band::after {
+        content: "";
+        position: absolute;
+        right: -80px;
+        top: -60px;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .mom-hero-band::before {
+        content: "";
+        position: absolute;
+        left: 42%;
+        bottom: -90px;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .mom-hero-copy,
+    .mom-hero-side {
+        position: relative;
+        z-index: 1;
+    }
+
+    .mom-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+    }
+
+    .mom-hero-title {
+        font-size: clamp(2.4rem, 4vw, 4rem);
+        line-height: 0.96;
+        font-weight: 900;
+        margin-bottom: 14px;
+        max-width: 640px;
+    }
+
+    .mom-hero-subtitle {
+        color: rgba(255,255,255,0.76);
+        max-width: 580px;
+        font-size: 1rem;
+        margin-bottom: 22px;
+    }
+
+    .mom-hero-tags {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .mom-hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.11);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-weight: 700;
+    }
+
+    .mom-hero-side {
+        display: grid;
+        gap: 14px;
+        align-content: center;
+    }
+
+    .mom-hero-metric {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.14);
+        backdrop-filter: blur(8px);
+    }
+
+    .mom-hero-metric-label {
+        color: rgba(255,255,255,0.68);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .mom-hero-metric-value {
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 900;
+        margin-bottom: 6px;
+    }
+
+    .mom-hero-metric-sub {
+        color: rgba(255,255,255,0.76);
+        font-size: 0.9rem;
+    }
+
+    .mom-dash-shell {
+        display: grid;
+        gap: 22px;
+    }
+
+    .mom-dash-title h1 {
+        margin-bottom: 6px;
+        font-size: 2.55rem;
+        font-weight: 800;
+        color: #1c2550;
+    }
+
+    .mom-dash-title p {
+        color: #6f7d95;
+        margin-bottom: 0;
+        font-size: 1.02rem;
+    }
+
+    .mom-overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .mom-overview-card {
+        border-radius: 20px;
+        padding: 18px 18px 16px;
+        min-height: 148px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.07);
+        border: 1px solid rgba(255,255,255,0.8);
+    }
+
+    .mom-overview-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -40px -40px auto;
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.28);
+    }
+
+    .mom-overview-card.purple { background: linear-gradient(135deg, #f3efff 0%, #f7f1ff 100%); }
+    .mom-overview-card.blue { background: linear-gradient(135deg, #edf4ff 0%, #f4f8ff 100%); }
+    .mom-overview-card.amber { background: linear-gradient(135deg, #fff7dd 0%, #fffbed 100%); }
+    .mom-overview-card.green { background: linear-gradient(135deg, #e8fff4 0%, #effff7 100%); }
+
+    .mom-overview-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .mom-overview-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.15rem;
+        box-shadow: 0 10px 22px rgba(35, 43, 88, 0.12);
+    }
+
+    .mom-overview-icon.purple { background: linear-gradient(135deg, #6b57f5, #8766ff); }
+    .mom-overview-icon.blue { background: linear-gradient(135deg, #2f7bf0, #4c95ff); }
+    .mom-overview-icon.amber { background: linear-gradient(135deg, #ff9800, #ffb300); }
+    .mom-overview-icon.green { background: linear-gradient(135deg, #0dbb86, #2acb9a); }
+
+    .mom-overview-tag {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #596682;
+        background: rgba(255,255,255,0.76);
+        padding: 7px 12px;
+        border-radius: 999px;
+    }
+
+    .mom-overview-value {
+        font-size: 2.5rem;
+        line-height: 1;
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: #1b2545;
+        position: relative;
+        z-index: 1;
+    }
+
+    .mom-overview-label {
+        font-size: 0.93rem;
+        font-weight: 700;
+        color: #48556f;
+        position: relative;
+        z-index: 1;
+    }
+
+    .mom-chart-card {
+        border-radius: 20px;
+        background: #fff;
+        border: 1px solid #e8edf5;
+        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.06);
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .mom-chart-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid #eef2f8;
+    }
+
+    .mom-chart-head h5 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #1d2752;
+    }
+
+    .mom-chart-action {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f9fc;
+        color: #7b88a0;
+    }
+
+    .mom-chart-body {
+        padding: 16px 16px 10px;
+        min-height: 330px;
+    }
+
+    .mom-logs-card {
+        border-radius: 20px;
+        background: #fff;
+        border: 1px solid #e8edf5;
+        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.06);
+        padding: 20px;
+    }
+
+    .mom-notify-card {
+        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid #e8edf5;
+        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.06);
+        padding: 20px;
+    }
+
+    .mom-notify-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .mom-notify-item {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        border: 1px solid #edf1f7;
+        border-radius: 16px;
+        padding: 14px;
+        background: #fbfcff;
+    }
+
+    .mom-notify-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.05rem;
+        color: #fff;
+        background: linear-gradient(135deg, #5f67f8, #8156d6);
+    }
+
+    .mom-notify-title {
+        font-weight: 800;
+        color: #1c2550;
+        margin-bottom: 4px;
+    }
+
+    .mom-notify-text {
+        color: #6f7d95;
+        margin-bottom: 4px;
+    }
+
+    .mom-notify-time {
+        color: #8a96aa;
+        font-size: 0.83rem;
+    }
+
+    .mom-notify-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+
+    .mom-soft-tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        background: #eef2ff;
+        color: #5864dd;
+    }
+
+    .mom-logs-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+
+    .mom-logs-head h5 {
+        margin: 0;
+        font-weight: 800;
+        color: #1d2752;
+    }
+
+    .mom-log-row {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 0.9fr 0.9fr;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 16px;
+        border: 1px solid #eef2f8;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        background: #fbfcff;
+    }
+
+    .mom-log-title {
+        font-weight: 700;
+        color: #1e274e;
+        margin-bottom: 2px;
+    }
+
+    .mom-log-sub {
+        color: #7a889e;
+        font-size: 0.88rem;
+    }
+
+    .mom-dash-empty {
+        text-align: center;
+        color: #8591a6;
+        padding: 24px 10px 8px;
+    }
+
+    @@media (max-width: 1199px) {
+        .mom-overview-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .mom-hero-band {
+            grid-template-columns: 1fr;
+            padding: 22px;
+        }
+
+        .mom-overview-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .mom-log-row {
+            grid-template-columns: 1fr;
+        }
+
+        .mom-dash-title h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<section class="mom-dash-shell">
+    <div class="mom-hero-band">
+        <div class="mom-hero-copy">
+            <div class="mom-hero-kicker"><i class="bi bi-stars"></i>@(isAdminUser ? "Admin Command Center" : "My Meeting Workspace")</div>
+            <div class="mom-hero-title">Welcome back, @Context.Session.GetString("UserName")</div>
+            <div class="mom-hero-subtitle">
+                @(isAdminUser
+                    ? "Monitor company-wide meeting flow, resolve profile actions quickly and keep scheduling, attendance and staff coordination in one operational surface."
+                    : "See only the meetings assigned to you, track approval progress and stay ready for your next meeting from one clean personal workspace.")
+            </div>
+            <div class="mom-hero-tags">
+                <span class="mom-hero-tag"><i class="bi bi-buildings"></i>@(string.IsNullOrWhiteSpace(Context.Session.GetString("CompanyName")) ? "No Company" : Context.Session.GetString("CompanyName"))</span>
+                <span class="mom-hero-tag"><i class="bi bi-grid-1x2"></i>@(isAdminUser ? "Full access workspace" : "Assigned meeting access")</span>
+                <span class="mom-hero-tag"><i class="bi bi-arrow-clockwise"></i>@(isAdminUser ? "Live operational view" : "My next actions")</span>
+            </div>
+        </div>
+        <div class="mom-hero-side">
+            <div class="mom-hero-metric">
+                <div class="mom-hero-metric-label">@(isAdminUser ? "Meetings in System" : "Meetings Assigned")</div>
+                <div class="mom-hero-metric-value">@ViewBag.TotalMeetings</div>
+                <div class="mom-hero-metric-sub">@(isAdminUser ? "Visible scheduled records across your current access scope." : "Meetings currently available to your account access.")</div>
+            </div>
+            <div class="mom-hero-metric">
+                <div class="mom-hero-metric-label">@(isAdminUser ? "Current Activity" : "Pending Requests")</div>
+                <div class="mom-hero-metric-value">@(isAdminUser ? ViewBag.ActiveMeetings : (pendingProfileRequests.Count + pendingTransferRequests.Count))</div>
+                <div class="mom-hero-metric-sub">@(isAdminUser ? "Upcoming or in-flow meetings that still need operational attention." : "Profile and transfer approvals still waiting on admin action.")</div>
+            </div>
+            <div class="mom-hero-metric">
+                <div class="mom-hero-metric-label">@(isAdminUser ? "Attendance Logged" : "Next Meeting")</div>
+                <div class="mom-hero-metric-value">@(isAdminUser ? ViewBag.TotalAttendees : (nextMeeting?.MeetingDate?.ToString("dd MMM") ?? "None"))</div>
+                <div class="mom-hero-metric-sub">@(isAdminUser ? "Attendance entries recorded inside the current visible meeting set." : (nextMeeting == null ? "No upcoming meeting is currently assigned." : $"{nextMeeting.MeetingDescription}"))</div>
+            </div>
         </div>
     </div>
 
     <div class="mom-page-header">
-        <div>
-            <h1>Dashboard</h1>
-            <p class="mom-page-subtitle">Meeting management overview and analytics</p>
+        <div class="mom-dash-title">
+            <h1>Overview</h1>
+            <p>@(isAdminUser ? "Live meeting analytics, approval activity and company scheduling posture." : "Your own meeting timeline, request status and upcoming work queue.")</p>
         </div>
         <div class="mom-toolbar">
-            <button class="btn btn-light" onclick="location.reload();"><i class="bi bi-arrow-clockwise me-1 text-primary"></i> Refresh</button>
-            <button class="btn btn-success"><i class="bi bi-download me-1"></i> Export Report</button>
+            <button class="btn btn-light px-4" onclick="location.reload();"><i class="bi bi-arrow-clockwise me-2"></i>Refresh Data</button>
+            @if (isAdminUser)
+            {
+                <button class="btn btn-primary px-4"><i class="bi bi-download me-2"></i>Export Report</button>
+            }
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card border-0" style="border-left:4px solid #5f58f4;background: linear-gradient(135deg, #f1f3ff 0%, #eef2ff 100%);">
-                <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #5a52e0; color: white;"><i class="bi bi-calendar-event fs-4"></i></div>
-                    <h2 class="fw-bold mb-1" style="font-size: 2.2rem; color: #1e2125;">14</h2>
-                    <p class="text-uppercase fw-bold mb-2 small text-muted">Total Meetings</p>
-                    <span class="badge" style="background:#ddfae8;color:#10b981;">12% from last month</span>
-                </div>
+    <div class="mom-overview-grid">
+        <div class="mom-overview-card purple">
+            <div class="mom-overview-top">
+                <div class="mom-overview-icon purple"><i class="bi bi-calendar-event"></i></div>
+                <div class="mom-overview-tag">All Time</div>
             </div>
+            <div class="mom-overview-value">@ViewBag.TotalMeetings</div>
+            <div class="mom-overview-label">Total Scheduled Meetings</div>
         </div>
 
-        <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card border-0" style="border-left:4px solid #19bf84;background: linear-gradient(135deg, #e9fff7 0%, #f3fff8 100%);">
-                <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #18b981; color: white;"><i class="bi bi-calendar-plus fs-4"></i></div>
-                    <h2 class="fw-bold mb-1" style="font-size: 2.2rem;">1</h2>
-                    <p class="text-uppercase fw-bold mb-2 small text-muted">Upcoming</p>
-                    <span class="badge" style="background:#ddfae8;color:#10b981;">8% from last week</span>
-                </div>
+        <div class="mom-overview-card blue">
+            <div class="mom-overview-top">
+                <div class="mom-overview-icon blue"><i class="bi bi-check2-circle"></i></div>
+                <div class="mom-overview-tag">Active</div>
             </div>
+            <div class="mom-overview-value">@(isAdminUser ? ViewBag.ActiveMeetings : ViewBag.CompletedMeetings)</div>
+            <div class="mom-overview-label">@(isAdminUser ? "Completed / Upcoming" : "Completed Meetings")</div>
         </div>
 
-        <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card border-0" style="border-left:4px solid #3d86ff;background: linear-gradient(135deg, #eff5ff 0%, #f5f8ff 100%);">
-                <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #3182ce; color: white;"><i class="bi bi-calendar-check fs-4"></i></div>
-                    <h2 class="fw-bold mb-1" style="font-size: 2.2rem;">8</h2>
-                    <p class="text-uppercase fw-bold mb-2 small text-muted">Completed</p>
-                    <span class="badge" style="background:#ddfae8;color:#10b981;">15% completion rate</span>
-                </div>
+        <div class="mom-overview-card amber">
+            <div class="mom-overview-top">
+                <div class="mom-overview-icon amber"><i class="bi bi-x-octagon"></i></div>
+                <div class="mom-overview-tag">@(isAdminUser ? "Recorded" : "Requests")</div>
             </div>
+            <div class="mom-overview-value">@(isAdminUser ? ViewBag.CancelledMeetings : pendingProfileRequests.Count)</div>
+            <div class="mom-overview-label">@(isAdminUser ? "Cancelled Meetings" : "Profile Requests Pending")</div>
         </div>
 
-        <div class="col-xxl-3 col-md-6 mb-4">
-            <div class="card border-0" style="border-left:4px solid #f5a000;background: linear-gradient(135deg, #fff9e6 0%, #fff7ee 100%);">
-                <div class="card-body p-4">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 55px; height: 55px; background-color: #f59e0b; color: white;"><i class="bi bi-calendar-x fs-4"></i></div>
-                    <h2 class="fw-bold mb-1" style="font-size: 2.2rem;">5</h2>
-                    <p class="text-uppercase fw-bold mb-2 small text-muted">Cancelled</p>
-                    <span class="badge" style="background:#ffe2e5;color:#ef4444;">3% cancellation rate</span>
-                </div>
+        <div class="mom-overview-card green">
+            <div class="mom-overview-top">
+                <div class="mom-overview-icon green"><i class="bi bi-people"></i></div>
+                <div class="mom-overview-tag">@(isAdminUser ? "Records" : "Transfer")</div>
             </div>
+            <div class="mom-overview-value">@(isAdminUser ? ViewBag.TotalAttendees : pendingTransferRequests.Count)</div>
+            <div class="mom-overview-label">@(isAdminUser ? "Total Attendees Logged" : "Transfer Requests Pending")</div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center"><h6>Meetings by Type</h6><div><i class="bi bi-arrow-clockwise text-primary me-3"></i><i class="bi bi-download text-secondary"></i></div></div>
-                <div class="card-body d-flex align-items-center justify-content-center" style="min-height:320px;">
-                    <div class="text-center text-muted">Chart area</div>
-                </div>
+    @if (isAdminUser)
+    {
+        <div class="mom-notify-card">
+            <div class="mom-logs-head mb-3">
+                <h5>Admin Notifications</h5>
+                <div class="text-muted small">Profile update requests, password changes and user activity.</div>
             </div>
-        </div>
-        <div class="col-lg-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center"><h6>Meetings by Department</h6><div><i class="bi bi-arrow-clockwise text-primary me-3"></i><i class="bi bi-download text-secondary"></i></div></div>
-                <div class="card-body d-flex align-items-center justify-content-center" style="min-height:320px;">
-                    <div class="text-center text-muted">Chart area</div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                        <h5 class="card-title fw-bold mb-0">Recent Meetings Logs</h5>
-                        <div class="mom-search-input" style="max-width:320px;">
-                            <span><i class="bi bi-search"></i></span>
-                            <input type="text" id="meetingSearchInput" onkeyup="searchTable()" class="form-control" placeholder="Search meeting title...">
+            @if (adminNotifications.Count == 0)
+            {
+                <div class="mom-dash-empty">No recent notifications found.</div>
+            }
+            else
+            {
+                <div class="mom-notify-list">
+                    @foreach (var notification in adminNotifications)
+                    {
+                        <div class="mom-notify-item">
+                            <div class="mom-notify-icon">
+                                @if (notification.NotificationType == "PasswordChanged")
+                                {
+                                    <i class="bi bi-key"></i>
+                                }
+                                else if (notification.NotificationType == "StaffTransferRequest")
+                                {
+                                    <i class="bi bi-arrow-left-right"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-person-lines-fill"></i>
+                                }
+                            </div>
+                            <div>
+                                <div class="mom-notify-title">@notification.Title</div>
+                                <div class="mom-notify-text">@notification.Message</div>
+                                <div class="mom-notify-meta">
+                                    <span class="mom-soft-tag">@(notification.NotificationType == "PasswordChanged" ? "Password" : notification.NotificationType == "StaffTransferRequest" ? "Transfer Request" : "Profile Request")</span>
+                                    <div class="mom-notify-time">@notification.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (isAdminUser)
+    {
+        <div class="row g-4">
+            <div class="col-xl-5">
+                <div class="mom-chart-card">
+                    <div class="mom-chart-head">
+                        <h5>Meeting Distribution</h5>
+                        <div class="mom-chart-action"><i class="bi bi-arrow-clockwise"></i></div>
+                    </div>
+                    <div class="mom-chart-body">
+                        <div id="meetingDistributionChart"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-7">
+                <div class="mom-chart-card">
+                    <div class="mom-chart-head">
+                        <h5>Department Involvement</h5>
+                        <div class="mom-chart-action"><i class="bi bi-arrow-clockwise"></i></div>
+                    </div>
+                    <div class="mom-chart-body">
+                        <div id="departmentInvolvementChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-xl-7">
+                <div class="mom-chart-card">
+                    <div class="mom-chart-head">
+                        <h5>My Upcoming Queue</h5>
+                        <div class="mom-chart-action"><i class="bi bi-calendar-check"></i></div>
+                    </div>
+                    <div class="mom-chart-body">
+                        @if (recentMeetings.Count == 0)
+                        {
+                            <div class="mom-dash-empty">No meetings are currently assigned to you.</div>
+                        }
+                        else
+                        {
+                            foreach (var meeting in recentMeetings.Where(x => !x.IsCancelled).OrderBy(x => x.MeetingDate).Take(4))
+                            {
+                                <div class="mom-log-row">
+                                    <div>
+                                        <div class="mom-log-title">@meeting.MeetingDescription</div>
+                                        <div class="mom-log-sub">@meeting.MeetingTypeName</div>
+                                    </div>
+                                    <div>
+                                        <div class="mom-log-title">@meeting.DepartmentName</div>
+                                        <div class="mom-log-sub">Department</div>
+                                    </div>
+                                    <div>
+                                        <div class="mom-log-title">@meeting.MeetingDate?.ToString("dd MMM yyyy")</div>
+                                        <div class="mom-log-sub">@meeting.MeetingDate?.ToString("hh:mm tt")</div>
+                                    </div>
+                                    <div>
+                                        @if (meeting.MeetingDate > DateTime.Now)
+                                        {
+                                            <span class="badge bg-primary">Upcoming</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-5">
+                <div class="mom-notify-card h-100">
+                    <div class="mom-logs-head mb-3">
+                        <h5>My Request Status</h5>
+                        <div class="text-muted small">Profile and transfer approvals connected to your account.</div>
+                    </div>
+
+                    <div class="mom-notify-list">
+                        @if (pendingProfileRequests.Count == 0 && pendingTransferRequests.Count == 0)
+                        {
+                            <div class="mom-dash-empty">No pending requests right now.</div>
+                        }
+                        @foreach (var request in pendingProfileRequests)
+                        {
+                            <div class="mom-notify-item">
+                                <div class="mom-notify-icon"><i class="bi bi-person-lines-fill"></i></div>
+                                <div>
+                                    <div class="mom-notify-title">Profile update pending</div>
+                                    <div class="mom-notify-text">@request.RequestedEmail</div>
+                                    <div class="mom-notify-time">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            </div>
+                        }
+                        @foreach (var request in pendingTransferRequests)
+                        {
+                            <div class="mom-notify-item">
+                                <div class="mom-notify-icon"><i class="bi bi-arrow-left-right"></i></div>
+                                <div>
+                                    <div class="mom-notify-title">Transfer request pending</div>
+                                    <div class="mom-notify-text">@request.TargetCompanyName | @request.TargetDepartmentName</div>
+                                    <div class="mom-notify-time">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mom-logs-card">
+        <div class="mom-logs-head">
+            <h5>@(isAdminUser ? "Recent Meeting Logs" : "My Meeting Logs")</h5>
+            <div class="mom-search-input" style="max-width: 320px;">
+                <span><i class="bi bi-search"></i></span>
+                <input type="text" id="meetingSearchInput" class="form-control" placeholder="Search meeting title..." onkeyup="filterMeetingLogs()">
+            </div>
+        </div>
+
+        <div id="meetingLogsWrap">
+            @if (recentMeetings.Count == 0)
+            {
+                <div class="mom-dash-empty">No recent meetings found.</div>
+            }
+            else
+            {
+                @foreach (var meeting in recentMeetings)
+                {
+                    <div class="mom-log-row">
+                        <div>
+                            <div class="mom-log-title">@meeting.MeetingDescription</div>
+                            <div class="mom-log-sub">@meeting.MeetingTypeName</div>
+                        </div>
+                        <div>
+                            <div class="mom-log-title">@meeting.DepartmentName</div>
+                            <div class="mom-log-sub">Department</div>
+                        </div>
+                        <div>
+                            <div class="mom-log-title">@meeting.MeetingDate?.ToString("dd MMM yyyy")</div>
+                            <div class="mom-log-sub">@meeting.MeetingDate?.ToString("hh:mm tt")</div>
+                        </div>
+                        <div>
+                            @if (meeting.IsCancelled)
+                            {
+                                <span class="badge bg-danger">Cancelled</span>
+                            }
+                            else if (meeting.MeetingDate > DateTime.Now)
+                            {
+                                <span class="badge bg-primary">Upcoming</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Completed</span>
+                            }
                         </div>
                     </div>
-
-                    <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
-                        <table class="table table-hover align-middle" id="meetingTable">
-                            <thead>
-                                <tr>
-                                    <th>Meeting Title</th>
-                                    <th>Department</th>
-                                    <th>Date</th>
-                                    <th class="text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (recentMeetings != null && recentMeetings.Count > 0)
-                                {
-                                    @foreach (var meeting in recentMeetings)
-                                    {
-                                        <tr>
-                                            <td class="fw-bold">@meeting.MeetingDescription</td>
-                                            <td>@meeting.DepartmentName</td>
-                                            <td>@meeting.MeetingDate?.ToString("dd MMM yyyy")</td>
-                                            <td class="text-center">
-                                                @if (meeting.IsCancelled)
-                                                {
-                                                    <span class="badge bg-danger">Cancelled</span>
-                                                }
-                                                else if (meeting.MeetingDate > DateTime.Now)
-                                                {
-                                                    <span class="badge bg-warning text-dark">Upcoming</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-success">Completed</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                }
+            }
         </div>
     </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    function searchTable() {
-      var input = document.getElementById("meetingSearchInput");
-      var filter = input.value.toUpperCase();
-      var table = document.getElementById("meetingTable");
-      var tr = table.getElementsByTagName("tr");
+    const meetingTypeLabels = @Html.Raw(JsonSerializer.Serialize(typeLabels));
+    const meetingTypeValues = @Html.Raw(JsonSerializer.Serialize(typeValues));
+    const departmentLabels = @Html.Raw(JsonSerializer.Serialize(departmentLabels));
+    const departmentValues = @Html.Raw(JsonSerializer.Serialize(departmentValues));
 
-      for (var i = 0; i < tr.length; i++) {
-        var td = tr[i].getElementsByTagName("td")[0];
-        if (td) {
-          var txtValue = td.textContent || td.innerText;
-          tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-        }
-      }
+    if (@(isAdminUser.ToString().ToLower()) && document.getElementById("meetingDistributionChart")) {
+        const distributionChart = new ApexCharts(document.querySelector("#meetingDistributionChart"), {
+            chart: { type: "donut", height: 320, toolbar: { show: false } },
+            series: meetingTypeValues.length ? meetingTypeValues : [1],
+            labels: meetingTypeLabels.length ? meetingTypeLabels : ["No Data"],
+            colors: ["#6c63ff", "#24c1a7", "#ffb000", "#3f8cff", "#ff6b6b", "#8b5cf6"],
+            legend: { position: "bottom", fontSize: "13px" },
+            dataLabels: { enabled: false },
+            stroke: { width: 0 },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: "68%"
+                    }
+                }
+            }
+        });
+        distributionChart.render();
+    }
+
+    if (@(isAdminUser.ToString().ToLower()) && document.getElementById("departmentInvolvementChart")) {
+        const departmentChart = new ApexCharts(document.querySelector("#departmentInvolvementChart"), {
+            chart: { type: "bar", height: 320, toolbar: { show: false } },
+            series: [{ name: "Meetings", data: departmentValues.length ? departmentValues : [0] }],
+            xaxis: { categories: departmentLabels.length ? departmentLabels : ["No Data"] },
+            colors: ["#6c63ff"],
+            plotOptions: {
+                bar: {
+                    borderRadius: 8,
+                    columnWidth: "42%"
+                }
+            },
+            dataLabels: { enabled: false },
+            grid: { borderColor: "#edf1f7" },
+            yaxis: { labels: { style: { colors: "#8090a7" } } },
+            xaxis: { labels: { style: { colors: "#8090a7" } } }
+        });
+        departmentChart.render();
+    }
+
+    function filterMeetingLogs() {
+        const input = document.getElementById("meetingSearchInput");
+        const filter = input.value.toUpperCase();
+        const rows = document.querySelectorAll("#meetingLogsWrap .mom-log-row");
+
+        rows.forEach(function (row) {
+            const title = row.querySelector(".mom-log-title");
+            const text = title ? title.textContent || title.innerText : "";
+            row.style.display = text.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        });
     }
 </script>

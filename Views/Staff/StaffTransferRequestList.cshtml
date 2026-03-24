@@ -1,0 +1,371 @@
+@model List<Meeting_Of_Minutes.Models.StaffTransferRequestModel>
+
+@{
+    ViewData["Title"] = "Staff Transfer Requests - Meeting Of Minutes";
+}
+
+@await Html.PartialAsync("_AlertMessages")
+
+<style>
+    .mom-transfer-shell {
+        display: grid;
+        gap: 22px;
+    }
+
+    .mom-transfer-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .mom-transfer-stat,
+    .mom-transfer-card {
+        background: #fff;
+        border: 1px solid #e8edf5;
+        border-radius: 24px;
+        box-shadow: 0 18px 40px rgba(35, 43, 88, 0.08);
+    }
+
+    .mom-transfer-stat {
+        padding: 18px 20px;
+    }
+
+    .mom-transfer-stat-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+        color: #8a97ac;
+        margin-bottom: 10px;
+    }
+
+    .mom-transfer-stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1d2752;
+    }
+
+    .mom-transfer-list {
+        display: grid;
+        gap: 18px;
+    }
+
+    .mom-transfer-card {
+        padding: 22px;
+    }
+
+    .mom-transfer-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .mom-transfer-user {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .mom-transfer-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        color: #5b5ce6;
+        font-size: 1.2rem;
+        border: 1px solid #dfe5ff;
+    }
+
+    .mom-transfer-name {
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: #1d2752;
+    }
+
+    .mom-transfer-sub {
+        color: #78859c;
+        font-size: 0.9rem;
+    }
+
+    .mom-transfer-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .mom-transfer-panel {
+        border: 1px solid #edf1f7;
+        border-radius: 20px;
+        padding: 18px;
+        background: #fbfcff;
+    }
+
+    .mom-transfer-panel h6 {
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #33415f;
+    }
+
+    .mom-transfer-field {
+        margin-bottom: 10px;
+    }
+
+    .mom-transfer-field label {
+        display: block;
+        color: #8a97ac;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 800;
+        margin-bottom: 3px;
+    }
+
+    .mom-transfer-field div {
+        color: #1f2a49;
+        font-weight: 700;
+    }
+
+    .mom-transfer-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .mom-transfer-proof {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #f7f9fc;
+        border: 1px solid #e6ecf4;
+        color: #44516c;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .mom-transfer-proof:hover {
+        color: #44516c;
+        background: #f2f5fb;
+    }
+
+    .mom-transfer-remark {
+        border: 1px solid #edf1f7;
+        border-radius: 18px;
+        padding: 15px 16px;
+        background: #fafbfd;
+        margin-bottom: 18px;
+    }
+
+    .mom-transfer-remark small {
+        display: block;
+        color: #8a97ac;
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+
+    .mom-transfer-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .mom-transfer-action-form {
+        border: 1px solid #edf1f7;
+        border-radius: 20px;
+        padding: 18px;
+        background: #fff;
+    }
+
+    .mom-transfer-action-form h6 {
+        font-weight: 800;
+        margin-bottom: 12px;
+        color: #233054;
+    }
+
+    @@media (max-width: 991px) {
+        .mom-transfer-summary,
+        .mom-transfer-grid,
+        .mom-transfer-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item">Admin</li>
+            <li class="breadcrumb-item active">Staff Transfer Requests</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="mom-page-header">
+    <div>
+        <h1>Staff Transfer Requests</h1>
+        <p class="mom-page-subtitle">Review incoming company transfer requests, validate department placement and decide whether the staff move should be approved.</p>
+    </div>
+    <div class="mom-toolbar">
+        <a asp-controller="Staff" asp-action="StaffList" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-2"></i>Back to Staff
+        </a>
+    </div>
+</div>
+
+@{
+    int pendingCount = Model.Count(x => string.Equals(x.RequestStatus, "Pending", StringComparison.OrdinalIgnoreCase));
+    int approvedCount = Model.Count(x => string.Equals(x.RequestStatus, "Approved", StringComparison.OrdinalIgnoreCase));
+    int rejectedCount = Model.Count(x => string.Equals(x.RequestStatus, "Rejected", StringComparison.OrdinalIgnoreCase));
+}
+
+<section class="mom-transfer-shell">
+    <div class="mom-transfer-summary">
+        <div class="mom-transfer-stat">
+            <div class="mom-transfer-stat-label">Pending</div>
+            <div class="mom-transfer-stat-value">@pendingCount</div>
+        </div>
+        <div class="mom-transfer-stat">
+            <div class="mom-transfer-stat-label">Approved</div>
+            <div class="mom-transfer-stat-value">@approvedCount</div>
+        </div>
+        <div class="mom-transfer-stat">
+            <div class="mom-transfer-stat-label">Rejected</div>
+            <div class="mom-transfer-stat-value">@rejectedCount</div>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body py-5 text-center text-muted">
+                No staff transfer requests found.
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mom-transfer-list">
+            @foreach (var request in Model)
+            {
+                <div class="mom-transfer-card">
+                    <div class="mom-transfer-top">
+                        <div class="mom-transfer-user">
+                            <div class="mom-transfer-avatar">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </div>
+                            <div>
+                                <div class="mom-transfer-name">@request.StaffName</div>
+                                <div class="mom-transfer-sub">@request.EmailAddress | @request.MobileNo</div>
+                                <div class="mom-transfer-sub">Requested by @request.RequestedByUserName on @request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                            </div>
+                        </div>
+                        <div>
+                            @if (request.RequestStatus == "Approved")
+                            {
+                                <span class="badge bg-success-subtle text-success">Approved</span>
+                            }
+                            else if (request.RequestStatus == "Rejected")
+                            {
+                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning">Pending</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mom-transfer-grid">
+                        <div class="mom-transfer-panel">
+                            <h6>Current Placement</h6>
+                            <div class="mom-transfer-field">
+                                <label>Company</label>
+                                <div>@request.SourceCompanyName</div>
+                            </div>
+                            <div class="mom-transfer-field">
+                                <label>Department</label>
+                                <div>@request.SourceDepartmentName</div>
+                            </div>
+                        </div>
+
+                        <div class="mom-transfer-panel">
+                            <h6>Requested Placement</h6>
+                            <div class="mom-transfer-field">
+                                <label>Target Company</label>
+                                <div>@request.TargetCompanyName</div>
+                            </div>
+                            <div class="mom-transfer-field">
+                                <label>Target Department</label>
+                                <div>@request.TargetDepartmentName</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mom-transfer-remark">
+                        <small>Transfer Reason</small>
+                        <div class="fw-semibold">@(string.IsNullOrWhiteSpace(request.TransferReason) ? "-" : request.TransferReason)</div>
+                    </div>
+
+                    <div class="mom-transfer-footer">
+                        <div class="small text-muted">
+                            Requested on @request.Created.ToString("dd MMM yyyy hh:mm tt")
+                            @if (request.DecisionDate.HasValue)
+                            {
+                                <span> | Decision on @request.DecisionDate.Value.ToString("dd MMM yyyy hh:mm tt")</span>
+                            }
+                        </div>
+                        <a href="@request.DocumentPath" target="_blank" class="mom-transfer-proof">
+                            <i class="bi bi-file-earmark-arrow-down"></i>View Transfer Document
+                        </a>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(request.AdminRemarks))
+                    {
+                        <div class="mom-transfer-remark">
+                            <small>Admin Remarks</small>
+                            <div class="fw-semibold">@request.AdminRemarks</div>
+                        </div>
+                    }
+
+                    @if (request.RequestStatus == "Pending")
+                    {
+                        <div class="mom-transfer-actions">
+                            <form asp-action="ApproveStaffTransferRequest" method="post" class="mom-transfer-action-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="staffTransferRequestID" value="@request.StaffTransferRequestID" />
+                                <h6>Approve Transfer</h6>
+                                <input type="text" name="adminRemarks" class="form-control mb-3" placeholder="Approval remarks (optional)" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check2-circle me-2"></i>Approve Transfer
+                                </button>
+                            </form>
+
+                            <form asp-action="RejectStaffTransferRequest" method="post" class="mom-transfer-action-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="staffTransferRequestID" value="@request.StaffTransferRequestID" />
+                                <h6>Reject Transfer</h6>
+                                <input type="text" name="adminRemarks" class="form-control mb-3" placeholder="Rejection reason" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-circle me-2"></i>Reject Transfer
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>

@@ -1,0 +1,392 @@
+@model List<Meeting_Of_Minutes.Models.ProfileUpdateRequestModel>
+
+@{
+    ViewData["Title"] = "Profile Update Requests - Meeting Of Minutes";
+}
+
+@await Html.PartialAsync("_AlertMessages")
+
+<style>
+    .mom-request-shell {
+        display: grid;
+        gap: 22px;
+    }
+
+    .mom-request-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .mom-request-stat {
+        background: #fff;
+        border: 1px solid #e8edf5;
+        border-radius: 22px;
+        padding: 18px 20px;
+        box-shadow: 0 16px 36px rgba(35, 43, 88, 0.07);
+    }
+
+    .mom-request-stat-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+        color: #8a97ac;
+        margin-bottom: 10px;
+    }
+
+    .mom-request-stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1d2752;
+    }
+
+    .mom-request-list {
+        display: grid;
+        gap: 18px;
+    }
+
+    .mom-request-card {
+        background: #fff;
+        border: 1px solid #e8edf5;
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 18px 40px rgba(35, 43, 88, 0.08);
+    }
+
+    .mom-request-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .mom-request-user {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .mom-request-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eef2ff;
+        color: #5b5ce6;
+        font-size: 1.2rem;
+        border: 1px solid #dfe5ff;
+    }
+
+    .mom-request-name {
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: #1d2752;
+    }
+
+    .mom-request-sub {
+        color: #78859c;
+        font-size: 0.9rem;
+    }
+
+    .mom-request-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .mom-request-panel {
+        border: 1px solid #edf1f7;
+        border-radius: 20px;
+        padding: 18px;
+        background: #fbfcff;
+    }
+
+    .mom-request-panel h6 {
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #33415f;
+    }
+
+    .mom-request-field {
+        margin-bottom: 10px;
+    }
+
+    .mom-request-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .mom-request-field label {
+        display: block;
+        color: #8a97ac;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 800;
+        margin-bottom: 3px;
+    }
+
+    .mom-request-field div {
+        color: #1f2a49;
+        font-weight: 700;
+    }
+
+    .mom-request-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .mom-request-proof {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #f7f9fc;
+        border: 1px solid #e6ecf4;
+        color: #44516c;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .mom-request-proof:hover {
+        color: #44516c;
+        background: #f2f5fb;
+    }
+
+    .mom-request-remark {
+        border: 1px solid #edf1f7;
+        border-radius: 18px;
+        padding: 15px 16px;
+        background: #fafbfd;
+        margin-bottom: 18px;
+    }
+
+    .mom-request-remark small {
+        display: block;
+        color: #8a97ac;
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+
+    .mom-request-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .mom-request-action-form {
+        border: 1px solid #edf1f7;
+        border-radius: 20px;
+        padding: 18px;
+        background: #fff;
+    }
+
+    .mom-request-action-form h6 {
+        font-weight: 800;
+        margin-bottom: 12px;
+        color: #233054;
+    }
+
+    @@media (max-width: 991px) {
+        .mom-request-summary,
+        .mom-request-grid,
+        .mom-request-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item">Admin</li>
+            <li class="breadcrumb-item active">Profile Update Requests</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="mom-page-header">
+    <div>
+        <h1>Profile Update Requests</h1>
+        <p class="mom-page-subtitle">Review requested profile changes, validate proof documents and decide whether the request should be applied.</p>
+    </div>
+    <div class="mom-toolbar">
+        <a asp-action="Profile" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-2"></i>Back to Profile
+        </a>
+    </div>
+</div>
+
+@{
+    int pendingCount = Model.Count(x => string.Equals(x.RequestStatus, "Pending", StringComparison.OrdinalIgnoreCase));
+    int approvedCount = Model.Count(x => string.Equals(x.RequestStatus, "Approved", StringComparison.OrdinalIgnoreCase));
+    int rejectedCount = Model.Count(x => string.Equals(x.RequestStatus, "Rejected", StringComparison.OrdinalIgnoreCase));
+}
+
+<section class="mom-request-shell">
+    <div class="mom-request-summary">
+        <div class="mom-request-stat">
+            <div class="mom-request-stat-label">Pending</div>
+            <div class="mom-request-stat-value">@pendingCount</div>
+        </div>
+        <div class="mom-request-stat">
+            <div class="mom-request-stat-label">Approved</div>
+            <div class="mom-request-stat-value">@approvedCount</div>
+        </div>
+        <div class="mom-request-stat">
+            <div class="mom-request-stat-label">Rejected</div>
+            <div class="mom-request-stat-value">@rejectedCount</div>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body py-5 text-center text-muted">
+                No profile update requests found.
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mom-request-list">
+            @foreach (var request in Model)
+            {
+                var companyDepartmentText = request.CompanyName;
+                if (!string.IsNullOrWhiteSpace(request.DepartmentName))
+                {
+                    companyDepartmentText += " | " + request.DepartmentName;
+                }
+
+                <div class="mom-request-card">
+                    <div class="mom-request-top">
+                        <div class="mom-request-user">
+                            <div class="mom-request-avatar">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </div>
+                            <div>
+                                <div class="mom-request-name">@request.CurrentUserName</div>
+                                <div class="mom-request-sub">@companyDepartmentText</div>
+                                <div class="mom-request-sub">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                            </div>
+                        </div>
+                        <div>
+                            @if (request.RequestStatus == "Approved")
+                            {
+                                <span class="badge bg-success-subtle text-success">Approved</span>
+                            }
+                            else if (request.RequestStatus == "Rejected")
+                            {
+                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning">Pending</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mom-request-grid">
+                        <div class="mom-request-panel">
+                            <h6>Current Details</h6>
+                            <div class="mom-request-field">
+                                <label>Name</label>
+                                <div>@request.CurrentUserName</div>
+                            </div>
+                            <div class="mom-request-field">
+                                <label>Email</label>
+                                <div>@request.CurrentEmail</div>
+                            </div>
+                            <div class="mom-request-field">
+                                <label>Contact No</label>
+                                <div>@request.CurrentContactNo</div>
+                            </div>
+                            <div class="mom-request-field">
+                                <label>City</label>
+                                <div>@request.CurrentCity</div>
+                            </div>
+                        </div>
+
+                        <div class="mom-request-panel">
+                            <h6>Requested Details</h6>
+                            <div class="mom-request-field">
+                                <label>Name</label>
+                                <div>@request.RequestedUserName</div>
+                            </div>
+                            <div class="mom-request-field">
+                                <label>Email</label>
+                                <div>@request.RequestedEmail</div>
+                            </div>
+                            <div class="mom-request-field">
+                                <label>Contact No</label>
+                                <div>@request.RequestedContactNo</div>
+                            </div>
+                            <div class="mom-request-field">
+                                <label>City</label>
+                                <div>@request.RequestedCity</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mom-request-footer">
+                        <div class="small text-muted">
+                            Requested on @request.Created.ToString("dd MMM yyyy hh:mm tt")
+                            @if (request.DecisionDate.HasValue)
+                            {
+                                <span> | Decision on @request.DecisionDate.Value.ToString("dd MMM yyyy hh:mm tt")</span>
+                            }
+                        </div>
+                        <a href="@request.DocumentPath" target="_blank" class="mom-request-proof">
+                            <i class="bi bi-file-earmark-arrow-down"></i>View Uploaded Proof
+                        </a>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(request.AdminRemarks))
+                    {
+                        <div class="mom-request-remark">
+                            <small>Admin Remarks</small>
+                            <div class="fw-semibold">@request.AdminRemarks</div>
+                        </div>
+                    }
+
+                    @if (request.RequestStatus == "Pending")
+                    {
+                        <div class="mom-request-actions">
+                            <form asp-action="ApproveProfileUpdateRequest" method="post" class="mom-request-action-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="profileUpdateRequestID" value="@request.ProfileUpdateRequestID" />
+                                <h6>Approve Request</h6>
+                                <input type="text" name="adminRemarks" class="form-control mb-3" placeholder="Approval remarks (optional)" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check2-circle me-2"></i>Accept Request
+                                </button>
+                            </form>
+
+                            <form asp-action="RejectProfileUpdateRequest" method="post" class="mom-request-action-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="profileUpdateRequestID" value="@request.ProfileUpdateRequestID" />
+                                <h6>Reject Request</h6>
+                                <input type="text" name="adminRemarks" class="form-control mb-3" placeholder="Rejection reason" />
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-circle me-2"></i>Reject Request
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>

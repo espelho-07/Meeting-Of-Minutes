@@ -4,9 +4,31 @@
 -- TABLE : [dbo].[MOM_MeetingVenue]
 -- =============================================
 
+IF COL_LENGTH('dbo.MOM_MeetingVenue', 'CompanyName') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[MOM_MeetingVenue]
+    ADD [CompanyName] NVARCHAR(100) NULL;
+END;
+GO
+
+UPDATE mv
+SET mv.CompanyName = seed.CompanyName
+FROM [dbo].[MOM_MeetingVenue] mv
+CROSS APPLY
+(
+    SELECT TOP 1 [CompanyName]
+    FROM [dbo].[MST_User]
+    WHERE [UserRole] = 'Admin'
+      AND [CompanyName] IS NOT NULL
+    ORDER BY [UserID]
+) seed
+WHERE mv.CompanyName IS NULL;
+GO
+
 -- 1 -> SelectAll Procedure [For List Page]
 GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_MeetingVenue_SelectAll]
+    @CompanyName NVARCHAR(100)
 AS
 BEGIN
     SELECT
@@ -15,6 +37,7 @@ BEGIN
         [dbo].[MOM_MeetingVenue].[Created],
         [dbo].[MOM_MeetingVenue].[Modified]
     FROM [dbo].[MOM_MeetingVenue]
+    WHERE [dbo].[MOM_MeetingVenue].[CompanyName] = @CompanyName
     ORDER BY [dbo].[MOM_MeetingVenue].[MeetingVenueID] DESC;
 END;
 GO
@@ -23,7 +46,8 @@ GO
 GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_MeetingVenue_SelectByPK]
 (
-    @MeetingVenueID INT
+    @MeetingVenueID INT,
+    @CompanyName NVARCHAR(100)
 )
 AS
 BEGIN
@@ -33,7 +57,8 @@ BEGIN
         [dbo].[MOM_MeetingVenue].[Created],
         [dbo].[MOM_MeetingVenue].[Modified]
     FROM [dbo].[MOM_MeetingVenue]
-    WHERE [dbo].[MOM_MeetingVenue].[MeetingVenueID] = @MeetingVenueID;
+    WHERE [dbo].[MOM_MeetingVenue].[MeetingVenueID] = @MeetingVenueID
+      AND [dbo].[MOM_MeetingVenue].[CompanyName] = @CompanyName;
 END;
 GO
 
@@ -42,6 +67,7 @@ GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_MeetingVenue_Insert]
 (
     @MeetingVenueName NVARCHAR(100),
+    @CompanyName      NVARCHAR(100),
     @Modified         DATETIME
 )
 AS
@@ -49,12 +75,14 @@ BEGIN
     INSERT INTO [dbo].[MOM_MeetingVenue]
     (
         [MeetingVenueName],
+        [CompanyName],
         [Created],
         [Modified]
     )
     VALUES
     (
         @MeetingVenueName,
+        @CompanyName,
         GETDATE(),
         @Modified
     );
@@ -66,7 +94,8 @@ GO
 CREATE OR ALTER PROCEDURE [dbo].[PR_MeetingVenue_UpdateByPK]
 (
     @MeetingVenueID   INT,
-    @MeetingVenueName NVARCHAR(100)
+    @MeetingVenueName NVARCHAR(100),
+    @CompanyName      NVARCHAR(100)
 )
 AS
 BEGIN
@@ -74,7 +103,8 @@ BEGIN
     SET
         [MeetingVenueName] = @MeetingVenueName,
         [Modified]         = GETDATE()
-    WHERE [MeetingVenueID] = @MeetingVenueID;
+    WHERE [MeetingVenueID] = @MeetingVenueID
+      AND [CompanyName] = @CompanyName;
 END;
 GO
 

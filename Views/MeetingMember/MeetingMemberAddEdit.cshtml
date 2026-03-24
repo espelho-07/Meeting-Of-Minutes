@@ -1,8 +1,9 @@
 @model Meeting_Of_Minutes.Models.MeetingMemberModel
-
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSFormStyles")
 @{
     ViewData["Title"] = "Attendance Edit - Meeting Of Minutes";
+    bool isEditMode = Model.MeetingMemberID != 0;
 }
 
 <div class="pagetitle mb-4">
@@ -15,44 +16,85 @@
     </nav>
 </div>
 
-<div class="mom-form-wrap">
-    <div class="mb-4">
-        <h1>@(Model.MeetingMemberID == 0 ? "Add Attendance Record" : "Update Attendance")</h1>
-        <p class="mom-page-subtitle">Manage member attendance for meetings</p>
-    </div>
-
-    <div class="card mom-form-card col-lg-8 mx-auto">
-        <div class="card-header">
-            <h6><i class="bi bi-person-check me-2"></i> Update Attendance</h6>
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-person-check"></i> Attendance Control</div>
+            <h1 class="form-title">@(isEditMode ? "Update Attendance" : "Add Attendance Record")</h1>
+            <p class="form-subtitle">Review one attendance record and update the meeting, staff member, presence state and supporting remarks in one place.</p>
         </div>
-        <div class="card-body">
-            <form class="row g-4 js-update-confirm-form" data-id-field="MeetingMemberID" data-update-message="Sure to update this meeting member?" method="post" asp-action="Save">
+        <aside class="form-note">
+            <div class="form-note-label">Attendance note</div>
+            <h2 class="form-note-title">This page is meant for corrections and record maintenance.</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Use it when an attendance entry needs manual correction.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Presence status updates control who is marked present or absent.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Remarks help track why an entry was adjusted.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="form-card">
+        <div class="form-card-header">
+            <div>
+                <h3 class="form-card-heading">Attendance Details</h3>
+                <p class="form-card-meta">Update the attendance mapping for one meeting member record.</p>
+            </div>
+            <div class="form-status-chip">@(isEditMode ? "Editing attendance record" : "Creating attendance record")</div>
+        </div>
+        <div class="form-card-body">
+            <form class="row g-4 js-update-confirm-form" data-id-field="MeetingMemberID" data-update-message="Sure to update this meeting member?" method="post" asp-action="Save" id="attendanceForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="MeetingMemberID" />
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Meeting</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-calendar-event"></i></span><select asp-for="MeetingID" asp-items="ViewBag.MeetingDropDown" class="form-select"><option value="">-- Select Meeting --</option></select></div>
+                    <div class="form-field">
+                        <label class="form-label-modern">Meeting</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-calendar-event"></i></span><select asp-for="MeetingID" asp-items="ViewBag.MeetingDropDown" class="form-select"><option value="">-- Select Meeting --</option></select></div>
+                        <span asp-validation-for="MeetingID" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Select Staff Member</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-people"></i></span><select asp-for="StaffID" asp-items="ViewBag.StaffDropDown" class="form-select"><option value="">-- Select Staff --</option></select></div>
+                    <div class="form-field">
+                        <label class="form-label-modern">Staff Member</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-people"></i></span><select asp-for="StaffID" asp-items="ViewBag.StaffDropDown" class="form-select"><option value="">-- Select Staff --</option></select></div>
+                        <span asp-validation-for="StaffID" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Is Present?</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-check2-square"></i></span><select asp-for="IsPresent" class="form-select"><option value="true">Yes (Present)</option><option value="false">No (Absent)</option></select></div>
+                    <div class="form-field">
+                        <label class="form-label-modern">Attendance Status</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-check2-square"></i></span><select asp-for="IsPresent" class="form-select"><option value="true">Yes (Present)</option><option value="false">No (Absent)</option></select></div>
+                        <span asp-validation-for="IsPresent" class="text-danger"></span>
+                    </div>
                 </div>
-                <div class="col-md-12">
-                    <label class="form-label small fw-bold">Remarks</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-chat-left-text"></i></span><textarea asp-for="Remarks" class="form-control" rows="3" maxlength="250"></textarea></div>
+                <div class="col-12">
+                    <div class="form-field">
+                        <label class="form-label-modern">Remarks</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-chat-left-text"></i></span><textarea asp-for="Remarks" class="form-control" rows="4" maxlength="250" placeholder="Add a short note for this attendance record"></textarea></div>
+                    </div>
                 </div>
-                <div class="col-12 mom-form-actions">
-                    <a asp-action="MeetingMemberList" class="btn btn-light px-4">Back to List</a>
-                    <button type="submit" class="btn btn-primary px-5">Update Record</button>
+                <div class="col-12 form-actions-modern">
+                    <a asp-action="MeetingMemberList" class="btn form-btn form-btn-outline">Back to List</a>
+                    <button type="submit" class="btn form-btn form-btn-primary" id="attendanceSaveButton">
+                        <span class="spinner-border spinner-border-sm me-2 form-btn-spinner" aria-hidden="true"></span>
+                        <span>Update Record</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('attendanceForm');
+            const button = document.getElementById('attendanceSaveButton');
+            if (!form || !button) return;
+            form.addEventListener('submit', function () {
+                button.classList.add('is-loading');
+                button.disabled = true;
+            });
+        })();
+    </script>
+}

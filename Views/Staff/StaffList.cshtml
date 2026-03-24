@@ -1,10 +1,9 @@
-@{
-    ViewData["Title"] = "Staff Members - Meeting Of Minutes";
-}
 @model List<StaffModel>
 
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
 @{
+    ViewData["Title"] = "Staff Members - Meeting Of Minutes";
     int SerialNumber = 1;
 }
 
@@ -17,72 +16,106 @@
     </nav>
 </div>
 
-<div class="mom-page-header">
-    <div>
-        <h1>Staff Members</h1>
-        <p class="mom-page-subtitle">Manage staff access and organizational participation</p>
-    </div>
-    <div class="mom-toolbar">
-        <a asp-action="StaffAddEdit" class="btn btn-primary px-4"><i class="bi bi-person-plus-fill me-2"></i>Add Staff Member</a>
-        <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
-    </div>
-</div>
-
-<div class="mom-search-card">
-    <form class="mom-search-form" asp-action="StaffList" asp-controller="Staff" method="post">
-        @Html.AntiForgeryToken()
-        <div class="mom-search-input">
-            <span><i class="bi bi-search"></i></span>
-            <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search staff members..." />
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-people"></i> Staff Access</div>
+            <h1 class="list-title">Staff Members</h1>
+            <p class="list-subtitle">Manage staff records, auto-created user access and company participation from the same clean workspace language used in meeting scheduling.</p>
         </div>
-        <button class="btn btn-primary px-4" type="submit">Search</button>
-        <a href="@Url.Action("StaffList", "Staff")" class="btn btn-light px-4">Clear</a>
-    </form>
-    <div class="mom-stat-chip">Total Records: @Model.Count</div>
-</div>
+        <aside class="list-note">
+            <div class="list-note-label">Access notes</div>
+            <h2 class="list-note-title">@Model.Count staff records are active in the current company scope.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Every staff record can create or sync a linked user account automatically.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Department placement controls meeting visibility and transfer workflows.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Open staff details to review password state, transfer history and enrolled meetings.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-<div class="card mom-list-card">
-    <div class="card-header">
-        <h6><i class="bi bi-people"></i> Staff List</h6>
-    </div>
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Staff Directory</h3>
+                <p class="list-surface-meta">Search, review and manage staff records from one consistent administrative surface.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="StaffAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-person-plus-fill me-2"></i>Add Staff Member</a>
+                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
+            </div>
+        </div>
 
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0" id="staffTable">
-            <thead>
-                <tr>
-                    <th style="width:44px;"></th>
-                    <th class="ps-4">#</th>
-                    <th>Staff Member</th>
-                    <th>Department Name</th>
-                    <th>Mobile & Email</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var staff in Model)
+        <div class="list-search-wrap">
+            <form class="list-search-form" asp-action="StaffList" asp-controller="Staff" method="post">
+                @Html.AntiForgeryToken()
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search staff members..." />
+                </div>
+                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
+                <a href="@Url.Action("StaffList", "Staff")" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+            <div class="list-status-chip">Total Records: @Model.Count</div>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
                 {
-                    <tr>
-                        <td><input type="checkbox" class="form-check-input" /></td>
-                        <td class="ps-4">@SerialNumber</td>
-                        <td><div class="fw-bold">@staff.StaffName</div></td>
-                        <td>@staff.DepartmentName</td>
-                        <td>@staff.MobileNo<br /><small>@staff.EmailAddress</small></td>
-                        <td class="text-center">
-                            <a asp-action="StaffAddEdit" asp-route-id="@staff.StaffID" class="mom-icon-btn">
-                                <i class="bi bi-pencil-square text-warning"></i>
-                            </a>
-                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="StaffID" value="@staff.StaffID" />
-                                <button type="submit" class="btn btn-sm btn-link mom-icon-btn p-0">
-                                    <i class="bi bi-trash3 text-danger"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    SerialNumber++;
+                    <div class="list-empty">No staff members found.</div>
                 }
-            </tbody>
-        </table>
-    </div>
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Staff Member</th>
+                                <th>Department</th>
+                                <th>Mobile & Email</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var staff in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">@SerialNumber</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@staff.StaffName</div>
+                                        <div class="small text-muted">Auto user account enabled</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@staff.DepartmentName</div>
+                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(staff.CompanyName) ? "-" : staff.CompanyName)</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@staff.MobileNo</div>
+                                        <div class="small text-muted">@staff.EmailAddress</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="StaffView" asp-route-id="@staff.StaffID" class="mom-icon-btn text-primary me-1" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="StaffAddEdit" asp-route-id="@staff.StaffID" class="mom-icon-btn text-warning me-1" title="Edit">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="StaffID" value="@staff.StaffID" />
+                                            <button type="submit" class="btn btn-sm btn-link mom-icon-btn text-danger p-0">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                SerialNumber++;
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
 </div>

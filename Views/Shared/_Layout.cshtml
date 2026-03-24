@@ -1,9 +1,48 @@
 @using Microsoft.AspNetCore.Http
+@using Microsoft.Data.SqlClient
+@using System.Data
+@using Meeting_Of_Minutes.Models
 <!DOCTYPE html>
 <html lang="en">
 @{
     string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    string currentUserRole = Context.Session.GetString("UserRole") ?? string.Empty;
+    bool isAdminUser = currentUserRole.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+    List<AdminNotificationModel> layoutNotifications = new List<AdminNotificationModel>();
+    int unreadNotificationCount = 0;
+
+    if (isAdminUser)
+    {
+        string companyName = Context.Session.GetString("CompanyName") ?? string.Empty;
+        using (SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString))
+        using (SqlCommand cmd = new SqlCommand("PR_MST_AdminNotification_SelectAll", con))
+        {
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", companyName);
+            con.Open();
+
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    layoutNotifications.Add(new AdminNotificationModel
+                    {
+                        AdminNotificationID = Convert.ToInt32(reader["AdminNotificationID"]),
+                        CompanyName = reader["CompanyName"].ToString() ?? string.Empty,
+                        NotificationType = reader["NotificationType"].ToString() ?? string.Empty,
+                        Title = reader["Title"].ToString() ?? string.Empty,
+                        Message = reader["Message"].ToString() ?? string.Empty,
+                        RelatedUserID = reader["RelatedUserID"] == DBNull.Value ? null : Convert.ToInt32(reader["RelatedUserID"]),
+                        IsRead = reader["IsRead"] != DBNull.Value && Convert.ToBoolean(reader["IsRead"]),
+                        Created = Convert.ToDateTime(reader["Created"])
+                    });
+                }
+            }
+        }
+
+        unreadNotificationCount = layoutNotifications.Count(x => !x.IsRead);
+    }
 
     string NavClass(string controller, string action = "")
     {
@@ -63,81 +102,55 @@
         }
 
         .header {
-            background: #ffffff;
-            box-shadow: 0 1px 0 rgba(17, 24, 39, 0.08);
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 1px 0 rgba(17, 24, 39, 0.05);
             height: 74px;
             padding: 0 20px;
         }
 
-        .header .logo {
-            min-width: 220px;
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            box-shadow: none;
-        }
-
-        .header .logo img {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            padding: 8px;
-            background: #5b5ce6;
-            box-shadow: none;
-        }
-
-        .header .logo span {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #172033;
-        }
-
-        .header .logo small {
-            display: block;
-            line-height: 1;
-            margin-top: 2px;
-            color: #7b8798;
-            font-size: 0.70rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            box-shadow: none;
-        }
-
-        .header-brand-text {
+        .mom-shell-title {
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .mom-shell-title strong {
+            font-size: 1.02rem;
+            font-weight: 900;
+            color: #172033;
+            line-height: 1;
+        }
+
+        .mom-shell-title span {
+            font-size: 0.78rem;
+            color: #7c88a0;
+            margin-top: 4px;
+            font-weight: 700;
         }
 
         .toggle-sidebar-btn {
-            color: #6e7894;
-            font-size: 1.15rem;
-            margin-left: 14px;
-            width: 38px;
-            height: 38px;
+            color: #5f6d86;
+            font-size: 1rem;
+            margin-right: 14px;
+            width: 40px;
+            height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: #f7f9fc;
+            border: 1px solid #e7edf5;
         }
 
         .header-nav .nav-icon,
         .header-nav .nav-profile {
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e6ecf4;
             background: #fff;
             border-radius: 14px;
             padding: 8px 12px;
-            box-shadow: none;
+            box-shadow: 0 6px 14px rgba(32, 41, 76, 0.04);
         }
 
         .header-nav .nav-icon i {
@@ -148,6 +161,12 @@
             top: -6px;
             right: -6px;
             background: #ff5b63;
+            min-width: 20px;
+            min-height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
         }
 
         .header-nav .nav-profile img {
@@ -162,72 +181,80 @@
         }
 
         .sidebar {
-            background: #232862;
-            box-shadow: none;
-            border-right: 1px solid rgba(255, 255, 255, 0.06);
-            padding-top: 88px;
+            background: #ffffff;
+            box-shadow: 8px 0 24px rgba(36, 46, 82, 0.04);
+            border-right: 1px solid #edf1f7;
+            padding-top: 74px;
             padding-left: 14px;
             padding-right: 14px;
         }
 
         .sidebar-nav .nav-heading {
-            color: rgba(255, 255, 255, 0.34);
-            font-size: 0.70rem;
+            color: #a0abc0;
+            font-size: 0.68rem;
             font-weight: 700;
             letter-spacing: 0.11em;
-            margin: 24px 10px 12px;
+            margin: 18px 12px 8px;
         }
 
         .sidebar-nav .nav-link {
-            color: rgba(255, 255, 255, 0.76);
+            color: #41506b;
             background: transparent;
-            border-radius: 12px;
+            border-radius: 14px;
             margin: 4px 0;
-            padding: 12px 14px;
+            padding: 11px 13px;
             font-weight: 700;
             position: relative;
             transition: all 0.2s ease;
             border: 1px solid transparent;
+            font-size: 0.94rem;
         }
 
         .sidebar-nav .nav-link i {
-            color: rgba(255, 255, 255, 0.55);
-            font-size: 1rem;
-            margin-right: 12px;
-            width: 20px;
+            color: #91a0bc;
+            font-size: 0.95rem;
+            margin-right: 10px;
+            width: 18px;
             text-align: center;
         }
 
-        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link:hover {
+            background: #f5f7ff;
+            color: #2b3b67;
+            border-color: #e7ebfb;
+            box-shadow: 0 8px 20px rgba(64, 86, 179, 0.06);
+            transform: translateY(-1px);
+        }
+
         .sidebar-nav .nav-link.active {
-            background: #4f46c9;
-            color: #fff;
-            box-shadow: none;
-            transform: none;
+            background: linear-gradient(180deg, #f6f4ff 0%, #f2f6ff 100%);
+            color: #4f46c9;
+            border-color: #e3e6ff;
+            box-shadow: 0 8px 18px rgba(91, 92, 230, 0.07);
         }
 
         .sidebar-nav .nav-link:hover i,
         .sidebar-nav .nav-link.active i {
-            color: #fff;
+            color: inherit;
         }
 
         .sidebar-nav .nav-link.active::before {
             content: "";
             position: absolute;
-            left: -14px;
+            left: -16px;
             top: 50%;
             transform: translateY(-50%);
-            width: 4px;
-            height: 24px;
+            width: 3px;
+            height: 22px;
             border-radius: 0 999px 999px 0;
-            background: #8bd2ff;
+            background: #6b57f5;
             box-shadow: none;
         }
 
         .main {
             background: var(--mom-bg);
             min-height: calc(100vh - 72px);
-            padding: 28px 26px 34px;
+            padding: 24px 22px 30px;
         }
 
         .pagetitle {
@@ -307,19 +334,20 @@
         }
 
         .table thead th {
-            font-size: 0.82rem;
+            font-size: 0.76rem;
             text-transform: none !important;
             color: #44516c !important;
             font-weight: 800;
             background: #fff !important;
             border-bottom: 1px solid #e9eef6;
-            padding: 1rem 1.15rem;
+            padding: 0.9rem 1rem;
         }
 
         .table tbody td {
-            padding: 1rem 1.15rem;
+            padding: 0.88rem 1rem;
             vertical-align: middle;
             border-bottom-color: #edf1f7;
+            font-size: 0.93rem;
         }
 
         .table-hover tbody tr:hover {
@@ -406,6 +434,100 @@
 
         .dropdown-menu .dropdown-item:hover {
             background: #f5f7ff;
+        }
+
+        .notifications {
+            width: 380px;
+            padding: 14px !important;
+        }
+
+        .notifications .dropdown-header {
+            padding: 4px 4px 10px;
+            color: #1e274e;
+        }
+
+        .notifications .notification-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid #eef2f8;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+            margin-bottom: 10px;
+        }
+
+        .notifications .notification-item.is-read {
+            opacity: 0.72;
+            background: #fcfdff;
+        }
+
+        .notifications .notification-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .notifications .notification-item i {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #5b5ce6, #6f7cff);
+            color: #fff !important;
+            font-size: 1rem;
+        }
+
+        .notifications .notification-item h4 {
+            margin: 0 0 4px;
+            color: #1d2752;
+            font-size: 0.94rem;
+            font-weight: 800;
+        }
+
+        .notifications .notification-item p {
+            margin: 0;
+            color: #6f7d95;
+            font-size: 0.83rem;
+        }
+
+        .mom-notification-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 0 4px 10px;
+        }
+
+        .mom-notification-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mom-notification-actions form {
+            margin: 0;
+        }
+
+        .mom-notification-actions button {
+            border: 1px solid #e6ecf4;
+            background: #fff;
+            color: #51607b;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .mom-notification-status {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #5b5ce6;
+            background: #eef1ff;
+            border-radius: 999px;
+            padding: 5px 9px;
+            display: inline-flex;
+            align-items: center;
         }
 
         .mom-page-header {
@@ -508,6 +630,54 @@
 
         .mom-form-card .card-body {
             padding: 30px 28px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+        }
+
+        .mom-form-card {
+            border: 1px solid #e4ebf5 !important;
+            box-shadow: 0 20px 50px rgba(36, 46, 82, 0.08) !important;
+        }
+
+        .mom-form-card .card-header {
+            padding: 1rem 1.35rem !important;
+        }
+
+        .mom-form-card .card-header h6 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+
+        .mom-form-card .form-label {
+            color: #41506b;
+            margin-bottom: 0.5rem;
+            font-weight: 700 !important;
+        }
+
+        .mom-form-card .input-group,
+        .mom-form-card .form-control,
+        .mom-form-card .form-select {
+            transition: all 0.2s ease;
+        }
+
+        .mom-form-card .input-group:focus-within,
+        .mom-form-card .form-control:focus,
+        .mom-form-card .form-select:focus {
+            transform: translateY(-1px);
+        }
+
+        .mom-form-card .input-group:focus-within .input-group-text,
+        .mom-form-card .input-group:focus-within .form-control,
+        .mom-form-card .input-group:focus-within .form-select {
+            border-color: #cfd8ff;
+            background: #fff;
+        }
+
+        .mom-form-hint {
+            color: #8794aa;
+            font-size: 0.83rem;
+            margin-top: 0.45rem;
         }
 
         .mom-form-actions {
@@ -576,33 +746,43 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-left: 18px;
+            margin-left: 6px;
         }
 
         .mom-topbar-chip {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
-            border-radius: 14px;
-            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #f7f9fc;
             color: #67748a;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e6ecf4;
             font-weight: 700;
-            font-size: 0.88rem;
+            font-size: 0.8rem;
+        }
+
+        .mom-sidebar-stack {
+            display: grid;
+            gap: 6px;
         }
 
         .mom-sidebar-foot {
             margin-top: 24px;
             padding: 16px 14px;
             border-radius: 18px;
-            background: #2e357f;
-            border: 1px solid rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.82);
+            background: #f7f9fd;
+            border: 1px solid #e8edf5;
+            color: #44516c;
         }
 
         .mom-sidebar-foot .small {
-            color: rgba(255,255,255,0.55) !important;
+            color: #8b97ab !important;
+        }
+
+        .sidebar-nav {
+            padding-top: 0;
+            margin-top: 0;
         }
 
         .mom-confirm-modal .modal-content {
@@ -702,43 +882,92 @@
     <header id="header" class="header fixed-top d-flex align-items-center">
 
         <div class="d-flex align-items-center justify-content-between">
-            <a asp-controller="Dashboard" asp-action="Dashboard" class="logo d-flex align-items-center">
-                <div class="header-brand">
-                    <img src="~/assets/img/logo.png" alt="">
-                    <div class="header-brand-text d-none d-lg-block">
-                        <span>MOM</span>
-                        <small>Management</small>
-                    </div>
-                </div>
-            </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>
+            <div class="mom-shell-title">
+                <strong>@(currentController == "DashBoard" ? "Dashboard" : currentController)</strong>
+                <span>@(isAdminUser ? "Admin control surface" : "User workspace")</span>
+            </div>
             <div class="mom-topbar-meta d-none d-xl-flex">
-                <div class="mom-topbar-chip"><i class="bi bi-lightning-charge"></i> MOM Admin Panel</div>
+                <div class="mom-topbar-chip">
+                    <i class="bi bi-grid-1x2"></i>
+                    @(isAdminUser ? "Admin Workspace" : "User Workspace")
+                </div>
+                <div class="mom-topbar-chip">
+                    <i class="bi bi-building"></i>
+                    @(string.IsNullOrWhiteSpace(Context.Session.GetString("CompanyName")) ? "No Company" : Context.Session.GetString("CompanyName"))
+                </div>
             </div>
         </div>
 
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
 
-                <!-- Notification -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-bell"></i>
-                        <span class="badge bg-primary badge-number">4</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
-                        <li class="dropdown-header">You have 4 new notifications</li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li class="notification-item">
-                            <i class="bi bi-info-circle text-primary"></i>
-                            <div>
-                                <h4>System Update</h4>
-                                <p>New meeting added</p>
-                                <p>30 min ago</p>
-                            </div>
-                        </li>
-                    </ul>
-                </li>
+                @if (isAdminUser)
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-bell"></i>
+                            @if (unreadNotificationCount > 0)
+                            {
+                                <span class="badge bg-primary badge-number">@unreadNotificationCount</span>
+                            }
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
+                            <li class="dropdown-header">
+                                @(layoutNotifications.Count == 0 ? "No new notifications" : $"You have {unreadNotificationCount} unread notifications")
+                            </li>
+                            @if (layoutNotifications.Count > 0)
+                            {
+                                <li class="mom-notification-tools">
+                                    <div class="mom-notification-status">@(unreadNotificationCount > 0 ? $"{unreadNotificationCount} unread" : "All read")</div>
+                                    <div class="mom-notification-actions">
+                                        <form asp-controller="Profile" asp-action="MarkAllNotificationsRead" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit">Mark all read</button>
+                                        </form>
+                                        <form asp-controller="Profile" asp-action="ClearAllNotifications" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit">Clear all</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            }
+                            <li><hr class="dropdown-divider"></li>
+                            @if (layoutNotifications.Count == 0)
+                            {
+                                <li class="notification-item">
+                                    <i class="bi bi-bell"></i>
+                                    <div>
+                                        <h4>All clear</h4>
+                                        <p>No recent admin notifications found.</p>
+                                    </div>
+                                </li>
+                            }
+                            else
+                            {
+                                @foreach (var notification in layoutNotifications.Take(5))
+                                {
+                                    string targetController = notification.NotificationType == "StaffTransferRequest" ? "Staff" : "Profile";
+                                    string targetAction = notification.NotificationType == "PasswordChanged"
+                                        ? "Profile"
+                                        : notification.NotificationType == "StaffTransferRequest"
+                                            ? "StaffTransferRequestList"
+                                            : "ProfileUpdateRequestList";
+                                    <li>
+                                        <a class="notification-item text-decoration-none @(notification.IsRead ? "is-read" : string.Empty)" asp-controller="@targetController" asp-action="@targetAction">
+                                            <i class="bi @(notification.NotificationType == "PasswordChanged" ? "bi-key" : notification.NotificationType == "StaffTransferRequest" ? "bi-arrow-left-right" : "bi-person-lines-fill")"></i>
+                                            <div>
+                                                <h4>@notification.Title</h4>
+                                                <p>@notification.Message</p>
+                                                <p>@notification.Created.ToString("dd MMM yyyy hh:mm tt")</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </li>
+                }
 
                 <!-- Profile -->
                 <li class="nav-item dropdown pe-3">
@@ -751,7 +980,7 @@
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                         <li class="dropdown-header">
                             <h6>@Context.Session.GetString("UserName")</h6>
-                            <span>Admin</span>
+                            <span>@currentUserRole</span>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
@@ -761,26 +990,6 @@
                             <a class="dropdown-item d-flex align-items-center" asp-controller="Profile" asp-action="Profile">
                                 <i class="bi bi-person"></i>
                                 <span>My Profile</span>
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                                <i class="bi bi-gear"></i>
-                                <span>Account Settings</span>
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
-                                <i class="bi bi-question-circle"></i>
-                                <span>Need Help?</span>
                             </a>
                         </li>
                         <li>
@@ -803,7 +1012,7 @@
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
 
-        <ul class="sidebar-nav" id="sidebar-nav">
+        <ul class="sidebar-nav mom-sidebar-stack" id="sidebar-nav">
 
             <li class="nav-item">
                 <a class="@NavClass("DashBoard", "DashBoard")" asp-controller="Dashboard" asp-action="Dashboard">
@@ -812,66 +1021,91 @@
                 </a>
             </li>
 
-            <li class="nav-heading">MASTER DATA</li>
+            @if (isAdminUser)
+            {
+                <li class="nav-heading">MASTER DATA</li>
 
-            <li class="nav-item">
-                <a class="@NavClass("MeetingsType")" asp-controller="MeetingsType" asp-action="MeetingsTypeList">
-                    <i class="bi bi-tags"></i>
-                    <span>Meeting Types</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="@NavClass("MeetingsType")" asp-controller="MeetingsType" asp-action="MeetingsTypeList">
+                        <i class="bi bi-tags"></i>
+                        <span>Meeting Types</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a class="@NavClass("Department")" asp-controller="Department" asp-action="DepartmentList">
-                    <i class="bi bi-building"></i>
-                    <span>Departments</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="@NavClass("Department")" asp-controller="Department" asp-action="DepartmentList">
+                        <i class="bi bi-building"></i>
+                        <span>Departments</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a class="@NavClass("MeetingVenue")" asp-controller="MeetingVenue" asp-action="MeetingVenueList">
-                    <i class="bi bi-geo-alt"></i>
-                    <span>Venues</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="@NavClass("MeetingVenue")" asp-controller="MeetingVenue" asp-action="MeetingVenueList">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>Venues</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a class="@NavClass("Staff")" asp-controller="Staff" asp-action="StaffList">
-                    <i class="bi bi-people"></i>
-                    <span>Staff Members</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a class="@NavClass("Staff")" asp-controller="Staff" asp-action="StaffList">
+                        <i class="bi bi-people"></i>
+                        <span>Staff Members</span>
+                    </a>
+                </li>
+            }
 
             <li class="nav-heading">MEETINGS</li>
 
             <li class="nav-item">
                 <a class="@NavClass("Meetings", "MeetingsList")" asp-controller="Meetings" asp-action="MeetingsList">
                     <i class="bi bi-calendar-event"></i>
-                    <span>All Meetings</span>
+                    <span>@(isAdminUser ? "All Meetings" : "My Meetings")</span>
                 </a>
             </li>
 
+            @if (isAdminUser)
+            {
+                <li class="nav-item">
+                    <a class="@NavClass("Meetings", "MeetingsAddEdit")" asp-controller="Meetings" asp-action="MeetingsAddEdit">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Schedule Meeting</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="@NavClass("MeetingMember")" asp-controller="MeetingMember" asp-action="MeetingMemberList">
+                        <i class="bi bi-person-check"></i>
+                        <span>Attendance</span>
+                    </a>
+                </li>
+            }
+
+            <li class="nav-heading">ACCOUNT</li>
+
             <li class="nav-item">
-                <a class="@NavClass("Meetings", "MeetingsAddEdit")" asp-controller="Meetings" asp-action="MeetingsAddEdit">
-                    <i class="bi bi-plus-circle"></i>
-                    <span>Schedule Meeting</span>
+                <a class="@NavClass("Profile", "Profile")" asp-controller="Profile" asp-action="Profile">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="@NavClass("MeetingMember")" asp-controller="MeetingMember" asp-action="MeetingMemberList">
-                    <i class="bi bi-person-check"></i>
-                    <span>Attendance</span>
-                </a>
-            </li>
+            @if (isAdminUser)
+            {
+                <li class="nav-item">
+                    <a class="@NavClass("Profile", "ProfileUpdateRequestList")" asp-controller="Profile" asp-action="ProfileUpdateRequestList">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Profile Requests</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="@NavClass("Staff", "StaffTransferRequestList")" asp-controller="Staff" asp-action="StaffTransferRequestList">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <span>Transfer Requests</span>
+                    </a>
+                </li>
+            }
 
         </ul>
-
-        <div class="mom-sidebar-foot">
-            <div class="fw-bold mb-1"><i class="bi bi-stars me-2"></i>Meeting Workspace</div>
-            <div class="small">Manage meetings, staff, attendance and reports from one place.</div>
-        </div>
-
     </aside>
     <!-- End Sidebar -->
     <!-- ======= Main ======= -->

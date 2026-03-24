@@ -3,6 +3,7 @@
 @await Html.PartialAsync("_AlertMessages")
 @{
     ViewData["Title"] = "Meeting Type Configuration - Meeting Of Minutes";
+    bool isEditMode = Model.MeetingTypeID != 0;
 }
 
 <div class="pagetitle mb-4">
@@ -15,37 +16,438 @@
     </nav>
 </div>
 
-<div class="mom-form-wrap">
-    <div class="mb-4">
-        <h1>@(Model.MeetingTypeID == 0 ? "Add New Meeting Type" : "Edit Meeting Type")</h1>
-        <p class="mom-page-subtitle">Configure meeting category information</p>
-    </div>
+<style>
+    .meeting-type-page {
+        max-width: 1120px;
+        margin: 0 auto;
+    }
 
-    <div class="card mom-form-card col-lg-8 mx-auto">
-        <div class="card-header">
-            <h6><i class="bi bi-tags-fill me-2"></i> Category Details</h6>
+    .meeting-type-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.75fr);
+        gap: 18px;
+        align-items: stretch;
+        margin-bottom: 24px;
+    }
+
+    .meeting-type-hero-main {
+        position: relative;
+        overflow: hidden;
+        border-radius: 26px;
+        padding: 30px 32px;
+        background: linear-gradient(135deg, #eef2ff 0%, #f7f4ff 48%, #ffffff 100%);
+        border: 1px solid rgba(120, 102, 255, 0.14);
+        box-shadow: 0 24px 60px rgba(54, 63, 121, 0.10);
+    }
+
+    .meeting-type-hero-main::before,
+    .meeting-type-hero-main::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        pointer-events: none;
+    }
+
+    .meeting-type-hero-main::before {
+        width: 240px;
+        height: 240px;
+        right: -70px;
+        top: -110px;
+        background: radial-gradient(circle, rgba(108, 99, 255, 0.20) 0%, rgba(108, 99, 255, 0) 70%);
+    }
+
+    .meeting-type-hero-main::after {
+        width: 180px;
+        height: 180px;
+        left: -50px;
+        bottom: -80px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, rgba(139, 92, 246, 0) 70%);
+    }
+
+    .meeting-type-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(114, 97, 255, 0.12);
+        color: #5b59d9;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .meeting-type-title {
+        margin: 0 0 12px;
+        color: #18233f;
+        font-size: clamp(2.3rem, 4vw, 3.6rem);
+        line-height: 0.98;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        max-width: 11ch;
+        position: relative;
+        z-index: 1;
+    }
+
+    .meeting-type-subtitle {
+        margin: 0;
+        max-width: 58ch;
+        font-size: 1.02rem;
+        line-height: 1.75;
+        color: #60708d;
+        position: relative;
+        z-index: 1;
+    }
+
+    .meeting-type-hero-note {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid #e8ebf8;
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 18px 40px rgba(44, 52, 92, 0.08);
+    }
+
+    .meeting-type-note-label {
+        color: #8996ab;
+        font-size: 0.74rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .meeting-type-note-title {
+        margin: 0;
+        color: #1e2a48;
+        font-size: 1.45rem;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .meeting-type-note-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .meeting-type-note-list li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        color: #66748f;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .meeting-type-note-list i {
+        color: #6658f2;
+        margin-top: 3px;
+    }
+
+    .meeting-type-form-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid #e9edf7;
+        border-radius: 28px;
+        box-shadow: 0 24px 60px rgba(32, 41, 76, 0.08);
+        overflow: hidden;
+    }
+
+    .meeting-type-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px 28px 18px;
+        border-bottom: 1px solid #edf1f8;
+    }
+
+    .meeting-type-form-heading {
+        margin: 0;
+        color: #1b2747;
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .meeting-type-form-meta {
+        margin: 6px 0 0;
+        color: #7b88a0;
+        font-size: 0.92rem;
+    }
+
+    .meeting-type-status-chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f5f6ff;
+        color: #5d5ae6;
+        border: 1px solid #e3e6ff;
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .meeting-type-form-body {
+        padding: 28px;
+    }
+
+    .meeting-type-field {
+        display: grid;
+        gap: 10px;
+    }
+
+    .meeting-type-label {
+        color: #33415c;
+        font-size: 0.92rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .meeting-type-input-shell {
+        display: flex;
+        align-items: stretch;
+        border: 1px solid #e1e7f2;
+        border-radius: 20px;
+        background: #fbfcff;
+        min-height: 60px;
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .meeting-type-input-shell:focus-within {
+        border-color: rgba(99, 91, 255, 0.55);
+        box-shadow: 0 0 0 4px rgba(99, 91, 255, 0.10);
+        transform: translateY(-1px);
+        background: #fff;
+    }
+
+    .meeting-type-input-icon {
+        width: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #6d7c97;
+        background: linear-gradient(180deg, #fbfbff 0%, #f3f6ff 100%);
+        border-right: 1px solid #e5eaf4;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .meeting-type-input-shell .form-control {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        min-height: 60px;
+        font-size: 1rem;
+        color: #1d2742;
+        padding: 16px 18px;
+        box-shadow: none;
+    }
+
+    .meeting-type-input-shell textarea.form-control {
+        min-height: 130px;
+        resize: vertical;
+        padding-top: 16px;
+    }
+
+    .meeting-type-input-shell .form-control::placeholder {
+        color: #a1acbf;
+    }
+
+    .meeting-type-help {
+        color: #8390a7;
+        font-size: 0.84rem;
+        line-height: 1.55;
+        margin: 0;
+    }
+
+    .meeting-type-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 8px;
+    }
+
+    .meeting-type-btn {
+        min-height: 50px;
+        padding: 0 22px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .meeting-type-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .meeting-type-btn-outline {
+        border: 1px solid #dbe3ef;
+        background: #fff;
+        color: #273350;
+        box-shadow: 0 8px 18px rgba(38, 46, 78, 0.05);
+    }
+
+    .meeting-type-btn-primary {
+        border: 0;
+        color: #fff;
+        background: linear-gradient(135deg, #635bff 0%, #7a4dce 100%);
+        box-shadow: 0 16px 30px rgba(99, 91, 255, 0.24);
+    }
+
+    .meeting-type-btn-primary:disabled {
+        opacity: 0.88;
+        cursor: wait;
+        transform: none;
+    }
+
+    .meeting-type-btn-spinner {
+        display: none;
+    }
+
+    .meeting-type-btn.is-loading .meeting-type-btn-spinner {
+        display: inline-block;
+    }
+
+    .meeting-type-btn.is-loading .meeting-type-btn-text {
+        opacity: 0.92;
+    }
+
+    .field-validation-error,
+    .text-danger {
+        color: #dc3545 !important;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    @@media (max-width: 991px) {
+        .meeting-type-page {
+            max-width: 100%;
+        }
+
+        .meeting-type-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .meeting-type-hero-main,
+        .meeting-type-hero-note,
+        .meeting-type-form-body,
+        .meeting-type-form-header {
+            padding: 22px;
+        }
+
+        .meeting-type-title {
+            max-width: none;
+            font-size: 2.35rem;
+        }
+    }
+
+    @@media (max-width: 575px) {
+        .meeting-type-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        .meeting-type-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="meeting-type-page">
+    <section class="meeting-type-hero">
+        <div class="meeting-type-hero-main">
+            <div class="meeting-type-kicker">
+                <i class="bi bi-stars"></i>
+                Meeting Type Configuration
+            </div>
+            <h1 class="meeting-type-title">@(isEditMode ? "Edit Meeting Type" : "Add New Meeting Type")</h1>
+            <p class="meeting-type-subtitle">Create a clean category label that your team can use across scheduling, reports and exports without adding noise to the workspace.</p>
         </div>
 
-        <div class="card-body">
-            <form class="row g-4 js-update-confirm-form" data-id-field="MeetingTypeID" data-update-message="Sure to update this meeting type?" asp-action="Save" method="post">
+        <aside class="meeting-type-hero-note">
+            <div class="meeting-type-note-label">Usage Guidance</div>
+            <h2 class="meeting-type-note-title">Keep the category system small and readable.</h2>
+            <ul class="meeting-type-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Use short names such as Internal Review, Client Sync or Planning.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Remarks should add context only when the type needs extra explanation.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Simple labels scan better in dashboards, filters and exported reports.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="meeting-type-form-card">
+        <div class="meeting-type-form-header">
+            <div>
+                <h3 class="meeting-type-form-heading">Category Details</h3>
+                <p class="meeting-type-form-meta">Save a clear meeting type label with optional supporting remarks.</p>
+            </div>
+            <div class="meeting-type-status-chip">@(isEditMode ? "Editing existing type" : "Creating new type")</div>
+        </div>
+
+        <div class="meeting-type-form-body">
+            <form class="row g-4 js-update-confirm-form" data-id-field="MeetingTypeID" data-update-message="Sure to update this meeting type?" asp-action="Save" method="post" id="meetingTypeForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="MeetingTypeID" />
-                <div class="col-md-12">
-                    <label class="form-label small fw-bold text-muted">Meeting Type Name</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-bookmark-star"></i></span><input asp-for="MeetingTypeName" type="text" class="form-control" maxlength="100"></div>
-                    <span asp-validation-for="MeetingTypeName" class=" text-danger"></span>
+
+                <div class="col-12">
+                    <div class="meeting-type-field">
+                        <label asp-for="MeetingTypeName" class="meeting-type-label">Meeting Type Name</label>
+                        <div class="meeting-type-input-shell">
+                            <span class="meeting-type-input-icon"><i class="bi bi-bookmark-star"></i></span>
+                            <input asp-for="MeetingTypeName" type="text" class="form-control" maxlength="100" placeholder="Enter meeting type name" />
+                        </div>
+                        <p class="meeting-type-help">This appears in meeting filters, exports and analytics summaries.</p>
+                        <span asp-validation-for="MeetingTypeName" class="text-danger"></span>
+                    </div>
                 </div>
 
-                <div class="col-md-12">
-                    <label class="form-label small fw-bold text-muted">Remarks</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-chat-left-dots"></i></span><input asp-for="Remarks" type="text" class="form-control" maxlength="100"></div>
+                <div class="col-12">
+                    <div class="meeting-type-field">
+                        <label asp-for="Remarks" class="meeting-type-label">Remarks</label>
+                        <div class="meeting-type-input-shell">
+                            <span class="meeting-type-input-icon"><i class="bi bi-chat-left-text"></i></span>
+                            <textarea asp-for="Remarks" class="form-control" maxlength="100" rows="4" placeholder="Add a short optional note about how this meeting type should be used"></textarea>
+                        </div>
+                        <p class="meeting-type-help">Optional. Keep it short so the form stays clean and operators can scan it quickly.</p>
+                    </div>
                 </div>
 
-                <div class="col-12 mom-form-actions">
-                    <a asp-action="MeetingsTypeList" class="btn btn-light px-4">Back to List</a>
-                    <button type="submit" class="btn btn-primary px-5"><i class="bi bi-check2-circle me-2"></i> Save Type</button>
+                <div class="col-12 meeting-type-actions">
+                    <a asp-action="MeetingsTypeList" class="btn meeting-type-btn meeting-type-btn-outline">Back to List</a>
+                    <button type="submit" class="btn meeting-type-btn meeting-type-btn-primary" id="saveMeetingTypeButton">
+                        <span class="spinner-border spinner-border-sm me-2 meeting-type-btn-spinner" aria-hidden="true"></span>
+                        <span class="meeting-type-btn-text">Save Type</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('meetingTypeForm');
+            const saveButton = document.getElementById('saveMeetingTypeButton');
+
+            if (!form || !saveButton) return;
+
+            form.addEventListener('submit', function () {
+                saveButton.classList.add('is-loading');
+                saveButton.disabled = true;
+            });
+        })();
+    </script>
+}

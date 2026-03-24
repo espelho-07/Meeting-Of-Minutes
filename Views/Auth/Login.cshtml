@@ -7,181 +7,329 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Meetings Of Minutes</title>
+    <title>Login | Meeting Of Minutes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        :root {
+            --mom-bg: #eef2f8;
+            --mom-surface: rgba(255,255,255,0.94);
+            --mom-border: #dde4f0;
+            --mom-text: #172033;
+            --mom-muted: #6f7d95;
+            --mom-accent: #5b5ce6;
+            --mom-accent-soft: #eef1ff;
+            --mom-shadow: 0 24px 60px rgba(19, 28, 53, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
         body {
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #4538d6 0%, #4935d8 50%, #4338ca 100%);
+            background:
+                radial-gradient(circle at top left, rgba(91,92,230,0.16), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(117,126,255,0.12), transparent 24%),
+                linear-gradient(180deg, #f7f9fc 0%, var(--mom-bg) 100%);
             font-family: "Nunito", sans-serif;
+            color: var(--mom-text);
         }
 
         .auth-shell {
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            padding: 28px;
+            gap: 24px;
+        }
+
+        .auth-stage,
+        .auth-panel {
+            border-radius: 32px;
+            overflow: hidden;
+            border: 1px solid rgba(221,228,240,0.9);
+            box-shadow: var(--mom-shadow);
+        }
+
+        .auth-stage {
+            background: linear-gradient(160deg, #1f255f 0%, #2d367d 45%, #5862e7 100%);
+            color: #fff;
+            padding: 42px;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .auth-brand {
-            position: absolute;
-            top: 48px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .auth-brand-badge {
+            width: 46px;
+            height: 46px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .auth-stage h1 {
+            font-size: clamp(2.5rem, 4vw, 4.2rem);
+            line-height: 0.98;
+            font-weight: 900;
+            margin: 0 0 16px;
+            max-width: 540px;
+        }
+
+        .auth-stage p {
+            max-width: 520px;
+            color: rgba(255,255,255,0.76);
+            font-size: 1.02rem;
+            margin-bottom: 0;
+        }
+
+        .auth-stage-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 28px;
+        }
+
+        .auth-stage-card {
+            padding: 18px;
+            border-radius: 22px;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.14);
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-stage-card small {
+            color: rgba(255,255,255,0.68);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+        }
+
+        .auth-stage-card div {
+            margin-top: 8px;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .auth-panel {
+            background: var(--mom-surface);
+            backdrop-filter: blur(18px);
+            padding: 28px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            font-size: 1.1rem;
         }
 
         .auth-card {
             width: 100%;
-            max-width: 474px;
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 30px 60px rgba(21, 25, 71, 0.22);
-            overflow: hidden;
+            max-width: 520px;
+            margin: 0 auto;
         }
 
-        .auth-card-top {
-            background: linear-gradient(180deg, #f6f7ff 0%, #ffffff 100%);
-            padding: 36px 36px 18px;
-            text-align: center;
-        }
-
-        .auth-card-body {
-            padding: 24px 36px 30px;
-        }
-
-        .auth-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
+        .auth-eyebrow {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #6a6ff2, #7f55cf);
-            color: #fff;
-            font-size: 1.6rem;
-            margin-bottom: 12px;
+            gap: 8px;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: var(--mom-accent-soft);
+            color: var(--mom-accent);
+            font-weight: 800;
+            margin-bottom: 18px;
         }
 
         .auth-title {
-            font-size: 2.1rem;
-            font-weight: 800;
-            color: #111827;
-            margin-bottom: 8px;
+            font-size: 2.4rem;
+            line-height: 1;
+            font-weight: 900;
+            margin-bottom: 10px;
         }
 
         .auth-subtitle {
-            color: #64748b;
-            margin-bottom: 0;
+            color: var(--mom-muted);
+            margin-bottom: 26px;
         }
 
         .auth-label {
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #7c6cff;
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: #44516c;
             margin-bottom: 6px;
         }
 
         .auth-input-group {
             display: flex;
             align-items: center;
-            border: 1px solid #d9e2f2;
-            border-radius: 12px;
-            background: #eef4ff;
+            border: 1px solid var(--mom-border);
+            border-radius: 16px;
+            background: #fff;
             overflow: hidden;
+            min-height: 54px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
         }
 
         .auth-input-group span {
-            width: 48px;
+            width: 52px;
             text-align: center;
-            color: #95a2bb;
+            color: #93a0b8;
+            flex-shrink: 0;
         }
 
-        .auth-input-group input {
-            border: 0;
-            background: transparent;
+        .auth-input-group input,
+        .auth-input-group select {
+            border: 0 !important;
+            background: transparent !important;
             box-shadow: none !important;
-            min-height: 48px;
+            min-height: 52px;
         }
 
-        .auth-link,
-        .auth-link:hover {
-            color: #6165f0;
-            text-decoration: none;
-            font-weight: 700;
+        .auth-toggle {
+            width: 50px !important;
+            cursor: pointer;
+            border-left: 1px solid var(--mom-border);
         }
 
-        .signin {
-            background: linear-gradient(90deg, #6674f4, #7a4db8);
+        .auth-submit {
+            background: linear-gradient(90deg, #4f5bea 0%, #6672ff 100%);
             border: 0;
-            border-radius: 10px;
-            min-height: 46px;
-            font-weight: 700;
+            border-radius: 16px;
+            min-height: 54px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            box-shadow: 0 18px 30px rgba(91, 92, 230, 0.22);
+        }
+
+        .auth-footer-link,
+        .auth-footer-link:hover {
+            color: var(--mom-accent);
+            text-decoration: none;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 1100px) {
+            .auth-shell { grid-template-columns: 1fr; }
+            .auth-stage { min-height: 420px; }
+        }
+
+        @@media (max-width: 767px) {
+            .auth-shell { padding: 16px; }
+            .auth-stage, .auth-panel { border-radius: 24px; }
+            .auth-stage { padding: 24px; }
+            .auth-panel { padding: 18px; }
+            .auth-stage-grid { grid-template-columns: 1fr; }
+            .auth-title { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
     <div class="auth-shell">
-        <div class="auth-brand">
-            <i class="bi bi-calendar-check fs-4"></i>
-            <span>MOM System</span>
-        </div>
-
-        <div class="auth-card">
-            <div class="auth-card-top">
-                <div class="auth-icon"><i class="bi bi-calendar-check"></i></div>
-                <div class="fw-bold fs-3" style="color:#5f62ee;">MOM System</div>
-                <div class="auth-title">Welcome Back</div>
-                <p class="auth-subtitle">Sign in to access your meeting management dashboard</p>
+        <section class="auth-stage">
+            <div>
+                <div class="auth-brand">
+                    <div class="auth-brand-badge"><i class="bi bi-calendar-check"></i></div>
+                    <span>Meeting Of Minutes</span>
+                </div>
             </div>
 
-            <div class="auth-card-body">
+            <div>
+                <h1>Operations start with the right login context.</h1>
+                <p>Enter the user email first. We will pull the correct role, company and department context so the workspace opens with the right scope.</p>
+
+                <div class="auth-stage-grid">
+                    <div class="auth-stage-card">
+                        <small>Scoped Access</small>
+                        <div>Admin and user workspaces stay separated.</div>
+                    </div>
+                    <div class="auth-stage-card">
+                        <small>Company Bound</small>
+                        <div>Every login follows company and department rules.</div>
+                    </div>
+                    <div class="auth-stage-card">
+                        <small>Ready Flow</small>
+                        <div>Staff-created users can sign in without manual setup.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="auth-card">
+                <div class="auth-eyebrow"><i class="bi bi-box-arrow-in-right"></i> Secure Sign In</div>
+                <div class="auth-title">Welcome back</div>
+                <div class="auth-subtitle">Use your email and password to continue into your meeting workspace.</div>
+
                 <form method="post" asp-controller="Auth" asp-action="Login">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger text-start mb-2"></div>
 
-                    <label class="auth-label" asp-for="UserName">Username</label>
+                    <label class="auth-label" asp-for="Email">Email Address</label>
                     <div class="auth-input-group mb-3">
-                        <span><i class="bi bi-person"></i></span>
-                        <input asp-for="UserName" type="text" class="form-control" placeholder="Enter username">
+                        <span><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="Enter email address" id="loginEmail">
                     </div>
-                    <span asp-validation-for="UserName" class="text-danger d-block text-start mb-2"></span>
+                    <span asp-validation-for="Email" class="text-danger d-block text-start mb-2"></span>
+
+                    <label class="auth-label" asp-for="UserRole">Login As</label>
+                    <div class="auth-input-group mb-3">
+                        <span><i class="bi bi-shield-lock"></i></span>
+                        <select asp-for="UserRole" class="form-select" id="loginRole">
+                            <option value="">Select role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="User">User</option>
+                        </select>
+                    </div>
+                    <span asp-validation-for="UserRole" class="text-danger d-block text-start mb-2"></span>
+
+                    <label class="auth-label" asp-for="CompanyName">Company</label>
+                    <div class="auth-input-group mb-3">
+                        <span><i class="bi bi-buildings"></i></span>
+                        <select asp-for="CompanyName" asp-items="ViewBag.CompanyDropDown" class="form-select" id="loginCompany">
+                            <option value="">Select company</option>
+                        </select>
+                    </div>
+                    <span asp-validation-for="CompanyName" class="text-danger d-block text-start mb-2"></span>
+
+                    <div id="loginDepartmentWrap">
+                        <label class="auth-label" asp-for="DepartmentID">Department</label>
+                        <div class="auth-input-group mb-3">
+                            <span><i class="bi bi-building"></i></span>
+                            <select asp-for="DepartmentID" class="form-select" id="loginDepartment">
+                                <option value="">Select department</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="DepartmentID" class="text-danger d-block text-start mb-2"></span>
+                    </div>
 
                     <label class="auth-label" asp-for="Password">Password</label>
                     <div class="auth-input-group mb-3">
                         <span><i class="bi bi-key"></i></span>
                         <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" id="loginPassword">
-                        <span style="width:44px;cursor:pointer;" onclick="toggleLoginPassword()"><i class="bi bi-eye"></i></span>
+                        <span class="auth-toggle" onclick="toggleLoginPassword()"><i class="bi bi-eye"></i></span>
                     </div>
-                    <span asp-validation-for="Password" class="text-danger d-block text-start mb-3"></span>
+                    <span asp-validation-for="Password" class="text-danger d-block text-start mb-4"></span>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="rememberMe">
-                            <label class="form-check-label text-muted" for="rememberMe">Remember me</label>
-                        </div>
-                        <a href="#" class="auth-link">Forgot password?</a>
-                    </div>
-
-                    <button type="submit" class="signin btn w-100 py-2 text-white">
+                    <button type="submit" class="auth-submit btn w-100 text-white">
                         <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
                     </button>
                 </form>
 
-                <hr class="my-4">
-                <p class="mb-0 text-center">Don't have an account? <a class="auth-link" asp-controller="Auth" asp-action="Register">Create an account</a></p>
+                <div class="text-center mt-4 pt-3 border-top">
+                    Need admin access? <a class="auth-footer-link" asp-controller="Auth" asp-action="Register">Create admin account</a>
+                </div>
             </div>
-        </div>
+        </section>
     </div>
 
     <partial name="_ValidationScriptsPartial" />
@@ -191,6 +339,67 @@
             if (!input) return;
             input.type = input.type === 'password' ? 'text' : 'password';
         }
+
+        function toggleLoginDepartment() {
+            const role = document.getElementById('loginRole');
+            const wrap = document.getElementById('loginDepartmentWrap');
+            if (!role || !wrap) return;
+            wrap.style.display = role.value === 'User' ? '' : 'none';
+        }
+
+        async function loadDepartments(companyName, selectedDepartmentId) {
+            const department = document.getElementById('loginDepartment');
+            if (!department) return;
+            department.innerHTML = '<option value="">Select department</option>';
+            if (!companyName) return;
+            const response = await fetch(`/Auth/GetDepartmentsByCompany?companyName=${encodeURIComponent(companyName)}`);
+            const data = await response.json();
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.value;
+                option.text = item.text;
+                if (selectedDepartmentId && selectedDepartmentId.toString() === item.value.toString()) {
+                    option.selected = true;
+                }
+                department.appendChild(option);
+            });
+        }
+
+        async function autofillLoginContext() {
+            const email = document.getElementById('loginEmail');
+            const role = document.getElementById('loginRole');
+            const company = document.getElementById('loginCompany');
+            const department = document.getElementById('loginDepartment');
+            if (!email || !role || !company || !department || !email.value) return;
+
+            const response = await fetch(`/Auth/GetUserContextByEmail?email=${encodeURIComponent(email.value)}`);
+            const data = await response.json();
+            if (!data.found) return;
+
+            role.value = data.userRole || '';
+            company.value = data.companyName || '';
+            toggleLoginDepartment();
+            await loadDepartments(company.value, data.departmentId);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const role = document.getElementById('loginRole');
+            const email = document.getElementById('loginEmail');
+            const company = document.getElementById('loginCompany');
+            if (role) {
+                role.addEventListener('change', toggleLoginDepartment);
+                toggleLoginDepartment();
+            }
+            if (email) {
+                email.addEventListener('change', autofillLoginContext);
+                email.addEventListener('blur', autofillLoginContext);
+            }
+            if (company) {
+                company.addEventListener('change', function () {
+                    loadDepartments(company.value, null);
+                });
+            }
+        });
     </script>
 </body>
 </html>

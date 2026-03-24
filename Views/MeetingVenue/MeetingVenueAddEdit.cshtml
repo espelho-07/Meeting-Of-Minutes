@@ -1,42 +1,81 @@
 @model Meeting_Of_Minutes.Models.MeetingVenueModel
-
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSFormStyles")
 @{
     ViewData["Title"] = "Meeting Venue Configuration - Meeting Of Minutes";
+    bool isEditMode = Model.MeetingVenueID != 0;
 }
 
 <div class="pagetitle mb-4">
     <nav>
         <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i> Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
             <li class="breadcrumb-item"><a asp-controller="MeetingVenue" asp-action="MeetingVenueList">Meeting Venue</a></li>
             <li class="breadcrumb-item active">Add Edit</li>
         </ol>
     </nav>
 </div>
 
-<div class="card border-0 shadow-sm col-lg-8 mx-auto mt-4" style="border-radius: 15px;">
-    <div class="card-header border-0 py-3 text-white" style="background: linear-gradient(45deg, #5a52e0, #8965e0);">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-geo-alt-fill me-2"></i> Venue Details</h6>
-    </div>
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-geo-alt"></i> Venue Setup</div>
+            <h1 class="form-title">@(isEditMode ? "Edit Meeting Venue" : "Add Meeting Venue")</h1>
+            <p class="form-subtitle">Create a clear venue name so schedules, exports and meeting views remain clean and easy to understand.</p>
+        </div>
+        <aside class="form-note">
+            <div class="form-note-label">Venue guidance</div>
+            <h2 class="form-note-title">Choose names people can recognize in one glance.</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Use names such as Board Room, Main Hall, Zoom Room 1 or Training Lab.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Short names keep the meeting list and exports cleaner.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Avoid overly detailed room descriptions in the main label.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-    <div class="card-body p-5">
-        <form asp-controller="MeetingVenue" asp-action="Save" class="row g-4 js-update-confirm-form" data-id-field="MeetingVenueID" data-update-message="Sure to update this meeting venue?" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="MeetingVenueID" />
-            <div class="col-md-12">
-                <label class="form-label small fw-bold text-muted">Meeting Venue Name</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-door-open"></i></span>
-                    <input asp-for="MeetingVenueName" type="text" class="form-control border-start-0 ps-0 shadow-none" maxlength="100">
+    <section class="form-card">
+        <div class="form-card-header">
+            <div>
+                <h3 class="form-card-heading">Venue Details</h3>
+                <p class="form-card-meta">Save one clear venue label for use in meeting scheduling.</p>
+            </div>
+            <div class="form-status-chip">@(isEditMode ? "Editing venue" : "Creating venue")</div>
+        </div>
+        <div class="form-card-body">
+            <form asp-controller="MeetingVenue" asp-action="Save" class="row g-4 js-update-confirm-form" data-id-field="MeetingVenueID" data-update-message="Sure to update this meeting venue?" method="post" id="venueForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MeetingVenueID" />
+                <div class="col-12">
+                    <div class="form-field">
+                        <label class="form-label-modern">Meeting Venue Name</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-door-open"></i></span><input asp-for="MeetingVenueName" type="text" class="form-control" maxlength="100" placeholder="Enter meeting venue name" /></div>
+                        <p class="form-help">Use a recognizable name that stays readable in schedules and reports.</p>
+                        <span asp-validation-for="MeetingVenueName" class="text-danger"></span>
+                    </div>
                 </div>
-                <span asp-validation-for="MeetingVenueName" class=" text-danger"></span>
-            </div>
-
-            <div class="text-end mt-5 border-top pt-4">
-                <a asp-action="MeetingVenueList" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
-                <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm" style="background:#5a52e0; border:none;"><i class="bi bi-save me-2"></i> Save Venue</button>
-            </div>
-        </form>
-    </div>
+                <div class="col-12 form-actions-modern">
+                    <a asp-action="MeetingVenueList" class="btn form-btn form-btn-outline">Back to List</a>
+                    <button type="submit" class="btn form-btn form-btn-primary" id="venueSaveButton">
+                        <span class="spinner-border spinner-border-sm me-2 form-btn-spinner" aria-hidden="true"></span>
+                        <span>Save Venue</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('venueForm');
+            const button = document.getElementById('venueSaveButton');
+            if (!form || !button) return;
+            form.addEventListener('submit', function () {
+                button.classList.add('is-loading');
+                button.disabled = true;
+            });
+        })();
+    </script>
+}

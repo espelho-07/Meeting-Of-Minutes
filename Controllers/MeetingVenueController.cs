@@ -12,15 +12,17 @@ namespace Meeting_Of_Minutes.Controllers
         public IActionResult MeetingVenueAddEdit(int? id)
         {
             MeetingVenueModel model = new MeetingVenueModel();
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
 
             if (id.HasValue)
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingVenue_SelectByPK";
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@MeetingVenueID", id.Value);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
 
                 con.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -42,12 +44,14 @@ namespace Meeting_Of_Minutes.Controllers
         public IActionResult MeetingVenueList()
         {
             List<MeetingVenueModel> list = new List<MeetingVenueModel>();
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MeetingVenue_SelectAll";
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", companyName);
 
             con.Open();
             SqlDataReader reader = cmd.ExecuteReader();
@@ -72,11 +76,12 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 DataTable dt = new DataTable();
 
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
-                SqlCommand cmd = new SqlCommand();
-                cmd.Connection = con;
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandText = "PR_MeetingVenue_SelectAll";
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "PR_MeetingVenue_SelectAll";
+            cmd.Parameters.AddWithValue("@CompanyName", HttpContext.Session.GetString("CompanyName") ?? string.Empty);
 
                 con.Open();
                 SqlDataReader dr = cmd.ExecuteReader();
@@ -130,16 +135,18 @@ namespace Meeting_Of_Minutes.Controllers
                 return View("MeetingVenueAddEdit", model);
             }
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
 
             if (model.MeetingVenueID == 0)
             {
                 SqlCommand checkCmd = new SqlCommand();
                 checkCmd.Connection = con;
-                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingVenue WHERE MeetingVenueName = @MeetingVenueName";
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingVenue WHERE MeetingVenueName = @MeetingVenueName AND CompanyName = @CompanyName";
                 checkCmd.CommandType = CommandType.Text;
                 checkCmd.Parameters.AddWithValue("@MeetingVenueName", model.MeetingVenueName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
 
                 int count = Convert.ToInt32(checkCmd.ExecuteScalar());
                 if (count > 0)
@@ -153,10 +160,11 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 SqlCommand checkCmd = new SqlCommand();
                 checkCmd.Connection = con;
-                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingVenue WHERE MeetingVenueName = @MeetingVenueName AND MeetingVenueID <> @MeetingVenueID";
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingVenue WHERE MeetingVenueName = @MeetingVenueName AND MeetingVenueID <> @MeetingVenueID AND CompanyName = @CompanyName";
                 checkCmd.CommandType = CommandType.Text;
                 checkCmd.Parameters.AddWithValue("@MeetingVenueName", model.MeetingVenueName);
                 checkCmd.Parameters.AddWithValue("@MeetingVenueID", model.MeetingVenueID);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
 
                 int count = Convert.ToInt32(checkCmd.ExecuteScalar());
                 if (count > 0)
@@ -175,6 +183,7 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 cmd.CommandText = "PR_MeetingVenue_Insert";
                 cmd.Parameters.AddWithValue("@MeetingVenueName", model.MeetingVenueName);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
                 cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
             }
             else
@@ -182,6 +191,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.CommandText = "PR_MeetingVenue_UpdateByPK";
                 cmd.Parameters.AddWithValue("@MeetingVenueID", model.MeetingVenueID);
                 cmd.Parameters.AddWithValue("@MeetingVenueName", model.MeetingVenueName);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
             }
             TempData["SuccessMessage"] = model.MeetingVenueID == 0 ? "Meeting venue added successfully." : "Meeting venue updated successfully.";
             cmd.ExecuteNonQuery();
@@ -196,7 +206,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             try
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingVenue_DeleteByPK";
@@ -218,6 +228,9 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
     }
 }
+
+
+
 
 
 

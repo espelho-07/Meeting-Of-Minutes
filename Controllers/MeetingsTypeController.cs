@@ -19,7 +19,7 @@ namespace Meeting_Of_Minutes.Controllers
         [HttpPost]
         public IActionResult MeetingsTypeList(IFormCollection formdata)
         {
-            string searchtext = formdata["searchtext"].ToString();
+            string? searchtext = formdata["searchtext"].ToString();
 
             if (string.IsNullOrWhiteSpace(searchtext))
             {
@@ -32,15 +32,17 @@ namespace Meeting_Of_Minutes.Controllers
             return View(meetingTypesList);
         }
 
-        public List<MeetingTypeModel> GetAllMeetingTypes(string searchtext)
+        public List<MeetingTypeModel> GetAllMeetingTypes(string? searchtext)
         {
             List<MeetingTypeModel> meetingTypesList = new List<MeetingTypeModel>();
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MeetingType_SelectAll";
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", companyName);
 
             if (searchtext != null)
             {
@@ -78,12 +80,13 @@ namespace Meeting_Of_Minutes.Controllers
 
             if (id.HasValue)
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingType_SelectByPK";
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@MeetingTypeID", id.Value);
+                cmd.Parameters.AddWithValue("@CompanyName", HttpContext.Session.GetString("CompanyName") ?? string.Empty);
 
                 con.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
@@ -110,11 +113,12 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 DataTable dt = new DataTable();
 
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.CommandText = "PR_MeetingType_SelectAll";
+                cmd.Parameters.AddWithValue("@CompanyName", HttpContext.Session.GetString("CompanyName") ?? string.Empty);
                 cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
 
                 con.Open();
@@ -164,12 +168,13 @@ namespace Meeting_Of_Minutes.Controllers
         {
             MeetingTypeModel model = new MeetingTypeModel();
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MeetingType_SelectByPK";
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@MeetingTypeID", id);
+            cmd.Parameters.AddWithValue("@CompanyName", HttpContext.Session.GetString("CompanyName") ?? string.Empty);
 
             con.Open();
             SqlDataReader reader = cmd.ExecuteReader();
@@ -199,16 +204,18 @@ namespace Meeting_Of_Minutes.Controllers
                 return View("MeetingsTypeAddEdit", model);
             }
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
 
             if (model.MeetingTypeID == 0)
             {
                 SqlCommand checkCmd = new SqlCommand();
                 checkCmd.Connection = con;
-                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName";
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName AND CompanyName = @CompanyName";
                 checkCmd.CommandType = CommandType.Text;
                 checkCmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
 
                 int count = Convert.ToInt32(checkCmd.ExecuteScalar());
                 if (count > 0)
@@ -222,10 +229,11 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 SqlCommand checkCmd = new SqlCommand();
                 checkCmd.Connection = con;
-                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName AND MeetingTypeID <> @MeetingTypeID";
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName AND MeetingTypeID <> @MeetingTypeID AND CompanyName = @CompanyName";
                 checkCmd.CommandType = CommandType.Text;
                 checkCmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
                 checkCmd.Parameters.AddWithValue("@MeetingTypeID", model.MeetingTypeID);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
 
                 int count = Convert.ToInt32(checkCmd.ExecuteScalar());
                 if (count > 0)
@@ -245,6 +253,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.CommandText = "PR_MeetingType_Insert";
                 cmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
                 cmd.Parameters.AddWithValue("@Remarks", model.Remarks ?? string.Empty);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
                 cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
             }
             else
@@ -253,6 +262,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.Parameters.AddWithValue("@MeetingTypeID", model.MeetingTypeID);
                 cmd.Parameters.AddWithValue("@MeetingTypeName", model.MeetingTypeName);
                 cmd.Parameters.AddWithValue("@Remarks", model.Remarks ?? string.Empty);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
             }
             TempData["SuccessMessage"] = model.MeetingTypeID == 0 ? "Meeting type added successfully." : "Meeting type updated successfully.";
             cmd.ExecuteNonQuery();
@@ -267,7 +277,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             try
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingType_DeleteByPK";
@@ -289,6 +299,9 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
     }
 }
+
+
+
 
 
 

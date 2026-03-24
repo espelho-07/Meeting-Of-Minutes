@@ -12,6 +12,8 @@ namespace Meeting_Of_Minutes.Models
 
         public string? DepartmentName { get; set; }
 
+        public string? CompanyName { get; set; }
+
         [Required]
         [StringLength(50, ErrorMessage = "Staff Name Can't Exceed Than 50 Characters")]
         public string? StaffName { get; set; }
@@ -25,6 +27,18 @@ namespace Meeting_Of_Minutes.Models
         public string? EmailAddress { get; set; }
 
         public string? Remarks { get; set; }
+
+        public string? LoginUserName { get; set; }
+
+        public string? LoginPassword { get; set; }
+
+        public bool IsAutoPassword { get; set; }
+
+        public int EnrolledMeetingsCount { get; set; }
+
+        public List<MeetingsModel> EnrolledMeetings { get; set; } = new List<MeetingsModel>();
+
+        public List<StaffTransferRequestModel> TransferRequests { get; set; } = new List<StaffTransferRequestModel>();
 
         public DateTime Created { get; set; }
 

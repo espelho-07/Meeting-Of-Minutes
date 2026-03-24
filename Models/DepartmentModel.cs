@@ -12,6 +12,8 @@ namespace Meeting_Of_Minutes.Models
         [Display(Name = "Department Name")]
         public string? DepartmentName { get; set; }
 
+        public string? CompanyName { get; set; }
+
         public int StaffCount { get; set; }
 
         public int MeetingsCount { get; set; }

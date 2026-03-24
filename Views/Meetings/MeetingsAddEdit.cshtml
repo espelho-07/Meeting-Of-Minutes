@@ -1,9 +1,9 @@
 @model Meeting_Of_Minutes.Models.MeetingsModel
-
 @await Html.PartialAsync("_AlertMessages")
-
+@await Html.PartialAsync("_SaaSFormStyles")
 @{
     ViewData["Title"] = "Schedule New Meeting";
+    bool isEditMode = Model.MeetingID != 0;
 }
 
 <div class="pagetitle mb-4">
@@ -16,73 +16,126 @@
     </nav>
 </div>
 
-<div class="mom-form-wrap">
-    <div class="mb-4">
-        <h1>@(Model.MeetingID == 0 ? "Schedule New Meeting" : "Edit Meeting")</h1>
-        <p class="mom-page-subtitle">Create and schedule a new organizational meeting</p>
-    </div>
-
-    <div class="card mom-form-card col-lg-9 mx-auto">
-        <div class="card-header">
-            <h6><i class="bi bi-calendar-plus me-2"></i> Schedule New Meeting</h6>
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-calendar2-week"></i> Meeting Planner</div>
+            <h1 class="form-title">@(isEditMode ? "Edit Meeting" : "Schedule New Meeting")</h1>
+            <p class="form-subtitle">Choose the type, department scope, venue, schedule and supporting document from one clean planning surface.</p>
         </div>
+        <aside class="form-note">
+            <div class="form-note-label">Participant sync</div>
+            <h2 class="form-note-title">Members are added from the selected department scope.</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Select one department to include its staff automatically in the meeting.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Enable company-wide participation when the meeting should include all departments.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Documents and descriptions keep context available during review and attendance.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-        <div class="card-body">
-            <form asp-action="Save" method="post" enctype="multipart/form-data" class="row g-4 js-update-confirm-form" data-id-field="MeetingID" data-update-message="Sure to update this meeting?">
+    <section class="form-card">
+        <div class="form-card-header">
+            <div>
+                <h3 class="form-card-heading">Meeting Configuration</h3>
+                <p class="form-card-meta">Complete the core meeting setup and save it to generate the attendance workspace.</p>
+            </div>
+            <div class="form-status-chip">@(isEditMode ? "Editing scheduled meeting" : "Creating new meeting")</div>
+        </div>
+        <div class="form-card-body">
+            <form asp-action="Save" method="post" enctype="multipart/form-data" class="row g-4 js-update-confirm-form" data-id-field="MeetingID" data-update-message="Sure to update this meeting?" id="meetingsForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="MeetingID" />
-
                 <div class="col-12">
                     <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Meeting Type</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-tags"></i></span><select asp-for="MeetingTypeID" asp-items="ViewBag.MeetingTypeDropDown" class="form-select"><option value="">-- Select Meeting Type --</option></select></div>
-                    <span asp-validation-for="MeetingTypeID" class="text-danger small"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Meeting Type</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-tags"></i></span><select asp-for="MeetingTypeID" asp-items="ViewBag.MeetingTypeDropDown" class="form-select"><option value="">-- Select Meeting Type --</option></select></div>
+                        <span asp-validation-for="MeetingTypeID" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Department</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-building"></i></span><select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select"><option value="">-- Select Department --</option></select></div>
-                    <span asp-validation-for="DepartmentID" class="text-danger small"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Meeting Date & Time</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-calendar-event"></i></span><input asp-for="MeetingDate" type="datetime-local" class="form-control" /></div>
+                        <span asp-validation-for="MeetingDate" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Venue</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-geo-alt"></i></span><select asp-for="MeetingVenueID" asp-items="ViewBag.MeetingVenueDropDown" class="form-select"><option value="">-- Select Venue --</option></select></div>
-                    <span asp-validation-for="MeetingVenueID" class="text-danger small"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Department</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-building"></i></span><select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select" id="meetingDepartmentSelect"><option value="">-- Select Department --</option></select></div>
+                        <div class="form-check-modern">
+                            <input asp-for="IncludeAllDepartmentsMembers" class="form-check-input" type="checkbox" id="includeAllDepartmentsMembers" />
+                            <label class="form-check-label" for="includeAllDepartmentsMembers">Include all departments staff in this meeting</label>
+                        </div>
+                        <span asp-validation-for="DepartmentID" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-semibold">Meeting Date & Time</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-calendar-event"></i></span><input asp-for="MeetingDate" type="datetime-local" class="form-control" /></div>
-                    <span asp-validation-for="MeetingDate" class="text-danger small"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Venue</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-geo-alt"></i></span><select asp-for="MeetingVenueID" asp-items="ViewBag.MeetingVenueDropDown" class="form-select"><option value="">-- Select Venue --</option></select></div>
+                        <span asp-validation-for="MeetingVenueID" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-12">
-                    <label class="form-label small fw-semibold">Meeting Description</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-text-paragraph"></i></span><textarea asp-for="MeetingDescription" class="form-control" rows="3" maxlength="250" placeholder="Enter meeting description and agenda"></textarea></div>
-                    <span asp-validation-for="MeetingDescription" class="text-danger small"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Meeting Description</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-text-paragraph"></i></span><textarea asp-for="MeetingDescription" class="form-control" rows="4" maxlength="250" placeholder="Enter meeting description and agenda"></textarea></div>
+                        <span asp-validation-for="MeetingDescription" class="text-danger"></span>
+                    </div>
                 </div>
-
-                <div class="col-12">
-                    <label class="form-label small fw-semibold">Meeting Document (Optional)</label>
-                    <input asp-for="DocumentFile" type="file" class="form-control" />
-                    <span asp-validation-for="DocumentFile" class="text-danger small"></span>
-                    <label class="text-secondary mt-2">Upload agenda/minutes</label>
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label-modern">Meeting Document</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-paperclip"></i></span><input asp-for="DocumentFile" type="file" class="form-control" /></div>
+                        <p class="form-help">Optional. Upload a note, agenda or supporting document.</p>
+                        <span asp-validation-for="DocumentFile" class="text-danger"></span>
+                    </div>
                 </div>
-
-                <div class="col-12">
-                    <label class="form-label small fw-semibold">Document Path</label>
-                    <input asp-for="DocumentPath" type="text" class="form-control" placeholder="Enter document path" />
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label-modern">Document Path</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-folder2-open"></i></span><input asp-for="DocumentPath" type="text" class="form-control" placeholder="Enter manual document path" /></div>
+                        <p class="form-help">Optional manual reference when the file already exists elsewhere.</p>
+                    </div>
                 </div>
-
-                <div class="col-12 mom-form-actions">
-                    <a asp-action="MeetingsList" class="btn btn-light px-4">Back to Meetings</a>
-                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-circle me-1"></i> Save Meeting</button>
+                <div class="col-12 form-actions-modern">
+                    <a asp-action="MeetingsList" class="btn form-btn form-btn-outline">Back to Meetings</a>
+                    <button type="submit" class="btn form-btn form-btn-primary" id="meetingsSaveButton">
+                        <span class="spinner-border spinner-border-sm me-2 form-btn-spinner" aria-hidden="true"></span>
+                        <span>Save Meeting</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('meetingsForm');
+            const button = document.getElementById('meetingsSaveButton');
+            const departmentSelect = document.getElementById('meetingDepartmentSelect');
+            const includeAllCheckbox = document.getElementById('includeAllDepartmentsMembers');
+
+            if (form && button) {
+                form.addEventListener('submit', function () {
+                    button.classList.add('is-loading');
+                    button.disabled = true;
+                });
+            }
+
+            if (!departmentSelect || !includeAllCheckbox) return;
+            departmentSelect.addEventListener('change', function () {
+                if (departmentSelect.value === '-1') {
+                    includeAllCheckbox.checked = true;
+                }
+            });
+        })();
+    </script>
+}

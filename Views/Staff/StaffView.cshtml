@@ -1,0 +1,269 @@
+@model Meeting_Of_Minutes.Models.StaffModel
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSViewStyles")
+@{
+    ViewData["Title"] = "Staff Details - Meeting Of Minutes";
+    var transferCompanyDropDown = ViewBag.TransferCompanyDropDown as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+}
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item"><a asp-controller="Staff" asp-action="StaffList">Staff Members</a></li>
+            <li class="breadcrumb-item active">Details</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="view-page">
+    <section class="view-hero">
+        <div class="view-hero-main">
+            <div class="view-kicker"><i class="bi bi-person-vcard"></i> Staff View</div>
+            <h1 class="view-title">@Model.StaffName</h1>
+            <p class="view-subtitle">Review profile details, linked login state and enrolled meetings from one clean staff workspace.</p>
+        </div>
+        <aside class="view-note">
+            <div class="view-note-label">Enrollment Snapshot</div>
+            <h2 class="view-note-title">@Model.EnrolledMeetingsCount meetings currently linked to this staff profile.</h2>
+            <ul class="view-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>This user can only access meetings where the membership record exists.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Login details below reflect the linked user account behind this staff record.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="view-grid">
+        <div class="view-card">
+            <div class="view-card-header">
+                <div>
+                    <h3 class="view-card-heading">Staff Details</h3>
+                    <p class="view-card-meta">Primary profile information and department assignment.</p>
+                </div>
+            </div>
+            <div class="view-card-body">
+                <div class="view-detail-grid">
+                    <div class="view-detail-item wide">
+                        <span class="view-detail-label">Staff Name</span>
+                        <div class="view-detail-value">@Model.StaffName</div>
+                    </div>
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Company</span>
+                        <div class="view-detail-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "-" : Model.CompanyName)</div>
+                    </div>
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Department</span>
+                        <div class="view-detail-value">@(string.IsNullOrWhiteSpace(Model.DepartmentName) ? "-" : Model.DepartmentName)</div>
+                    </div>
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Email</span>
+                        <div class="view-detail-value">@(string.IsNullOrWhiteSpace(Model.EmailAddress) ? "-" : Model.EmailAddress)</div>
+                    </div>
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Mobile</span>
+                        <div class="view-detail-value">@(string.IsNullOrWhiteSpace(Model.MobileNo) ? "-" : Model.MobileNo)</div>
+                    </div>
+                    <div class="view-detail-item wide">
+                        <span class="view-detail-label">Remarks</span>
+                        <div class="view-detail-value muted">@(string.IsNullOrWhiteSpace(Model.Remarks) ? "-" : Model.Remarks)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view-card">
+            <div class="view-card-header">
+                <div>
+                    <h3 class="view-card-heading">Login Details</h3>
+                    <p class="view-card-meta">Linked account information for staff access.</p>
+                </div>
+                <div class="view-actions">
+                    <a asp-action="StaffList" class="btn view-btn view-btn-light">Back to List</a>
+                </div>
+            </div>
+            <div class="view-card-body">
+                <div class="view-stat-stack">
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Login Username</span>
+                        <div class="view-detail-value">@(string.IsNullOrWhiteSpace(Model.LoginUserName) ? "-" : Model.LoginUserName)</div>
+                    </div>
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Login Password</span>
+                        <div class="view-detail-value muted">@(!string.IsNullOrWhiteSpace(Model.LoginPassword) && Model.IsAutoPassword ? Model.LoginPassword : "Hidden (changed by user)")</div>
+                    </div>
+                    <div class="view-stat-tile">
+                        <div class="view-stat-number">@Model.EnrolledMeetingsCount</div>
+                        <div class="view-stat-caption">Meetings Enrolled</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="view-card">
+        <div class="view-card-header">
+            <div>
+                <h3 class="view-card-heading">Enrolled Meetings</h3>
+                <p class="view-card-meta">Meetings this staff member can currently access.</p>
+            </div>
+        </div>
+        <div class="view-card-body">
+            @if (Model.EnrolledMeetings.Count == 0)
+            {
+                <div class="view-detail-item">
+                    <span class="view-detail-value muted">No meetings enrolled.</span>
+                </div>
+            }
+            else
+            {
+                <div class="view-list">
+                    @foreach (var meeting in Model.EnrolledMeetings)
+                    {
+                        <div class="view-list-row">
+                            <div class="view-list-title">@(string.IsNullOrWhiteSpace(meeting.MeetingDescription) ? "Meeting Record" : meeting.MeetingDescription)</div>
+                            <div class="view-list-meta">@(meeting.MeetingDate?.ToString("dd MMM yyyy hh:mm tt") ?? "-") | @meeting.MeetingTypeName | @meeting.MeetingVenueName | @meeting.DepartmentName</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="view-grid">
+        <div class="view-card">
+            <div class="view-card-header">
+                <div>
+                    <h3 class="view-card-heading">Transfer To Another Company</h3>
+                    <p class="view-card-meta">Raise a formal transfer request for this staff profile with target company, department and supporting document.</p>
+                </div>
+            </div>
+            <div class="view-card-body">
+                <form asp-action="SubmitTransferRequest" method="post" enctype="multipart/form-data" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="staffID" value="@Model.StaffID" />
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Target Company</label>
+                        <select name="targetCompanyName" id="targetCompanyName" class="form-select">
+                            <option value="">Select Company</option>
+                            @foreach (var item in transferCompanyDropDown.Where(x => !string.Equals(x.Value, Model.CompanyName, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Target Department</label>
+                        <select name="targetDepartmentID" id="targetDepartmentID" class="form-select">
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Transfer Reason</label>
+                        <textarea name="transferReason" class="form-control" rows="4" placeholder="Why should this staff member be transferred to the new company and department?"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Supporting Document</label>
+                        <input type="file" name="transferDocument" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-2"></i>Send Transfer Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="view-card">
+            <div class="view-card-header">
+                <div>
+                    <h3 class="view-card-heading">Transfer Request History</h3>
+                    <p class="view-card-meta">Track previous company transfer decisions for this staff record.</p>
+                </div>
+            </div>
+            <div class="view-card-body">
+                @if (Model.TransferRequests.Count == 0)
+                {
+                    <div class="view-detail-item">
+                        <span class="view-detail-value muted">No transfer requests raised yet.</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="view-list">
+                        @foreach (var request in Model.TransferRequests)
+                        {
+                            <div class="view-list-row">
+                                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                                    <div>
+                                        <div class="view-list-title">@request.SourceCompanyName → @request.TargetCompanyName</div>
+                                        <div class="view-list-meta">@request.SourceDepartmentName → @request.TargetDepartmentName | @request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                    </div>
+                                    <div>
+                                        @if (request.RequestStatus == "Approved")
+                                        {
+                                            <span class="badge bg-success-subtle text-success">Approved</span>
+                                        }
+                                        else if (request.RequestStatus == "Rejected")
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="view-list-meta mt-2">Reason: @(string.IsNullOrWhiteSpace(request.TransferReason) ? "-" : request.TransferReason)</div>
+                                @if (!string.IsNullOrWhiteSpace(request.AdminRemarks))
+                                {
+                                    <div class="view-list-meta mt-1">Admin Remarks: @request.AdminRemarks</div>
+                                }
+                                <div class="mt-2">
+                                    <a href="@request.DocumentPath" target="_blank" class="btn btn-light btn-sm border">View Document</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        const transferCompanySelect = document.getElementById('targetCompanyName');
+        const transferDepartmentSelect = document.getElementById('targetDepartmentID');
+
+        async function loadTransferDepartments(companyName) {
+            if (!transferDepartmentSelect) return;
+
+            transferDepartmentSelect.innerHTML = '<option value="">Select Department</option>';
+
+            if (!companyName) return;
+
+            const response = await fetch(`/Auth/GetDepartmentsByCompany?companyName=${encodeURIComponent(companyName)}`);
+            if (!response.ok) return;
+
+            const items = await response.json();
+            items.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item.value;
+                option.textContent = item.text;
+                transferDepartmentSelect.appendChild(option);
+            });
+        }
+
+        if (transferCompanySelect) {
+            transferCompanySelect.addEventListener('change', function () {
+                loadTransferDepartments(this.value);
+            });
+        }
+    </script>
+}

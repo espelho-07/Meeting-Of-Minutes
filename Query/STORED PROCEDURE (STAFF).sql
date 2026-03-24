@@ -15,6 +15,7 @@ BEGIN
         s.[StaffID],
         s.[DepartmentID],
         d.[DepartmentName],
+        d.[CompanyName],
         s.[StaffName],
         s.[MobileNo],
         s.[EmailAddress],
@@ -41,16 +42,20 @@ CREATE OR ALTER PROCEDURE [dbo].[PR_Staff_SelectByPK]
 AS
 BEGIN
     SELECT
-        [dbo].[MOM_Staff].[StaffID],
-        [dbo].[MOM_Staff].[DepartmentID],
-        [dbo].[MOM_Staff].[StaffName],
-        [dbo].[MOM_Staff].[MobileNo],
-        [dbo].[MOM_Staff].[EmailAddress],
-        [dbo].[MOM_Staff].[Remarks],
-        [dbo].[MOM_Staff].[Created],
-        [dbo].[MOM_Staff].[Modified]
-    FROM [dbo].[MOM_Staff]
-    WHERE [dbo].[MOM_Staff].[StaffID] = @StaffID;
+        s.[StaffID],
+        s.[DepartmentID],
+        d.[DepartmentName],
+        d.[CompanyName],
+        s.[StaffName],
+        s.[MobileNo],
+        s.[EmailAddress],
+        s.[Remarks],
+        s.[Created],
+        s.[Modified]
+    FROM [dbo].[MOM_Staff] s
+    INNER JOIN [dbo].[MOM_Department] d
+        ON s.[DepartmentID] = d.[DepartmentID]
+    WHERE s.[StaffID] = @StaffID;
 END;
 GO
 
@@ -87,6 +92,43 @@ BEGIN
         GETDATE(),
         @Modified
     );
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS StaffID;
+END;
+GO
+
+GO
+CREATE OR ALTER PROCEDURE [dbo].[PR_Staff_SelectByPKForView]
+(
+    @StaffID INT
+)
+AS
+BEGIN
+    SELECT
+        s.[StaffID],
+        s.[DepartmentID],
+        d.[DepartmentName],
+        d.[CompanyName],
+        s.[StaffName],
+        s.[MobileNo],
+        s.[EmailAddress],
+        s.[Remarks],
+        s.[Created],
+        s.[Modified],
+        ISNULL(u.[UserName], '') AS [LoginUserName],
+        ISNULL(u.[Password], '') AS [LoginPassword],
+        ISNULL(u.[IsAutoPassword], 0) AS [IsAutoPassword],
+        (
+            SELECT COUNT(*)
+            FROM dbo.MOM_MeetingMember mm
+            WHERE mm.StaffID = s.StaffID
+        ) AS [EnrolledMeetingsCount]
+    FROM dbo.MOM_Staff s
+    INNER JOIN dbo.MOM_Department d
+        ON s.DepartmentID = d.DepartmentID
+    LEFT JOIN dbo.MST_User u
+        ON u.StaffID = s.StaffID
+    WHERE s.StaffID = @StaffID;
 END;
 GO
 

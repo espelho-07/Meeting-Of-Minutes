@@ -1,8 +1,9 @@
 @model Meeting_Of_Minutes.Models.StaffModel
-
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSFormStyles")
 @{
     ViewData["Title"] = "Staff Member Configuration - MOM";
+    bool isEditMode = Model.StaffID != 0;
 }
 
 <div class="pagetitle mb-4">
@@ -15,52 +16,96 @@
     </nav>
 </div>
 
-<div class="mom-form-wrap">
-    <div class="mb-4">
-        <h1>@(Model.StaffID == 0 ? "Add New Staff Member" : "Edit Staff Member")</h1>
-        <p class="mom-page-subtitle">Register a new staff member</p>
-    </div>
-
-    <div class="card mom-form-card col-lg-9 mx-auto">
-        <div class="card-header">
-            <h6><i class="bi bi-person-plus-fill me-2"></i> Add New Staff Member</h6>
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-person-badge"></i> Staff Onboarding</div>
+            <h1 class="form-title">@(isEditMode ? "Edit Staff Member" : "Add New Staff Member")</h1>
+            <p class="form-subtitle">Capture staff details once and keep their department mapping, login context and meeting visibility aligned automatically.</p>
         </div>
-        <div class="card-body">
-            <form asp-action="Save" class="row g-4 js-update-confirm-form" data-id-field="StaffID" data-update-message="Sure to update this staff?" method="post">
+        <aside class="form-note">
+            <div class="form-note-label">Linked access</div>
+            <h2 class="form-note-title">This form also controls the user account behind the staff record.</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>The selected department defines what meetings and data the user can access.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Email is used as the login identity for the linked user account.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Admin updates here keep staff profile and user access in sync.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="form-card">
+        <div class="form-card-header">
+            <div>
+                <h3 class="form-card-heading">Staff Member Details</h3>
+                <p class="form-card-meta">Add core profile information, department mapping and optional remarks.</p>
+            </div>
+            <div class="form-status-chip">@(isEditMode ? "Editing staff profile" : "Creating staff profile")</div>
+        </div>
+        <div class="form-card-body">
+            <form asp-action="Save" class="row g-4 js-update-confirm-form" data-id-field="StaffID" data-update-message="Sure to update this staff?" method="post" id="staffForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="StaffID" />
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Staff Name</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-person"></i></span><input asp-for="StaffName" type="text" class="form-control" placeholder="Enter staff name" maxlength="50"></div>
-                    <span asp-validation-for="StaffName" class=" text-danger"></span>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label small fw-bold">Department</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-building"></i></span><select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select"><option value="">-- Select Department --</option></select></div>
+                    <div class="form-field">
+                        <label class="form-label-modern">Staff Name</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-person"></i></span><input asp-for="StaffName" type="text" class="form-control" placeholder="Enter staff name" maxlength="50" /></div>
+                        <span asp-validation-for="StaffName" class="text-danger"></span>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Email Address</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-envelope"></i></span><input asp-for="EmailAddress" type="email" class="form-control" placeholder="Enter email address" maxlength="50"></div>
-                    <span asp-validation-for="EmailAddress" class=" text-danger"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Department</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-building"></i></span><select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select"><option value="">-- Select Department --</option></select></div>
+                        <p class="form-help">This controls meeting visibility and the staff member's access scope.</p>
+                        <span asp-validation-for="DepartmentID" class="text-danger"></span>
+                    </div>
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label small fw-bold">Mobile Number</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-phone"></i></span><input asp-for="MobileNo" type="text" class="form-control" placeholder="Enter mobile number" maxlength="20"></div>
-                    <small class="text-muted">Example: +91 98765 43210</small>
-                    <span asp-validation-for="MobileNo" class=" text-danger"></span>
+                    <div class="form-field">
+                        <label class="form-label-modern">Email Address</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-envelope"></i></span><input asp-for="EmailAddress" type="email" class="form-control" placeholder="Enter email address" maxlength="50" /></div>
+                        <p class="form-help">This same email is used for the linked user login.</p>
+                        <span asp-validation-for="EmailAddress" class="text-danger"></span>
+                    </div>
                 </div>
-
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label class="form-label-modern">Mobile Number</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-phone"></i></span><input asp-for="MobileNo" type="text" class="form-control" placeholder="Enter 10 digit mobile number" maxlength="20" /></div>
+                        <p class="form-help">Example: 9876543210</p>
+                        <span asp-validation-for="MobileNo" class="text-danger"></span>
+                    </div>
+                </div>
                 <div class="col-12">
-                    <label class="form-label small fw-bold">Remarks</label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-chat-left-text"></i></span><textarea asp-for="Remarks" class="form-control" rows="3" maxlength="250" placeholder="Enter any additional remarks (optional)"></textarea></div>
+                    <div class="form-field">
+                        <label class="form-label-modern">Remarks</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-chat-left-text"></i></span><textarea asp-for="Remarks" class="form-control" rows="4" maxlength="250" placeholder="Add any short note about role, team or onboarding details"></textarea></div>
+                        <p class="form-help">Optional. Keep it short and operational.</p>
+                    </div>
                 </div>
-                <div class="col-12 mom-form-actions">
-                    <a asp-action="StaffList" class="btn btn-light px-4">Back to List</a>
-                    <button type="submit" class="btn btn-primary px-5">@(Model.StaffID == 0 ? "Create Staff Member" : "Update Staff Member")</button>
+                <div class="col-12 form-actions-modern">
+                    <a asp-action="StaffList" class="btn form-btn form-btn-outline">Back to List</a>
+                    <button type="submit" class="btn form-btn form-btn-primary" id="staffSaveButton">
+                        <span class="spinner-border spinner-border-sm me-2 form-btn-spinner" aria-hidden="true"></span>
+                        <span>@(isEditMode ? "Update Staff Member" : "Create Staff Member")</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('staffForm');
+            const button = document.getElementById('staffSaveButton');
+            if (!form || !button) return;
+            form.addEventListener('submit', function () {
+                button.classList.add('is-loading');
+                button.disabled = true;
+            });
+        })();
+    </script>
+}

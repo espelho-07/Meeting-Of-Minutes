@@ -14,6 +14,7 @@ BEGIN
     SELECT
         [dbo].[MOM_Meetings].[MeetingID],
         [dbo].[MOM_Meetings].[MeetingDate],
+        [dbo].[MOM_Meetings].[DepartmentID],
         [dbo].[MOM_MeetingVenue].[MeetingVenueName],
         [dbo].[MOM_MeetingType].[MeetingTypeName],
         [dbo].[MOM_Department].[DepartmentName],
@@ -108,6 +109,8 @@ BEGIN
         GETDATE(),
         @Modified
     );
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS MeetingID;
 END;
 GO
 
@@ -146,8 +149,12 @@ CREATE OR ALTER PROCEDURE [dbo].[PR_Meetings_DeleteByPK]
 )
 AS
 BEGIN
-    DELETE
-    FROM [dbo].[MOM_Meetings]
+    UPDATE [dbo].[MOM_Meetings]
+    SET
+        [IsCancelled] = 1,
+        [CancellationDateTime] = GETDATE(),
+        [CancellationReason] = 'Cancelled',
+        [Modified] = GETDATE()
     WHERE [dbo].[MOM_Meetings].[MeetingID] = @MeetingID;
 END;
 GO
@@ -155,26 +162,33 @@ GO
 -- DROPDOWN LISTS
 go
 CREATE OR ALTER PROC PR_MOM_DEPARTMENT_DDL
+    @CompanyName NVARCHAR(100) = NULL
 AS
 BEGIN
-	SELECT DepartmentID , DepartmentName
-	FROM MOM_Department
-	ORDER BY DepartmentName
+    SELECT DepartmentID, DepartmentName
+    FROM MOM_Department
+    WHERE @CompanyName IS NULL OR CompanyName = @CompanyName
+    ORDER BY DepartmentName
 END
 GO
 CREATE OR ALTER PROC PR_MOM_MEETINGVENUE_DDL
+    @CompanyName NVARCHAR(100)
 AS
 BEGIN
 	SELECT MeetingVenueID , MeetingVenueName
 	FROM MOM_MeetingVenue
+	WHERE CompanyName = @CompanyName
 	ORDER BY MeetingVenueName
 END
 GO
 CREATE OR ALTER PROC PR_MOM_MEETINGTYPE_DDL
+    @CompanyName NVARCHAR(100)
 AS
 BEGIN
 	SELECT MeetingTypeID , MeetingTypeName
 	FROM MOM_MeetingType
+	WHERE CompanyName = @CompanyName
 	ORDER BY MeetingTypeName
 END
 GO
+

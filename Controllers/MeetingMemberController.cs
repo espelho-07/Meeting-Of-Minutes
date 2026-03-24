@@ -19,7 +19,7 @@ namespace Meeting_Of_Minutes.Controllers
 
             if (id.HasValue)
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingMember_SelectByPK";
@@ -50,7 +50,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             List<MeetingMemberModel> list = new List<MeetingMemberModel>();
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MeetingMember_SelectAll";
@@ -84,7 +84,7 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 DataTable dt = new DataTable();
 
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -144,7 +144,7 @@ namespace Meeting_Of_Minutes.Controllers
                 return View("MeetingMemberAddEdit", model);
             }
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
 
             if (model.MeetingMemberID == 0)
@@ -200,7 +200,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             try
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingMember_DeleteByPK";
@@ -224,7 +224,7 @@ namespace Meeting_Of_Minutes.Controllers
         public List<SelectListItem> FillMeetingDropDown()
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Meetings_SelectAll";
@@ -233,7 +233,7 @@ namespace Meeting_Of_Minutes.Controllers
             SqlDataReader reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                string value = reader["MeetingID"].ToString();
+                string value = Convert.ToString(reader["MeetingID"]) ?? string.Empty;
                 bool exists = false;
                 foreach (var item in list)
                 {
@@ -261,7 +261,7 @@ namespace Meeting_Of_Minutes.Controllers
         public List<SelectListItem> FillStaffDropDown()
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Staff_SelectAll";
@@ -270,7 +270,7 @@ namespace Meeting_Of_Minutes.Controllers
             SqlDataReader reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                string value = reader["StaffID"].ToString();
+                string value = Convert.ToString(reader["StaffID"]) ?? string.Empty;
                 bool exists = false;
                 foreach (var item in list)
                 {
@@ -297,6 +297,9 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
     }
 }
+
+
+
 
 
 

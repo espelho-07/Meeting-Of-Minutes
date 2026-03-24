@@ -1,8 +1,9 @@
 @model Meeting_Of_Minutes.Models.DepartmentModel
-
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSFormStyles")
 @{
     ViewData["Title"] = "Department Add - Meeting Of Minutes";
+    bool isEditMode = Model.DepartmentID != 0;
 }
 
 <div class="pagetitle mb-4">
@@ -15,35 +16,69 @@
     </nav>
 </div>
 
-<div class="mom-form-wrap">
-    <div class="mb-4">
-        <h1>@(Model.DepartmentID == 0 ? "Add Department" : "Edit Department")</h1>
-        <p class="mom-page-subtitle">Configure department information</p>
-    </div>
-
-    <div class="card mom-form-card col-lg-8 mx-auto">
-        <div class="card-header">
-            <h6><i class="bi bi-building me-2"></i> Department Details</h6>
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-diagram-3"></i> Department Setup</div>
+            <h1 class="form-title">@(isEditMode ? "Edit Department" : "Add Department")</h1>
+            <p class="form-subtitle">Set up a clean department name that staff, meetings and user access rules can all align to inside the current company workspace.</p>
         </div>
+        <aside class="form-note">
+            <div class="form-note-label">Where it is used</div>
+            <h2 class="form-note-title">Departments drive access and meeting scope.</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Staff accounts inherit the department selected here.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Meetings can auto-add all staff from the chosen department.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Short names keep filters and reports easy to scan.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-        <div class="card-body">
-            <form class="row g-4 js-update-confirm-form" data-id-field="DepartmentID" data-update-message="Sure to update this department?" asp-action="Save" method="post">
+    <section class="form-card">
+        <div class="form-card-header">
+            <div>
+                <h3 class="form-card-heading">Department Details</h3>
+                <p class="form-card-meta">Create or update one department record for this company workspace.</p>
+            </div>
+            <div class="form-status-chip">@(isEditMode ? "Editing existing record" : "Creating new record")</div>
+        </div>
+        <div class="form-card-body">
+            <form class="row g-4 js-update-confirm-form" data-id-field="DepartmentID" data-update-message="Sure to update this department?" asp-action="Save" method="post" id="departmentForm">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="DepartmentID" />
-                <div class="col-md-12">
-                    <label asp-for="DepartmentName" class="form-label small fw-bold text-muted"></label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-building"></i></span>
-                        <input asp-for="DepartmentName" type="text" class="form-control" placeholder="Enter department name" maxlength="100">
+                <div class="col-12">
+                    <div class="form-field">
+                        <label asp-for="DepartmentName" class="form-label-modern"></label>
+                        <div class="form-input-shell">
+                            <span class="form-input-icon"><i class="bi bi-building"></i></span>
+                            <input asp-for="DepartmentName" type="text" class="form-control" placeholder="Enter department name" maxlength="100" />
+                        </div>
+                        <p class="form-help">Use a simple label such as HR, Marketing, Operations or Finance.</p>
+                        <span asp-validation-for="DepartmentName" class="text-danger"></span>
                     </div>
-                    <span asp-validation-for="DepartmentName" class="text-danger"></span>
                 </div>
-
-                <div class="col-12 mom-form-actions">
-                    <a asp-action="DepartmentList" class="btn btn-light px-4">Back to List</a>
-                    <button type="submit" class="btn btn-primary px-5"><i class="bi bi-check-circle me-2"></i>Save Department</button>
+                <div class="col-12 form-actions-modern">
+                    <a asp-action="DepartmentList" class="btn form-btn form-btn-outline">Back to List</a>
+                    <button type="submit" class="btn form-btn form-btn-primary" id="departmentSaveButton">
+                        <span class="spinner-border spinner-border-sm me-2 form-btn-spinner" aria-hidden="true"></span>
+                        <span>Save Department</span>
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
+    </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('departmentForm');
+            const button = document.getElementById('departmentSaveButton');
+            if (!form || !button) return;
+            form.addEventListener('submit', function () {
+                button.classList.add('is-loading');
+                button.disabled = true;
+            });
+        })();
+    </script>
+}

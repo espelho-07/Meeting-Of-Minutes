@@ -1,108 +1,434 @@
+@model Meeting_Of_Minutes.Models.UserProfileModel
+@using Microsoft.AspNetCore.Http
+
 @{
     ViewData["Title"] = "My Profile - Meeting Of Minutes";
+    bool isAdminUser = (Context.Session.GetString("UserRole") ?? string.Empty).Equals("Admin", StringComparison.OrdinalIgnoreCase);
 }
+
+@await Html.PartialAsync("_AlertMessages")
+
+<style>
+    .mom-profile-shell {
+        display: grid;
+        gap: 22px;
+    }
+
+    .mom-profile-hero {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 22px;
+    }
+
+    .mom-profile-card {
+        background: #fff;
+        border: 1px solid #e8edf5;
+        border-radius: 24px;
+        box-shadow: 0 18px 40px rgba(35, 43, 88, 0.08);
+        overflow: hidden;
+    }
+
+    .mom-profile-aside {
+        padding: 26px 24px;
+        text-align: center;
+    }
+
+    .mom-profile-avatar {
+        width: 118px;
+        height: 118px;
+        object-fit: cover;
+        border-radius: 32px;
+        border: 4px solid #fff;
+        box-shadow: 0 14px 35px rgba(33, 44, 84, 0.15);
+        margin-bottom: 16px;
+    }
+
+    .mom-profile-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f4f6ff;
+        color: #5863dd;
+        font-weight: 800;
+        margin-bottom: 18px;
+    }
+
+    .mom-profile-mini-grid {
+        display: grid;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .mom-mini-info {
+        padding: 14px 15px;
+        border-radius: 18px;
+        border: 1px solid #edf1f7;
+        background: #fafcff;
+    }
+
+    .mom-mini-info small {
+        display: block;
+        color: #8a97ac;
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+
+    .mom-mini-info div {
+        font-weight: 700;
+        color: #1f2a49;
+    }
+
+    .mom-profile-main {
+        padding: 0;
+    }
+
+    .mom-profile-panels {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        padding: 22px;
+    }
+
+    .mom-profile-panel {
+        border: 1px solid #edf1f7;
+        border-radius: 22px;
+        padding: 18px;
+        background: #fbfcff;
+    }
+
+    .mom-profile-panel.full {
+        grid-column: 1 / -1;
+    }
+
+    .mom-profile-panel h6 {
+        margin-bottom: 14px;
+        font-weight: 800;
+        color: #243154;
+    }
+
+    .mom-data-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .mom-data-item {
+        padding: 14px 15px;
+        border-radius: 18px;
+        border: 1px solid #edf1f7;
+        background: #fff;
+    }
+
+    .mom-data-item small {
+        display: block;
+        color: #8a97ac;
+        margin-bottom: 4px;
+        font-weight: 700;
+    }
+
+    .mom-data-item div {
+        font-weight: 700;
+        color: #1f2a49;
+    }
+
+    .mom-request-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .mom-file-drop {
+        border: 1px dashed #cfd8ea;
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff;
+    }
+
+    .mom-password-note {
+        color: #72809a;
+        font-size: 0.88rem;
+    }
+
+    .mom-history-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .mom-history-item {
+        border: 1px solid #edf1f7;
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff;
+        display: grid;
+        grid-template-columns: 140px 1fr auto;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .mom-history-main {
+        min-width: 0;
+    }
+
+    .mom-history-title {
+        font-weight: 800;
+        color: #1f2a49;
+        margin-bottom: 4px;
+    }
+
+    .mom-history-sub {
+        color: #77849b;
+        font-size: 0.9rem;
+    }
+
+    .mom-password-group .input-group-text:last-child {
+        border-left: 1px solid #dce4f1 !important;
+        border-right: 1px solid #dce4f1 !important;
+        cursor: pointer;
+        min-width: 50px;
+    }
+
+    @@media (max-width: 1199px) {
+        .mom-profile-hero,
+        .mom-profile-panels,
+        .mom-request-form-grid,
+        .mom-data-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .mom-history-item {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 <div class="pagetitle mb-4">
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item">User</li>
+            <li class="breadcrumb-item">Account</li>
             <li class="breadcrumb-item active">Profile</li>
         </ol>
     </nav>
 </div>
 
-<section class="section profile">
-    <div class="row">
-        <div class="col-xl-4">
-            <div class="card text-center py-4">
-                <div class="card-body">
-                    <div class="position-relative d-inline-block">
-                        <img src="~/assets/img/profile-img.jpg" alt="Profile" class="rounded-circle border border-4 border-primary p-1 shadow" style="width: 130px; height: 130px; object-fit: cover;">
-                        <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-2"></span>
-                    </div>
-                    <h4 class="fw-bold mt-3 mb-0">@Context.Session.GetString("UserName")</h4>
-                    <p class="text-muted small fw-bold mb-3">System Administrator</p>
-                    <div class="d-flex justify-content-center gap-2 mb-3">
-                        <button class="btn btn-primary btn-sm px-3">Follow</button>
-                        <button class="btn btn-light btn-sm px-3">Message</button>
-                    </div>
-                </div>
-            </div>
+<div class="mom-page-header">
+    <div>
+        <h1>My Profile</h1>
+        <p class="mom-page-subtitle">Review account details, request profile changes and manage password access from one place.</p>
+    </div>
+    @if (isAdminUser)
+    {
+        <div class="mom-toolbar">
+            <a asp-action="ProfileUpdateRequestList" class="btn btn-primary">
+                <i class="bi bi-shield-check me-2"></i>Profile Update Requests
+            </a>
+        </div>
+    }
+</div>
 
-            <div class="card mt-3">
-                <div class="card-header"><h6>Performance Overview</h6></div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between small mb-1"><span>Meetings Efficiency</span><span class="fw-bold">85%</span></div>
-                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-success" role="progressbar" style="width: 85%"></div></div>
+<section class="mom-profile-shell">
+    <div class="mom-profile-hero">
+        <div class="mom-profile-card">
+            <div class="mom-profile-aside">
+                <img src="~/assets/img/profile-img.jpg" alt="Profile" class="mom-profile-avatar">
+                <h4 class="fw-bold mb-1">@Model.UserName</h4>
+                <div class="mom-profile-role">
+                    <i class="bi bi-person-badge"></i>@Model.UserRole
+                </div>
+
+                <div class="mom-profile-mini-grid">
+                    <div class="mom-mini-info">
+                        <small>Email</small>
+                        <div>@Model.Email</div>
                     </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between small mb-1"><span>MOM Documentation</span><span class="fw-bold">70%</span></div>
-                        <div class="progress" style="height: 6px;"><div class="progress-bar bg-primary" role="progressbar" style="width: 70%"></div></div>
+                    <div class="mom-mini-info">
+                        <small>Contact No</small>
+                        <div>@Model.ContactNo</div>
+                    </div>
+                    <div class="mom-mini-info">
+                        <small>City</small>
+                        <div>@Model.City</div>
+                    </div>
+                    <div class="mom-mini-info">
+                        <small>Company</small>
+                        <div>@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "-" : Model.CompanyName)</div>
+                    </div>
+                    <div class="mom-mini-info">
+                        <small>Department</small>
+                        <div>@(string.IsNullOrWhiteSpace(Model.DepartmentName) ? "-" : Model.DepartmentName)</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-8">
-            <div class="card">
-                <div class="card-body pt-3">
-                    <ul class="nav nav-pills nav-justified mb-4" id="pills-tab" role="tablist">
-                        <li class="nav-item"><button class="nav-link active rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-overview">Overview</button></li>
-                        <li class="nav-item"><button class="nav-link rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-edit">Edit Profile</button></li>
-                        <li class="nav-item"><button class="nav-link rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-activity">Recent Activity</button></li>
-                        <li class="nav-item"><button class="nav-link rounded-pill mx-1" data-bs-toggle="pill" data-bs-target="#profile-settings">Security</button></li>
-                    </ul>
-
-                    <div class="tab-content pt-2">
-                        <div class="tab-pane fade show active" id="profile-overview">
-                            <h5 class="fw-bold mb-3 text-primary">About Me</h5>
-                            <p class="text-muted fst-italic">Experienced in managing meeting records and ensuring accurate documentation of Minutes of Meetings.</p>
-                            <h5 class="fw-bold mb-3 mt-4 text-primary">Account Details</h5>
-                            <div class="row g-3">
-                                <div class="col-sm-6 border-start border-4 border-primary ps-3 mb-3"><small class="text-muted d-block">Official Email</small><span class="fw-bold">admin@example.com</span></div>
-                                <div class="col-sm-6 border-start border-4 border-info ps-3 mb-3"><small class="text-muted d-block">Department</small><span class="fw-bold">Administration</span></div>
-                                <div class="col-sm-6 border-start border-4 border-warning ps-3 mb-3"><small class="text-muted d-block">Mobile Number</small><span class="fw-bold">+91 98765 43210</span></div>
-                                <div class="col-sm-6 border-start border-4 border-success ps-3 mb-3"><small class="text-muted d-block">Current Location</small><span class="fw-bold">India</span></div>
-                            </div>
-                        </div>
-
-                        <div class="tab-pane fade" id="profile-edit">
-                            <form class="row g-3 mt-1">
-                                <div class="col-md-6"><label class="form-label small fw-bold">Full Name</label><input type="text" class="form-control" value="@Context.Session.GetString("UserName")"></div>
-                                <div class="col-md-6"><label class="form-label small fw-bold">Job Role</label><input type="text" class="form-control" value="System Administrator"></div>
-                                <div class="col-md-12"><label class="form-label small fw-bold">Short Bio</label><textarea class="form-control" rows="3">Experienced in managing meetings and MOM records.</textarea></div>
-                                <div class="text-end mt-4"><button type="submit" class="btn btn-primary px-5">Update Profile</button></div>
-                            </form>
-                        </div>
-
-                        <div class="tab-pane fade" id="profile-activity">
-                            <h5 class="fw-bold mb-4">Your Recent Actions</h5>
-                            <div class="activity">
-                                <div class="activity-item d-flex mb-3"><div class="activite-label small text-muted" style="min-width: 60px;">32 min</div><i class='bi bi-circle-fill activity-badge text-success align-self-start mx-2 small'></i><div class="activity-content">Created <strong>MOM</strong> for project meeting</div></div>
-                                <div class="activity-item d-flex mb-3"><div class="activite-label small text-muted" style="min-width: 60px;">2 hrs</div><i class='bi bi-circle-fill activity-badge text-primary align-self-start mx-2 small'></i><div class="activity-content">Added new staff member</div></div>
-                                <div class="activity-item d-flex mb-3"><div class="activite-label small text-muted" style="min-width: 60px;">1 day</div><i class='bi bi-circle-fill activity-badge text-warning align-self-start mx-2 small'></i><div class="activity-content">Updated venue settings</div></div>
-                            </div>
-                        </div>
-
-                        <div class="tab-pane fade" id="profile-settings">
-                            <form class="row g-3">
-                                <div class="col-12"><label class="form-label small fw-bold">Current Password</label><input type="password" class="form-control shadow-none"></div>
-                                <div class="col-md-6"><label class="form-label small fw-bold">New Password</label><input type="password" class="form-control shadow-none"></div>
-                                <div class="col-md-6"><label class="form-label small fw-bold">Confirm Password</label><input type="password" class="form-control shadow-none"></div>
-                                <div class="text-end mt-4"><button type="submit" class="btn btn-danger px-4">Change Password</button></div>
-                            </form>
-                        </div>
+        <div class="mom-profile-card mom-profile-main">
+            <div class="card-header">
+                <h6><i class="bi bi-person-vcard me-2"></i>Account Workspace</h6>
+            </div>
+            <div class="mom-profile-panels">
+                <div class="mom-profile-panel full">
+                    <h6>Account Information</h6>
+                    <div class="mom-data-grid">
+                        <div class="mom-data-item"><small>User Name</small><div>@Model.UserName</div></div>
+                        <div class="mom-data-item"><small>Role</small><div>@Model.UserRole</div></div>
+                        <div class="mom-data-item"><small>Email Address</small><div>@Model.Email</div></div>
+                        <div class="mom-data-item"><small>Contact Number</small><div>@Model.ContactNo</div></div>
+                        <div class="mom-data-item"><small>City</small><div>@Model.City</div></div>
+                        <div class="mom-data-item"><small>Company</small><div>@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "-" : Model.CompanyName)</div></div>
+                        <div class="mom-data-item full"><small>Department</small><div>@(string.IsNullOrWhiteSpace(Model.DepartmentName) ? "-" : Model.DepartmentName)</div></div>
                     </div>
+                </div>
+
+                @if (!isAdminUser)
+                {
+                    <div class="mom-profile-panel full">
+                        <h6>Request Profile Update</h6>
+                        <form asp-action="SubmitUpdateRequest" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="mom-request-form-grid mb-3">
+                                <div>
+                                    <label class="form-label fw-semibold">Requested Name</label>
+                                    <input asp-for="RequestedUserName" class="form-control" />
+                                </div>
+                                <div>
+                                    <label class="form-label fw-semibold">Requested Email</label>
+                                    <input asp-for="RequestedEmail" class="form-control" />
+                                </div>
+                                <div>
+                                    <label class="form-label fw-semibold">Requested Contact No</label>
+                                    <input asp-for="RequestedContactNo" class="form-control" />
+                                </div>
+                                <div>
+                                    <label class="form-label fw-semibold">Requested City</label>
+                                    <input asp-for="RequestedCity" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="mom-file-drop mb-3">
+                                <label class="form-label fw-semibold">Upload Proof Document</label>
+                                <input type="file" name="proofDocument" class="form-control" />
+                                <div class="small text-muted mt-2">Upload one supporting proof for any requested field change.</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-send me-2"></i>Send Request To Admin
+                            </button>
+                        </form>
+                    </div>
+                }
+
+                <div class="mom-profile-panel full">
+                    <h6>Profile Update History</h6>
+                    @if (Model.UpdateRequests.Count == 0)
+                    {
+                        <div class="text-muted">No profile update requests yet.</div>
+                    }
+                    else
+                    {
+                        <div class="mom-history-list">
+                            @foreach (var request in Model.UpdateRequests)
+                            {
+                                <div class="mom-history-item">
+                                    <div>
+                                        @if (request.RequestStatus == "Approved")
+                                        {
+                                            <span class="badge bg-success-subtle text-success">Approved</span>
+                                        }
+                                        else if (request.RequestStatus == "Rejected")
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                        }
+                                    </div>
+                                    <div class="mom-history-main">
+                                        <div class="mom-history-title">@request.RequestedUserName</div>
+                                        <div class="mom-history-sub">@request.RequestedEmail</div>
+                                        <div class="mom-history-sub">@request.RequestedContactNo | @request.RequestedCity</div>
+                                        <div class="mom-history-sub mt-2">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                        @if (!string.IsNullOrWhiteSpace(request.AdminRemarks))
+                                        {
+                                            <div class="mom-history-sub mt-2"><strong>Admin Remarks:</strong> @request.AdminRemarks</div>
+                                        }
+                                    </div>
+                                    <div>
+                                        <a href="@request.DocumentPath" target="_blank" class="btn btn-light btn-sm border">
+                                            <i class="bi bi-paperclip me-1"></i>View Document
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="mom-profile-panel full">
+                    <h6>Change Password</h6>
+                    <form asp-action="UpdatePassword" method="post" class="row g-3">
+                        @Html.AntiForgeryToken()
+                        <div class="col-md-4">
+                            <label asp-for="CurrentPassword" class="form-label fw-semibold">Current Password</label>
+                            <div class="input-group mom-password-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input asp-for="CurrentPassword" type="password" class="form-control js-password-field" />
+                                <button type="button" class="input-group-text bg-white js-toggle-password"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewPassword" class="form-label fw-semibold">New Password</label>
+                            <div class="input-group mom-password-group">
+                                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                                <input asp-for="NewPassword" type="password" class="form-control js-password-field" />
+                                <button type="button" class="input-group-text bg-white js-toggle-password"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold">Confirm Password</label>
+                            <div class="input-group mom-password-group">
+                                <span class="input-group-text"><i class="bi bi-check2-square"></i></span>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control js-password-field" />
+                                <button type="button" class="input-group-text bg-white js-toggle-password"><i class="bi bi-eye"></i></button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mom-password-note">
+                                Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-key me-2"></i>Update Password
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<style>
-    .nav-pills .nav-link.active { background-color: #5a52e0 !important; box-shadow: 0 4px 15px rgba(90, 82, 224, 0.3); }
-    .nav-pills .nav-link { color: #666; font-weight: 600; border: 1px solid #eee; }
-    .activity-badge { font-size: 10px; padding-top: 5px; }
-</style>
+@section Scripts {
+    <script>
+        document.querySelectorAll('.js-toggle-password').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const group = button.closest('.input-group');
+                const input = group ? group.querySelector('.js-password-field') : null;
+                const icon = button.querySelector('i');
+
+                if (!input || !icon) return;
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'bi bi-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'bi bi-eye';
+                }
+            });
+        });
+    </script>
+}

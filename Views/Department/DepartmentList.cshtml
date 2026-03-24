@@ -1,11 +1,9 @@
-@{
-    ViewData["Title"] = "Departments - Meeting Of Minutes";
-}
-
 @model List<DepartmentModel>
 
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
 @{
+    ViewData["Title"] = "Departments - Meeting Of Minutes";
     int SerialNumber = 1;
 }
 
@@ -18,73 +16,94 @@
     </nav>
 </div>
 
-<div class="mom-page-header">
-    <div>
-        <h1>Departments</h1>
-        <p class="mom-page-subtitle">Manage organizational departments and their staff members</p>
-    </div>
-    <div class="mom-toolbar">
-        <a asp-action="DepartmentAddEdit" class="btn btn-primary px-4">
-            <i class="bi bi-plus-circle me-1"></i> Add Department
-        </a>
-        <a asp-action="ExportToExcel" class="btn btn-success px-4">
-            <i class="bi bi-file-earmark-excel me-1"></i> Export
-        </a>
-    </div>
-</div>
-
-<div class="mom-search-card">
-    <form class="mom-search-form" asp-action="DepartmentList" asp-controller="Department" method="post">
-        @Html.AntiForgeryToken()
-        <div class="mom-search-input">
-            <span><i class="bi bi-search"></i></span>
-            <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search departments..." />
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-building"></i> Department Workspace</div>
+            <h1 class="list-title">Departments</h1>
+            <p class="list-subtitle">Organize business units, keep staff placement clear and maintain the department structure used across meetings, attendance and access.</p>
         </div>
-        <button class="btn btn-primary px-4" type="submit">Search</button>
-        <a href="@Url.Action("DepartmentList", "Department")" class="btn btn-light px-4">Clear</a>
-    </form>
-    <div class="mom-stat-chip">Total Departments: @Model.Count</div>
-</div>
+        <aside class="list-note">
+            <div class="list-note-label">Structure snapshot</div>
+            <h2 class="list-note-title">@Model.Count departments are active in the current company scope.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Staff and meetings remain scoped to the department records shown here.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Counts help you review where teams and meetings are concentrated.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Department ownership drives user access across the application.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-<div class="card mom-list-card">
-    <div class="card-header">
-        <h6><i class="bi bi-building"></i> Departments List</h6>
-    </div>
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Department Directory</h3>
+                <p class="list-surface-meta">Search, review and update department records from one shared management surface.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="DepartmentAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Department</a>
+                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
+            </div>
+        </div>
 
-    <div class="card-body p-0">
-        <table class="table align-middle mb-0">
-            <thead>
-                <tr>
-                    <th style="width:44px;"></th>
-                    <th style="width:60px;">#</th>
-                    <th>Department Name</th>
-                    <th>Staff Count</th>
-                    <th>Meetings</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
+        <div class="list-search-wrap">
+            <form class="list-search-form" asp-action="DepartmentList" asp-controller="Department" method="post">
+                @Html.AntiForgeryToken()
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search departments..." />
+                </div>
+                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
+                <a href="@Url.Action("DepartmentList", "Department")" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+            <div class="list-status-chip">Total Departments: @Model.Count</div>
+        </div>
 
-            <tbody>
-                @foreach (var dept in Model)
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
                 {
-                    <tr>
-                        <td><input type="checkbox" class="form-check-input" /></td>
-                        <td>@(SerialNumber++)</td>
-                        <td class="fw-semibold">@dept.DepartmentName</td>
-                        <td><span class="mom-count-pill staff"><i class="bi bi-people"></i> @dept.StaffCount</span></td>
-                        <td><span class="mom-count-pill meeting"><i class="bi bi-calendar-event"></i> @dept.MeetingsCount</span></td>
-                        <td class="text-center">
-                            <a asp-action="DepartmentView" asp-route-id="@dept.DepartmentID" class="mom-icon-btn text-primary me-1" title="View"><i class="bi bi-eye"></i></a>
-                            <a asp-action="DepartmentAddEdit" asp-route-id="@dept.DepartmentID" class="mom-icon-btn text-warning me-1" title="Edit"><i class="bi bi-pencil"></i></a>
-                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="DepartmentID" value="@dept.DepartmentID" />
-                                <button type="submit" class="btn btn-link mom-icon-btn text-danger p-0" title="Delete"><i class="bi bi-trash"></i></button>
-                            </form>
-                        </td>
-                    </tr>
+                    <div class="list-empty">No departments found.</div>
                 }
-            </tbody>
-        </table>
-    </div>
+                else
+                {
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Department Name</th>
+                                <th>Staff Count</th>
+                                <th>Meetings</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dept in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">@SerialNumber</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@dept.DepartmentName</div>
+                                        <div class="small text-muted">Department workspace entry</div>
+                                    </td>
+                                    <td><span class="mom-count-pill staff"><i class="bi bi-people"></i> @dept.StaffCount</span></td>
+                                    <td><span class="mom-count-pill meeting"><i class="bi bi-calendar-event"></i> @dept.MeetingsCount</span></td>
+                                    <td class="text-center">
+                                        <a asp-action="DepartmentView" asp-route-id="@dept.DepartmentID" class="mom-icon-btn text-primary me-1" title="View"><i class="bi bi-eye"></i></a>
+                                        <a asp-action="DepartmentAddEdit" asp-route-id="@dept.DepartmentID" class="mom-icon-btn text-warning me-1" title="Edit"><i class="bi bi-pencil"></i></a>
+                                        <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="DepartmentID" value="@dept.DepartmentID" />
+                                            <button type="submit" class="btn btn-link mom-icon-btn text-danger p-0" title="Delete"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                SerialNumber++;
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
 </div>

@@ -1,6 +1,6 @@
 @model Meeting_Of_Minutes.Models.DepartmentModel
-
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSViewStyles")
 @{
     ViewData["Title"] = "Department Details";
 }
@@ -15,50 +15,72 @@
     </nav>
 </div>
 
-<div class="mom-detail-grid">
-    <div>
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6><i class="bi bi-building me-2"></i> Department Information</h6>
-                <div class="d-flex gap-3 small">
-                    <a asp-action="DepartmentAddEdit" asp-route-id="@Model.DepartmentID" class="text-warning text-decoration-none"><i class="bi bi-pencil"></i> Edit</a>
+<div class="view-page">
+    <section class="view-hero">
+        <div class="view-hero-main">
+            <div class="view-kicker"><i class="bi bi-diagram-3"></i> Department View</div>
+            <h1 class="view-title">@Model.DepartmentName</h1>
+            <p class="view-subtitle">Review the department identity, linked staff activity and meeting scope from one clean administrative view.</p>
+        </div>
+        <aside class="view-note">
+            <div class="view-note-label">Quick Snapshot</div>
+            <h2 class="view-note-title">This department currently supports @Model.StaffCount staff and @Model.MeetingsCount meetings.</h2>
+            <ul class="view-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Department names are reused in staff access scope and meeting mapping.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Counts shown here reflect the records currently linked with this department.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="view-grid">
+        <div class="view-card">
+            <div class="view-card-header">
+                <div>
+                    <h3 class="view-card-heading">Department Information</h3>
+                    <p class="view-card-meta">Core identity details for this department record.</p>
+                </div>
+                <div class="view-actions">
+                    <a asp-action="DepartmentAddEdit" asp-route-id="@Model.DepartmentID" class="btn view-btn view-btn-light">Edit</a>
                     <form asp-action="Delete" method="post" class="d-inline js-delete-form">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="DepartmentID" value="@Model.DepartmentID" />
-                        <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none"><i class="bi bi-trash"></i> Delete</button>
+                        <button type="submit" class="btn view-btn view-btn-danger">Delete</button>
                     </form>
                 </div>
             </div>
-            <div class="card-body p-4">
-                <div class="row gy-4">
-                    <div class="col-md-6">
-                        <div class="text-muted small">Department ID</div>
-                        <div class="fw-bold fs-5">@Model.DepartmentID</div>
+            <div class="view-card-body">
+                <div class="view-detail-grid">
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Department ID</span>
+                        <div class="view-detail-value">#@Model.DepartmentID</div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="text-muted small">Department Name</div>
-                        <span class="badge bg-primary px-3 py-2">@Model.DepartmentName</span>
+                    <div class="view-detail-item">
+                        <span class="view-detail-label">Department Name</span>
+                        <div class="view-detail-value"><span class="view-badge">@Model.DepartmentName</span></div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div>
-        <div class="mom-stat-card mb-4">
-            <div class="mom-stat-card-head"><i class="bi bi-bar-chart me-2"></i>Department Statistics</div>
-            <div class="mom-stat-card-body">
-                <div class="mom-detail-stats">
-                    <div>
-                        <div class="fs-2 fw-bold text-primary">@Model.StaffCount</div>
-                        <div class="text-muted small">Total Staff Members</div>
+        <div class="view-card">
+            <div class="view-card-header">
+                <div>
+                    <h3 class="view-card-heading">Department Statistics</h3>
+                    <p class="view-card-meta">Current linked record counts for this department.</p>
+                </div>
+            </div>
+            <div class="view-card-body">
+                <div class="view-stat-stack">
+                    <div class="view-stat-tile">
+                        <div class="view-stat-number">@Model.StaffCount</div>
+                        <div class="view-stat-caption">Total Staff Members</div>
                     </div>
-                    <div>
-                        <div class="fs-2 fw-bold text-warning">@Model.MeetingsCount</div>
-                        <div class="text-muted small">Total Meetings</div>
+                    <div class="view-stat-tile">
+                        <div class="view-stat-number">@Model.MeetingsCount</div>
+                        <div class="view-stat-caption">Total Meetings</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 </div>

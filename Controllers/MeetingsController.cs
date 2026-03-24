@@ -19,6 +19,11 @@ namespace Meeting_Of_Minutes.Controllers
         #region AddEdit
         public IActionResult MeetingsAddEdit(int? id)
         {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
             ViewBag.DepartmentDropDown = FillDepartmentDropDown();
             ViewBag.MeetingTypeDropDown = FillMeetingTypeDropDown();
             ViewBag.MeetingVenueDropDown = FillMeetingVenueDropdown();
@@ -27,7 +32,7 @@ namespace Meeting_Of_Minutes.Controllers
 
             if (id.HasValue)
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_Meetings_SelectByPK";
@@ -69,7 +74,7 @@ namespace Meeting_Of_Minutes.Controllers
         [HttpPost]
         public IActionResult MeetingsList(IFormCollection formdata)
         {
-            string searchtext = formdata["searchtext"].ToString();
+            string? searchtext = formdata["searchtext"].ToString();
 
             if (string.IsNullOrWhiteSpace(searchtext))
             {
@@ -82,11 +87,12 @@ namespace Meeting_Of_Minutes.Controllers
             return View(meetingsList);
         }
 
-        public List<MeetingsModel> GetAllMeetings(string searchtext)
+        public List<MeetingsModel> GetAllMeetings(string? searchtext)
         {
             List<MeetingsModel> meetingsList = new List<MeetingsModel>();
+            HashSet<int> allowedDepartmentIds = GetAllowedDepartmentIdsForCompany();
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Meetings_SelectAll";
@@ -109,6 +115,7 @@ namespace Meeting_Of_Minutes.Controllers
                 MeetingsModel meeting = new MeetingsModel();
                 meeting.MeetingID = Convert.ToInt32(reader["MeetingID"]);
                 meeting.MeetingDate = reader["MeetingDate"] as DateTime?;
+                meeting.DepartmentID = reader["DepartmentID"] == DBNull.Value ? null : Convert.ToInt32(reader["DepartmentID"]);
                 meeting.MeetingTypeName = reader["MeetingTypeName"].ToString();
                 meeting.DepartmentName = reader["DepartmentName"].ToString();
                 meeting.MeetingVenueName = reader["MeetingVenueName"].ToString();
@@ -117,7 +124,15 @@ namespace Meeting_Of_Minutes.Controllers
                 meeting.IsCancelled = reader["IsCancelled"] == DBNull.Value ? false : Convert.ToBoolean(reader["IsCancelled"]);
                 meeting.CancellationDateTime = reader["CancellationDateTime"] as DateTime?;
                 meeting.CancellationReason = reader["CancellationReason"].ToString();
-                meetingsList.Add(meeting);
+
+                bool canAccessMeeting = IsAdmin()
+                    ? allowedDepartmentIds.Contains(meeting.DepartmentID ?? 0) && CanAccessDepartmentMeeting(meeting.DepartmentID)
+                    : IsMeetingAssignedToCurrentUser(meeting.MeetingID);
+
+                if (canAccessMeeting)
+                {
+                    meetingsList.Add(meeting);
+                }
             }
 
             reader.Close();
@@ -129,10 +144,16 @@ namespace Meeting_Of_Minutes.Controllers
 
         public IActionResult MeetingsDetails(int id)
         {
+            if (!IsAdmin() && !IsMeetingInUserDepartment(id))
+            {
+                TempData["ErrorMessage"] = "You can only view your meetings.";
+                return RedirectToAction("MeetingsList");
+            }
+
             MeetingDetailsViewModel viewModel = new MeetingDetailsViewModel();
             MeetingsModel model = new MeetingsModel();
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Meetings_SelectByPK";
@@ -185,9 +206,6 @@ namespace Meeting_Of_Minutes.Controllers
             con.Close();
 
             viewModel.Meeting = model;
-            viewModel.NewMember.MeetingID = id;
-            ViewBag.StaffDropDown = FillStaffDropDown(model.DepartmentID);
-
             return View(viewModel);
         }
 
@@ -195,6 +213,11 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult AddMeetingMember(MeetingDetailsViewModel viewModel)
         {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
             if (viewModel.NewMember.MeetingID == 0)
             {
                 TempData["ErrorMessage"] = "Meeting not found.";
@@ -207,7 +230,7 @@ namespace Meeting_Of_Minutes.Controllers
                 return RedirectToAction("MeetingsDetails", new { id = viewModel.NewMember.MeetingID });
             }
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
 
             SqlCommand checkCmd = new SqlCommand();
@@ -246,7 +269,12 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult UpdateMeetingMemberAttendance(int MeetingMemberID, int MeetingID, bool IsPresent, string Remarks)
         {
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MeetingMember_UpdateByPK";
@@ -267,9 +295,14 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteMeetingMember(int MeetingMemberID, int MeetingID)
         {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
             try
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_MeetingMember_DeleteByPK";
@@ -292,11 +325,16 @@ namespace Meeting_Of_Minutes.Controllers
 
         public IActionResult ExportToExcel()
         {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
             try
             {
                 DataTable dt = new DataTable();
 
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -350,12 +388,39 @@ namespace Meeting_Of_Minutes.Controllers
 
         public IActionResult Save(MeetingsModel model)
         {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
+            if (model.IncludeAllDepartmentsMembers)
+            {
+                ModelState.Remove("DepartmentID");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.DepartmentDropDown = FillDepartmentDropDown();
                 ViewBag.MeetingTypeDropDown = FillMeetingTypeDropDown();
                 ViewBag.MeetingVenueDropDown = FillMeetingVenueDropdown();
                 return View("MeetingsAddEdit", model);
+            }
+
+            bool includeAllDepartments = model.IncludeAllDepartmentsMembers || (model.DepartmentID.HasValue && model.DepartmentID.Value == -1);
+            if (includeAllDepartments)
+            {
+                int? defaultDepartmentId = GetFirstDepartmentIdForCompany();
+                if (!defaultDepartmentId.HasValue)
+                {
+                    ModelState.AddModelError("DepartmentID", "Please add at least one department first.");
+                    ViewBag.DepartmentDropDown = FillDepartmentDropDown();
+                    ViewBag.MeetingTypeDropDown = FillMeetingTypeDropDown();
+                    ViewBag.MeetingVenueDropDown = FillMeetingVenueDropdown();
+                    return View("MeetingsAddEdit", model);
+                }
+
+                model.DepartmentID = defaultDepartmentId.Value;
+                model.IncludeAllDepartmentsMembers = true;
             }
 
             string filePath = model.DocumentPath ?? string.Empty;
@@ -380,8 +445,9 @@ namespace Meeting_Of_Minutes.Controllers
                 filePath = "/uploads/" + fileName;
             }
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
+            int meetingId = model.MeetingID;
 
             if (model.MeetingID == 0)
             {
@@ -420,6 +486,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.Parameters.AddWithValue("@MeetingDescription", model.MeetingDescription ?? string.Empty);
                 cmd.Parameters.AddWithValue("@DocumentPath", filePath);
                 cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                meetingId = Convert.ToInt32(cmd.ExecuteScalar());
             }
             else
             {
@@ -431,10 +498,15 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
                 cmd.Parameters.AddWithValue("@MeetingDescription", model.MeetingDescription ?? string.Empty);
                 cmd.Parameters.AddWithValue("@DocumentPath", filePath);
+                cmd.ExecuteNonQuery();
             }
-            TempData["SuccessMessage"] = model.MeetingID == 0 ? "Meeting added successfully." : "Meeting updated successfully.";
-            cmd.ExecuteNonQuery();
+
+            AddDepartmentMembersToMeeting(con, meetingId, model.DepartmentID, model.IncludeAllDepartmentsMembers);
             con.Close();
+
+            TempData["SuccessMessage"] = model.MeetingID == 0
+                ? "Meeting added successfully. Department members added automatically."
+                : "Meeting updated successfully. Department members synced automatically.";
 
             return RedirectToAction("MeetingsList");
         }
@@ -443,23 +515,64 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int MeetingID)
         {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
             try
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+                con.Open();
+
+                SqlCommand checkCmd = new SqlCommand();
+                checkCmd.Connection = con;
+                checkCmd.CommandText = "PR_Meetings_SelectByPK";
+                checkCmd.CommandType = CommandType.StoredProcedure;
+                checkCmd.Parameters.AddWithValue("@MeetingID", MeetingID);
+
+                SqlDataReader reader = checkCmd.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    bool isCancelled = reader["IsCancelled"] != DBNull.Value && Convert.ToBoolean(reader["IsCancelled"]);
+                    DateTime? meetingDate = reader["MeetingDate"] as DateTime?;
+                    reader.Close();
+
+                    if (isCancelled)
+                    {
+                        con.Close();
+                        TempData["DeleteError"] = "Meeting already cancelled.";
+                        return RedirectToAction("MeetingsList");
+                    }
+
+                    if (meetingDate.HasValue && meetingDate.Value <= DateTime.Now)
+                    {
+                        con.Close();
+                        TempData["DeleteError"] = "Completed meeting cannot be cancelled.";
+                        return RedirectToAction("MeetingsList");
+                    }
+                }
+                else
+                {
+                    reader.Close();
+                    con.Close();
+                    TempData["DeleteError"] = "Meeting not found.";
+                    return RedirectToAction("MeetingsList");
+                }
+
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_Meetings_DeleteByPK";
                 cmd.Parameters.AddWithValue("@MeetingID", MeetingID);
                 cmd.CommandType = CommandType.StoredProcedure;
-
-                con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
-                TempData["SuccessMessage"] = "Meeting deleted successfully.";
+                TempData["SuccessMessage"] = "Meeting cancelled successfully.";
             }
             catch
             {
-                TempData["DeleteError"] = "FK violation: linked data exists.";
+                TempData["DeleteError"] = "Cancel failed.";
             }
 
             return RedirectToAction("MeetingsList");
@@ -469,16 +582,17 @@ namespace Meeting_Of_Minutes.Controllers
         public List<SelectListItem> FillDepartmentDropDown()
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MOM_DEPARTMENT_DDL";
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
             con.Open();
             SqlDataReader sdr = cmd.ExecuteReader();
             while (sdr.Read())
             {
-                string value = sdr["DepartmentID"].ToString();
+                string value = Convert.ToString(sdr["DepartmentID"]) ?? string.Empty;
                 bool exists = false;
                 foreach (var item in list)
                 {
@@ -495,22 +609,30 @@ namespace Meeting_Of_Minutes.Controllers
             }
             sdr.Close();
             con.Close();
+
+            list.Insert(0, new SelectListItem
+            {
+                Text = "Include All Departments",
+                Value = "-1"
+            });
+
             return list;
         }
 
         public List<SelectListItem> FillMeetingTypeDropDown()
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MOM_MEETINGTYPE_DDL";
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
             con.Open();
             SqlDataReader sdr = cmd.ExecuteReader();
             while (sdr.Read())
             {
-                string value = sdr["MeetingTypeID"].ToString();
+                string value = Convert.ToString(sdr["MeetingTypeID"]) ?? string.Empty;
                 bool exists = false;
                 foreach (var item in list)
                 {
@@ -533,16 +655,17 @@ namespace Meeting_Of_Minutes.Controllers
         public List<SelectListItem> FillMeetingVenueDropdown()
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_MOM_MEETINGVENUE_DDL";
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
             con.Open();
             SqlDataReader sdr = cmd.ExecuteReader();
             while (sdr.Read())
             {
-                string value = sdr["MeetingVenueID"].ToString();
+                string value = Convert.ToString(sdr["MeetingVenueID"]) ?? string.Empty;
                 bool exists = false;
                 foreach (var item in list)
                 {
@@ -565,7 +688,7 @@ namespace Meeting_Of_Minutes.Controllers
         public List<SelectListItem> FillStaffDropDown(int? departmentId = null)
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Staff_SelectAll";
@@ -583,7 +706,7 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
 
-                string value = reader["StaffID"].ToString();
+                string value = Convert.ToString(reader["StaffID"]) ?? string.Empty;
                 bool exists = false;
                 foreach (var item in list)
                 {
@@ -624,9 +747,238 @@ namespace Meeting_Of_Minutes.Controllers
 
             return string.Empty;
         }
+
+        public bool IsAdmin()
+        {
+            return string.Equals(HttpContext.Session.GetString("UserRole"), "Admin", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool CanAccessDepartmentMeeting(int? departmentId)
+        {
+            if (!departmentId.HasValue || !GetAllowedDepartmentIdsForCompany().Contains(departmentId.Value))
+            {
+                return false;
+            }
+
+            if (IsAdmin())
+            {
+                return true;
+            }
+
+            int? userDepartmentId = HttpContext.Session.GetInt32("DepartmentID");
+            if (!userDepartmentId.HasValue)
+            {
+                return false;
+            }
+
+            return userDepartmentId.Value == departmentId.Value;
+        }
+
+        public bool IsMeetingAssignedToCurrentUser(int meetingId)
+        {
+            if (IsAdmin())
+            {
+                return true;
+            }
+
+            int? staffId = HttpContext.Session.GetInt32("StaffID");
+            if (!staffId.HasValue)
+            {
+                return false;
+            }
+
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = @"SELECT COUNT(*)
+                                FROM MOM_MeetingMember mm
+                                INNER JOIN MOM_Meetings m ON mm.MeetingID = m.MeetingID
+                                INNER JOIN MOM_Department d ON m.DepartmentID = d.DepartmentID
+                                WHERE mm.MeetingID = @MeetingID
+                                  AND mm.StaffID = @StaffID
+                                  AND d.CompanyName = @CompanyName";
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@MeetingID", meetingId);
+            cmd.Parameters.AddWithValue("@StaffID", staffId.Value);
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
+
+            con.Open();
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+            con.Close();
+
+            return count > 0;
+        }
+
+        public bool IsMeetingInUserDepartment(int meetingId)
+        {
+            if (!IsAdmin())
+            {
+                return IsMeetingAssignedToCurrentUser(meetingId);
+            }
+
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@MeetingID", meetingId);
+
+            cmd.CommandText = @"SELECT COUNT(*)
+                                FROM MOM_Meetings m
+                                INNER JOIN MOM_Department d ON m.DepartmentID = d.DepartmentID
+                                WHERE m.MeetingID = @MeetingID
+                                  AND d.CompanyName = @CompanyName";
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
+
+            con.Open();
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+            con.Close();
+
+            return count > 0;
+        }
+
+        public HashSet<int> GetAllowedDepartmentIdsForCompany()
+        {
+            HashSet<int> departmentIds = new HashSet<int>();
+            string companyName = GetCurrentCompanyName();
+
+            if (string.IsNullOrWhiteSpace(companyName))
+            {
+                return departmentIds;
+            }
+
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "SELECT DepartmentID FROM MOM_Department WHERE CompanyName = @CompanyName";
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@CompanyName", companyName);
+
+            con.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                departmentIds.Add(Convert.ToInt32(reader["DepartmentID"]));
+            }
+            reader.Close();
+            con.Close();
+
+            return departmentIds;
+        }
+
+        public string GetCurrentCompanyName()
+        {
+            return HttpContext.Session.GetString("CompanyName") ?? string.Empty;
+        }
+
+        public int? GetFirstDepartmentIdForCompany()
+        {
+            int? departmentId = null;
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "SELECT TOP 1 DepartmentID FROM MOM_Department WHERE CompanyName = @CompanyName ORDER BY DepartmentName";
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
+            con.Open();
+            object result = cmd.ExecuteScalar();
+            con.Close();
+
+            if (result != null && result != DBNull.Value)
+            {
+                departmentId = Convert.ToInt32(result);
+            }
+
+            return departmentId;
+        }
+
+        public void AddDepartmentMembersToMeeting(SqlConnection con, int meetingId, int? departmentId, bool includeAllDepartmentsMembers)
+        {
+            List<int> staffIds = new List<int>();
+
+            if (includeAllDepartmentsMembers || (departmentId.HasValue && departmentId.Value == -1))
+            {
+                staffIds = GetCompanyStaffIds(con);
+            }
+            else if (departmentId.HasValue && departmentId.Value > 0)
+            {
+                staffIds = GetDepartmentStaffIds(con, departmentId.Value);
+            }
+
+            foreach (int staffId in staffIds)
+            {
+                SqlCommand checkCmd = new SqlCommand();
+                checkCmd.Connection = con;
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_MeetingMember WHERE MeetingID = @MeetingID AND StaffID = @StaffID";
+                checkCmd.CommandType = CommandType.Text;
+                checkCmd.Parameters.AddWithValue("@MeetingID", meetingId);
+                checkCmd.Parameters.AddWithValue("@StaffID", staffId);
+
+                int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+                if (count > 0)
+                {
+                    continue;
+                }
+
+                SqlCommand insertCmd = new SqlCommand();
+                insertCmd.Connection = con;
+                insertCmd.CommandText = "PR_MeetingMember_Insert";
+                insertCmd.CommandType = CommandType.StoredProcedure;
+                insertCmd.Parameters.AddWithValue("@MeetingID", meetingId);
+                insertCmd.Parameters.AddWithValue("@StaffID", staffId);
+                insertCmd.Parameters.AddWithValue("@IsPresent", false);
+                insertCmd.Parameters.AddWithValue("@Remarks", string.Empty);
+                insertCmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                insertCmd.ExecuteNonQuery();
+            }
+        }
+
+        public List<int> GetDepartmentStaffIds(SqlConnection con, int departmentId)
+        {
+            List<int> staffIds = new List<int>();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = "SELECT StaffID FROM MOM_Staff WHERE DepartmentID = @DepartmentID ORDER BY StaffName";
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@DepartmentID", departmentId);
+
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                staffIds.Add(Convert.ToInt32(reader["StaffID"]));
+            }
+            reader.Close();
+
+            return staffIds;
+        }
+
+        public List<int> GetCompanyStaffIds(SqlConnection con)
+        {
+            List<int> staffIds = new List<int>();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = con;
+            cmd.CommandText = @"SELECT s.StaffID
+                                FROM MOM_Staff s
+                                INNER JOIN MOM_Department d ON s.DepartmentID = d.DepartmentID
+                                WHERE d.CompanyName = @CompanyName
+                                ORDER BY s.StaffName";
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
+
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                staffIds.Add(Convert.ToInt32(reader["StaffID"]));
+            }
+            reader.Close();
+
+            return staffIds;
+        }
         #endregion
     }
 }
+
+
+
 
 
 

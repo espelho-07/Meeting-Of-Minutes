@@ -1,9 +1,11 @@
-@{
-    ViewData["Title"] = "Meeting Venues - MOM";
-}
 @model List<MeetingVenueModel>
 
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "Meeting Venues - Meeting Of Minutes";
+    int SerialNumber = 1;
+}
 
 <div class="pagetitle mb-4">
     <nav>
@@ -14,96 +16,111 @@
     </nav>
 </div>
 
-<div class="mom-page-header">
-    <div>
-        <h1>Meeting Venues</h1>
-        <p class="mom-page-subtitle">Manage meeting rooms and virtual meeting locations</p>
-    </div>
-    <div class="mom-toolbar">
-        <a asp-action="MeetingVenueAddEdit" class="btn btn-primary px-4"><i class="bi bi-plus-circle me-1"></i> Add Venue</a>
-        <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-1"></i> Export</a>
-    </div>
-</div>
-
-<div class="mom-search-card">
-    <div class="mom-search-form">
-        <div class="mom-search-input">
-            <span><i class="bi bi-search"></i></span>
-            <input id="venueSearchInput" class="form-control" type="text" placeholder="Search venues..." onkeyup="filterVenueCards()" />
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-geo-alt"></i> Venue Directory</div>
+            <h1 class="list-title">Meeting Venues</h1>
+            <p class="list-subtitle">Keep physical rooms and virtual locations ready so meetings can be scheduled against approved venue records inside the company workspace.</p>
         </div>
-        <button type="button" class="btn btn-primary px-4" onclick="filterVenueCards()">Search</button>
-        <button type="button" class="btn btn-light px-4" onclick="resetVenueSearch()">Clear</button>
-    </div>
-    <div class="mom-stat-chip">Total Venues: @Model.Count</div>
-</div>
+        <aside class="list-note">
+            <div class="list-note-label">Venue readiness</div>
+            <h2 class="list-note-title">@Model.Count venues are currently available for scheduling.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Venues listed here appear directly in the Schedule Meeting form.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Keep names clean so meeting details stay readable and consistent.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Each company maintains only its own venue records.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-<div class="row g-3" id="venueCardGrid">
-    @foreach (var venue in Model)
-    {
-        <div class="col-lg-4 col-md-6 venue-card-item" data-venue-name="@venue.MeetingVenueName">
-            <div class="card border-0 shadow-sm h-100" style="overflow:hidden;">
-                <div class="card-header d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="fw-bold fs-5">@venue.MeetingVenueName</div>
-                        <div class="small text-white-50"><i class="bi bi-geo-alt me-1"></i> Venue ID #@venue.MeetingVenueID</div>
-                    </div>
-                    <div class="d-flex align-items-center gap-1">
-                        <a asp-action="MeetingVenueAddEdit" asp-route-id="@venue.MeetingVenueID" class="mom-icon-btn text-white" title="Edit"><i class="bi bi-pencil"></i></a>
-                        <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="MeetingVenueID" value="@venue.MeetingVenueID" />
-                            <button type="submit" class="btn btn-link mom-icon-btn text-white p-0" title="Delete"><i class="bi bi-trash"></i></button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="card-body">
-                    <div class="row g-3 mb-3">
-                        <div class="col-6">
-                            <div class="border rounded-4 text-center p-3 bg-light">
-                                <div class="small text-muted fw-bold">VENUE TYPE</div>
-                                <div class="fs-5 fw-bold text-primary">General</div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="border rounded-4 text-center p-3 bg-light">
-                                <div class="small text-muted fw-bold">STATUS</div>
-                                <div class="fs-5 fw-bold text-success">Active</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="small text-muted fw-bold">VENUE CODE</div>
-                        <span class="badge bg-light text-dark border">MV-@venue.MeetingVenueID</span>
-                    </div>
-
-                    <div class="d-flex gap-2 mt-4">
-                        <a asp-controller="Meetings" asp-action="MeetingsAddEdit" class="btn btn-success flex-fill">
-                            <i class="bi bi-plus-circle me-1"></i> Schedule Meeting
-                        </a>
-                    </div>
-                </div>
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Venue Records</h3>
+                <p class="list-surface-meta">Search, review and manage venue definitions from one consistent scheduling surface.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="MeetingVenueAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Venue</a>
+                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
             </div>
         </div>
-    }
+
+        <div class="list-search-wrap">
+            <div class="list-search-form">
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input id="venueSearchInput" class="form-control" type="text" placeholder="Search venues..." onkeyup="filterVenueRows()" />
+                </div>
+                <button type="button" class="btn list-btn list-btn-primary" onclick="filterVenueRows()">Search</button>
+                <button type="button" class="btn list-btn list-btn-light" onclick="resetVenueSearch()">Clear</button>
+            </div>
+            <div class="list-status-chip">Total Venues: @Model.Count</div>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
+                {
+                    <div class="list-empty">No venues found.</div>
+                }
+                else
+                {
+                    <table class="table align-middle" id="venueTable">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Venue Name</th>
+                                <th>Venue Code</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var venue in Model)
+                            {
+                                <tr class="venue-row" data-venue-name="@venue.MeetingVenueName">
+                                    <td class="ps-4">@SerialNumber</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@venue.MeetingVenueName</div>
+                                        <div class="small text-muted">Approved meeting location</div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">MV-@venue.MeetingVenueID</span></td>
+                                    <td><span class="badge bg-success-subtle text-success">Active</span></td>
+                                    <td class="text-center">
+                                        <a asp-action="MeetingVenueAddEdit" asp-route-id="@venue.MeetingVenueID" class="mom-icon-btn text-warning me-1" title="Edit"><i class="bi bi-pencil"></i></a>
+                                        <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="MeetingVenueID" value="@venue.MeetingVenueID" />
+                                            <button type="submit" class="btn btn-link mom-icon-btn text-danger p-0" title="Delete"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                SerialNumber++;
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
 </div>
 
 <script>
-    function filterVenueCards() {
+    function filterVenueRows() {
         var input = document.getElementById("venueSearchInput");
-        var filter = input.value.toUpperCase();
-        var cards = document.querySelectorAll(".venue-card-item");
+        var filter = (input.value || "").toUpperCase();
+        var rows = document.querySelectorAll(".venue-row");
 
-        cards.forEach(function (card) {
-            var venueName = (card.getAttribute("data-venue-name") || "").toUpperCase();
-            card.style.display = venueName.indexOf(filter) > -1 ? "" : "none";
+        rows.forEach(function (row) {
+            var venueName = (row.getAttribute("data-venue-name") || "").toUpperCase();
+            row.style.display = venueName.indexOf(filter) > -1 ? "" : "none";
         });
     }
 
     function resetVenueSearch() {
         var input = document.getElementById("venueSearchInput");
         input.value = "";
-        filterVenueCards();
+        filterVenueRows();
     }
 </script>

@@ -1,12 +1,11 @@
-@{
-    ViewData["Title"] = "Meetings Management - MOM";
-}
-
 @model List<MeetingsModel>
 
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
 @{
+    ViewData["Title"] = "Meetings Management - MOM";
     int SerialNumber = 1;
+    bool isAdminUser = (Context.Session.GetString("UserRole") ?? string.Empty).Equals("Admin", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="pagetitle mb-4">
@@ -18,89 +17,121 @@
     </nav>
 </div>
 
-<div class="mom-page-header">
-    <div>
-        <h1>Meetings</h1>
-        <p class="mom-page-subtitle">Schedule and manage organizational meetings</p>
-    </div>
-
-    <div class="mom-toolbar">
-        <a asp-action="MeetingsAddEdit" class="btn btn-primary px-4"><i class="bi bi-plus-circle me-2"></i> Schedule Meeting</a>
-        <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-2"></i> Export</a>
-    </div>
-</div>
-
-<div class="mom-search-card">
-    <form class="mom-search-form" asp-action="MeetingsList" asp-controller="Meetings" method="post">
-        @Html.AntiForgeryToken()
-        <div class="mom-search-input">
-            <span><i class="bi bi-search"></i></span>
-            <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search meetings..." />
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-calendar2-week"></i> Meeting Operations</div>
+            <h1 class="list-title">All Meetings</h1>
+            <p class="list-subtitle">Review scheduled, completed and cancelled meetings from the same workspace language used while creating them.</p>
         </div>
-        <button class="btn btn-primary px-4" type="submit">Search</button>
-        <a href="@Url.Action("MeetingsList", "Meetings")" class="btn btn-light px-4">Clear</a>
-    </form>
-    <div class="mom-stat-chip">Total Records: @Model.Count</div>
-</div>
+        <aside class="list-note">
+            <div class="list-note-label">Operational scope</div>
+            <h2 class="list-note-title">@Model.Count meeting records are visible in your current access scope.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Admins can schedule and cancel meetings from this list.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Users only see meetings actually assigned to their meeting membership.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Open the details workspace to manage attendees and attendance.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-<div class="card mom-list-card">
-    <div class="card-header">
-        <h6><i class="bi bi-calendar-event"></i> Scheduled Meetings</h6>
-    </div>
-
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th style="width:44px;"></th>
-                    <th class="ps-4">#</th>
-                    <th>Date & Time</th>
-                    <th>Meeting Type</th>
-                    <th>Description</th>
-                    <th>Department</th>
-                    <th>Venue</th>
-                    <th>Status</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var meeting in Model)
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Meeting Register</h3>
+                <p class="list-surface-meta">Search, open and manage meeting records from one consistent scheduling surface.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                @if (isAdminUser)
                 {
-                    <tr>
-                        <td><input type="checkbox" class="form-check-input" /></td>
-                        <td class="ps-4">@SerialNumber</td>
-                        <td>@meeting.MeetingDate</td>
-                        <td>@meeting.MeetingTypeName</td>
-                        <td>@meeting.MeetingDescription</td>
-                        <td>@meeting.DepartmentName</td>
-                        <td>@meeting.MeetingVenueName</td>
-                        <td>
-                            @if (meeting.IsCancelled)
-                            {
-                                <span class="badge bg-danger">Cancelled</span>
-                            }
-                            else if (meeting.MeetingDate > DateTime.Now)
-                            {
-                                <span class="badge bg-primary">Scheduled</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">Completed</span>
-                            }
-                        </td>
-                        <td class="text-center">
-                            <a asp-action="MeetingsDetails" asp-route-id="@meeting.MeetingID" class="mom-icon-btn text-primary me-1" title="Manage Meeting"><i class="bi bi-card-list"></i></a>
-                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="MeetingID" value="@meeting.MeetingID" />
-                                <button type="submit" class="btn btn-sm btn-link mom-icon-btn text-danger p-0"><i class="bi bi-trash"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    SerialNumber++;
+                    <a asp-action="MeetingsAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Schedule Meeting</a>
+                    <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
                 }
-            </tbody>
-        </table>
-    </div>
+            </div>
+        </div>
+
+        <div class="list-search-wrap">
+            <form class="list-search-form" asp-action="MeetingsList" asp-controller="Meetings" method="post">
+                @Html.AntiForgeryToken()
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search meetings..." />
+                </div>
+                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
+                <a href="@Url.Action("MeetingsList", "Meetings")" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+            <div class="list-status-chip">Total Records: @Model.Count</div>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
+                {
+                    <div class="list-empty">No meetings found.</div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Date & Time</th>
+                                <th>Meeting Type</th>
+                                <th>Description</th>
+                                <th>Department</th>
+                                <th>Venue</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var meeting in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">@SerialNumber</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@meeting.MeetingDate?.ToString("dd MMM yyyy")</div>
+                                        <div class="small text-muted">@meeting.MeetingDate?.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td>@meeting.MeetingTypeName</td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@meeting.MeetingDescription</div>
+                                        <div class="small text-muted">Operational meeting record</div>
+                                    </td>
+                                    <td>@meeting.DepartmentName</td>
+                                    <td>@meeting.MeetingVenueName</td>
+                                    <td>
+                                        @if (meeting.IsCancelled)
+                                        {
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        }
+                                        else if (meeting.MeetingDate > DateTime.Now)
+                                        {
+                                            <span class="badge bg-primary">Scheduled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="MeetingsDetails" asp-route-id="@meeting.MeetingID" class="mom-icon-btn text-primary me-1" title="View Meeting"><i class="bi bi-card-list"></i></a>
+                                        @if (isAdminUser)
+                                        {
+                                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="MeetingID" value="@meeting.MeetingID" />
+                                                <button type="submit" class="btn btn-sm btn-link mom-icon-btn text-danger p-0"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                                SerialNumber++;
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
 </div>

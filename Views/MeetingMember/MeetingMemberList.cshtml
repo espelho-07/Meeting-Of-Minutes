@@ -6,6 +6,29 @@
     int SerialNumber = 1;
 }
 
+<style>
+    .mom-table-title {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .mom-table-title strong {
+        font-size: 0.95rem;
+        color: #243154;
+    }
+
+    .mom-table-meta {
+        font-size: 0.8rem;
+        color: #8a97ac;
+    }
+
+    .mom-density-table tbody td {
+        padding-top: 0.82rem;
+        padding-bottom: 0.82rem;
+    }
+</style>
+
 <div class="pagetitle mb-4">
     <nav>
         <ol class="breadcrumb flex-nowrap">
@@ -22,7 +45,6 @@
         <p class="mom-page-subtitle">Track participation and attendance records for scheduled meetings</p>
     </div>
     <div class="mom-toolbar">
-        <a asp-action="MeetingMemberAddEdit" class="btn btn-primary px-4"><i class="bi bi-person-plus-fill me-2"></i>Add Meeting Member</a>
         <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
     </div>
 </div>
@@ -33,14 +55,13 @@
     </div>
 
     <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0 mom-density-table">
             <thead>
                 <tr>
-                    <th style="width:44px;"></th>
                     <th class="ps-4">#</th>
                     <th>Meeting</th>
                     <th>Staff</th>
-                    <th class="text-center">IsPresent</th>
+                    <th class="text-center">Attendance</th>
                     <th>Remarks</th>
                     <th class="text-center">Actions</th>
                 </tr>
@@ -49,12 +70,30 @@
                 @foreach (var member in Model)
                 {
                     <tr>
-                        <td><input type="checkbox" class="form-check-input" /></td>
                         <td class="ps-4">@SerialNumber</td>
-                        <td>@member.MeetingDescription</td>
-                        <td>@member.StaffName</td>
-                        <td class="text-center">@(member.IsPresent ? "Yes" : "No")</td>
-                        <td>@member.Remarks</td>
+                        <td>
+                            <div class="mom-table-title">
+                                <strong>@member.MeetingDescription</strong>
+                                <span class="mom-table-meta">Meeting record</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="mom-table-title">
+                                <strong>@member.StaffName</strong>
+                                <span class="mom-table-meta">Assigned member</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            @if (member.IsPresent)
+                            {
+                                <span class="badge bg-success-subtle text-success">Present</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger-subtle text-danger">Absent</span>
+                            }
+                        </td>
+                        <td class="text-muted">@(string.IsNullOrWhiteSpace(member.Remarks) ? "-" : member.Remarks)</td>
                         <td class="text-center">
                             <a asp-action="MeetingMemberAddEdit" asp-route-id="@member.MeetingMemberID" class="mom-icon-btn"><i class="bi bi-pencil text-warning"></i></a>
                             <form asp-action="Delete" method="post" class="d-inline js-delete-form">

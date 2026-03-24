@@ -9,6 +9,8 @@ namespace Meeting_Of_Minutes.Models
         [Required(ErrorMessage = "Meeting Venue Required")]
         public string? MeetingVenueName { get; set; }
 
+        public string? CompanyName { get; set; }
+
         public DateTime Created { get; set; }
 
         public DateTime Modified { get; set; }

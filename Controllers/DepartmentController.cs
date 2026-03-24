@@ -15,12 +15,13 @@ namespace Meeting_Of_Minutes.Controllers
 
             if (id.HasValue)
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_Department_SelectByPK";
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@DepartmentID", id.Value);
+                cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
 
                 con.Open();
                 SqlDataReader sdr = cmd.ExecuteReader();
@@ -29,6 +30,7 @@ namespace Meeting_Of_Minutes.Controllers
                 {
                     model.DepartmentID = Convert.ToInt32(sdr["DepartmentID"]);
                     model.DepartmentName = sdr["DepartmentName"].ToString();
+                    model.CompanyName = sdr["CompanyName"].ToString();
                 }
 
                 sdr.Close();
@@ -50,7 +52,7 @@ namespace Meeting_Of_Minutes.Controllers
         [HttpPost]
         public IActionResult DepartmentList(IFormCollection formdata)
         {
-            string searchtext = formdata["searchtext"].ToString();
+            string? searchtext = formdata["searchtext"].ToString();
 
             if (string.IsNullOrWhiteSpace(searchtext))
             {
@@ -66,15 +68,16 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
 
         #region SearchGetAll
-        public List<DepartmentModel> GetAllDepartment(string searchtext)
+        public List<DepartmentModel> GetAllDepartment(string? searchtext)
         {
             List<DepartmentModel> departments = new List<DepartmentModel>();
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Department_SelectAll";
             cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
 
             if (searchtext != null)
             {
@@ -93,6 +96,7 @@ namespace Meeting_Of_Minutes.Controllers
                 DepartmentModel department = new DepartmentModel();
                 department.DepartmentID = Convert.ToInt32(sdr["DepartmentID"]);
                 department.DepartmentName = sdr["DepartmentName"].ToString();
+                department.CompanyName = sdr["CompanyName"].ToString();
                 department.StaffCount = Convert.ToInt32(sdr["StaffCount"]);
                 department.MeetingsCount = Convert.ToInt32(sdr["MeetingsCount"]);
                 departments.Add(department);
@@ -112,11 +116,12 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 DataTable dt = new DataTable();
 
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.CommandText = "PR_Department_SelectAll";
+                cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
                 cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
 
                 con.Open();
@@ -167,12 +172,13 @@ namespace Meeting_Of_Minutes.Controllers
         {
             DepartmentModel model = new DepartmentModel();
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
             cmd.CommandText = "PR_Department_SelectByPK";
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@DepartmentID", id);
+            cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
 
             con.Open();
             SqlDataReader sdr = cmd.ExecuteReader();
@@ -181,6 +187,7 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 model.DepartmentID = Convert.ToInt32(sdr["DepartmentID"]);
                 model.DepartmentName = sdr["DepartmentName"].ToString();
+                model.CompanyName = sdr["CompanyName"].ToString();
                 model.StaffCount = Convert.ToInt32(sdr["StaffCount"]);
                 model.MeetingsCount = Convert.ToInt32(sdr["MeetingsCount"]);
             }
@@ -203,16 +210,17 @@ namespace Meeting_Of_Minutes.Controllers
                 return View("DepartmentAddEdit", model);
             }
 
-            SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+            SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
 
             if (model.DepartmentID == 0)
             {
                 SqlCommand checkCmd = new SqlCommand();
                 checkCmd.Connection = con;
-                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_Department WHERE DepartmentName = @DepartmentName";
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_Department WHERE DepartmentName = @DepartmentName AND CompanyName = @CompanyName";
                 checkCmd.CommandType = CommandType.Text;
                 checkCmd.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
 
                 int count = Convert.ToInt32(checkCmd.ExecuteScalar());
                 if (count > 0)
@@ -226,9 +234,10 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 SqlCommand checkCmd = new SqlCommand();
                 checkCmd.Connection = con;
-                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_Department WHERE DepartmentName = @DepartmentName AND DepartmentID <> @DepartmentID";
+                checkCmd.CommandText = "SELECT COUNT(*) FROM MOM_Department WHERE DepartmentName = @DepartmentName AND CompanyName = @CompanyName AND DepartmentID <> @DepartmentID";
                 checkCmd.CommandType = CommandType.Text;
                 checkCmd.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
                 checkCmd.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
 
                 int count = Convert.ToInt32(checkCmd.ExecuteScalar());
@@ -248,6 +257,7 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 cmd.CommandText = "PR_Department_Insert";
                 cmd.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
+                cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
                 cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
             }
             else
@@ -255,6 +265,7 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.CommandText = "PR_Department_UpdateByPK";
                 cmd.Parameters.AddWithValue("@DepartmentID", model.DepartmentID);
                 cmd.Parameters.AddWithValue("@DepartmentName", model.DepartmentName);
+                cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
             }
 
             TempData["SuccessMessage"] = model.DepartmentID == 0 ? "Department added successfully." : "Department updated successfully.";
@@ -272,7 +283,7 @@ namespace Meeting_Of_Minutes.Controllers
         {
             try
             {
-                SqlConnection con = new SqlConnection("Data Source=ESPELHO\\SQLEXPRESS;Initial Catalog=MOM;Integrated Security=True; TrustServerCertificate=True;");
+                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = con;
                 cmd.CommandText = "PR_Department_DeleteByPK";
@@ -293,8 +304,16 @@ namespace Meeting_Of_Minutes.Controllers
         }
 
         #endregion
+
+        public string GetCurrentCompanyName()
+        {
+            return HttpContext.Session.GetString("CompanyName") ?? string.Empty;
+        }
     }
 }
+
+
+
 
 
 

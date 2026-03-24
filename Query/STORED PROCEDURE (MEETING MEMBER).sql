@@ -116,3 +116,35 @@ BEGIN
 END;
 GO
 
+GO
+CREATE OR ALTER PROCEDURE [dbo].[PR_MeetingMember_SelectByStaffID]
+(
+    @StaffID INT
+)
+AS
+BEGIN
+    SELECT
+        mm.[MeetingMemberID],
+        mm.[MeetingID],
+        mm.[StaffID],
+        m.[MeetingDate],
+        m.[MeetingDescription],
+        d.[DepartmentName],
+        mt.[MeetingTypeName],
+        mv.[MeetingVenueName],
+        mm.[IsPresent],
+        mm.[Remarks]
+    FROM dbo.MOM_MeetingMember mm
+    INNER JOIN dbo.MOM_Meetings m
+        ON mm.MeetingID = m.MeetingID
+    INNER JOIN dbo.MOM_Department d
+        ON m.DepartmentID = d.DepartmentID
+    INNER JOIN dbo.MOM_MeetingType mt
+        ON m.MeetingTypeID = mt.MeetingTypeID
+    INNER JOIN dbo.MOM_MeetingVenue mv
+        ON m.MeetingVenueID = mv.MeetingVenueID
+    WHERE mm.StaffID = @StaffID
+    ORDER BY m.MeetingDate DESC;
+END;
+GO
+

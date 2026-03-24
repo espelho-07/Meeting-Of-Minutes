@@ -1,6 +1,7 @@
 @model List<MeetingTypeModel>
 
 @await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
 @{
     ViewData["Title"] = "Meeting Types - Meeting Of Minutes";
     int SerialNumber = 1;
@@ -15,67 +16,92 @@
     </nav>
 </div>
 
-<div class="mom-page-header">
-    <div>
-        <h1>Meeting Types</h1>
-        <p class="mom-page-subtitle">Manage different types of meetings in the organization</p>
-    </div>
-    <div class="mom-toolbar">
-        <a asp-action="MeetingsTypeAddEdit" class="btn btn-primary px-4"><i class="bi bi-plus-circle me-1"></i> Add New Type</a>
-        <a asp-action="ExportToExcel" class="btn btn-success px-4"><i class="bi bi-file-earmark-excel me-1"></i> Export</a>
-    </div>
-</div>
-
-<div class="mom-search-card">
-    <form class="mom-search-form" asp-action="MeetingsTypeList" asp-controller="MeetingsType" method="post">
-        @Html.AntiForgeryToken()
-        <div class="mom-search-input">
-            <span><i class="bi bi-search"></i></span>
-            <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Enter meeting type name..." />
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-tags"></i> Meeting Taxonomy</div>
+            <h1 class="list-title">Meeting Types</h1>
+            <p class="list-subtitle">Define the meeting labels that drive reporting, scheduling and cleaner categorization across your company workspace.</p>
         </div>
-        <button class="btn btn-primary px-4" type="submit">Search</button>
-        <a href="@Url.Action("MeetingsTypeList", "MeetingsType")" class="btn btn-light px-4">Clear</a>
-    </form>
-    <div class="mom-stat-chip">Total Records: @Model.Count</div>
-</div>
+        <aside class="list-note">
+            <div class="list-note-label">Usage guidance</div>
+            <h2 class="list-note-title">@Model.Count configured meeting types in the current company scope.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Keep names short and recognizable so meeting records stay easy to scan.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Remarks help admins understand where each meeting category should be used.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Only company-scoped types appear while scheduling new meetings.</span></li>
+            </ul>
+        </aside>
+    </section>
 
-<div class="card mom-list-card">
-    <div class="card-header">
-        <h6><i class="bi bi-tags"></i> Meeting Types List</h6>
-    </div>
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Meeting Type Directory</h3>
+                <p class="list-surface-meta">Search, review and maintain type definitions from one clean operational surface.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="MeetingsTypeAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Add New Type</a>
+                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
+            </div>
+        </div>
 
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr>
-                    <th style="width:44px;"></th>
-                    <th class="ps-4">#</th>
-                    <th>Meeting Type Name</th>
-                    <th>Remarks</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var meetingType in Model)
+        <div class="list-search-wrap">
+            <form class="list-search-form" asp-action="MeetingsTypeList" asp-controller="MeetingsType" method="post">
+                @Html.AntiForgeryToken()
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search meeting type name..." />
+                </div>
+                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
+                <a href="@Url.Action("MeetingsTypeList", "MeetingsType")" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+            <div class="list-status-chip">Total Records: @Model.Count</div>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
                 {
-                    <tr>
-                        <td><input type="checkbox" class="form-check-input" /></td>
-                        <td class="ps-4">@SerialNumber</td>
-                        <td class="fw-bold text-primary">@meetingType.MeetingTypeName</td>
-                        <td>@meetingType.Remarks</td>
-                        <td class="text-center">
-                            <a asp-action="MeetingsTypeDetails" asp-route-id="@meetingType.MeetingTypeID" class="mom-icon-btn text-primary me-1"><i class="bi bi-eye"></i></a>
-                            <a asp-action="MeetingsTypeAddEdit" asp-route-id="@meetingType.MeetingTypeID" class="mom-icon-btn text-warning me-1"><i class="bi bi-pencil"></i></a>
-                            <form asp-action="Delete" method="post" class="d-inline js-delete-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="MeetingTypeID" value="@meetingType.MeetingTypeID" />
-                                <button type="submit" class="btn btn-link mom-icon-btn text-danger p-0"><i class="bi bi-trash"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    SerialNumber++;
+                    <div class="list-empty">No meeting types found.</div>
                 }
-            </tbody>
-        </table>
-    </div>
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Meeting Type Name</th>
+                                <th>Remarks</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var meetingType in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">@SerialNumber</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@meetingType.MeetingTypeName</div>
+                                        <div class="small text-muted">Meeting category</div>
+                                    </td>
+                                    <td class="text-muted">@(string.IsNullOrWhiteSpace(meetingType.Remarks) ? "-" : meetingType.Remarks)</td>
+                                    <td class="text-center">
+                                        <a asp-action="MeetingsTypeDetails" asp-route-id="@meetingType.MeetingTypeID" class="mom-icon-btn text-primary me-1"><i class="bi bi-eye"></i></a>
+                                        <a asp-action="MeetingsTypeAddEdit" asp-route-id="@meetingType.MeetingTypeID" class="mom-icon-btn text-warning me-1"><i class="bi bi-pencil"></i></a>
+                                        <form asp-action="Delete" method="post" class="d-inline js-delete-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="MeetingTypeID" value="@meetingType.MeetingTypeID" />
+                                            <button type="submit" class="btn btn-link mom-icon-btn text-danger p-0"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                SerialNumber++;
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
 </div>

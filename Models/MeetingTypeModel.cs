@@ -12,6 +12,8 @@ namespace Meeting_Of_Minutes.Models
 
         public string? Remarks { get; set; }
 
+        public string? CompanyName { get; set; }
+
         public DateTime Created { get; set; }
 
         public DateTime Modified { get; set; }

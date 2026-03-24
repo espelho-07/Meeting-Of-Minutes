@@ -21,6 +21,8 @@ namespace Meeting_Of_Minutes.Models
         [Required(ErrorMessage = "Department is required")]
         public int? DepartmentID { get; set; }
 
+        public bool IncludeAllDepartmentsMembers { get; set; }
+
         [MaxLength(250, ErrorMessage = "Description can be max 250 characters")]
         public string? MeetingDescription { get; set; }
 
