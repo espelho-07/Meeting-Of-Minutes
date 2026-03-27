@@ -1,25 +1,25 @@
 <style>
     .list-page {
-        max-width: 1120px;
-        margin: 0 auto;
+        width: min(100%, 1320px);
+        margin: 0;
     }
 
     .list-hero {
         display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.75fr);
-        gap: 18px;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.7fr);
+        gap: 16px;
         align-items: stretch;
-        margin-bottom: 24px;
+        margin-bottom: 18px;
     }
 
     .list-hero-main {
         position: relative;
         overflow: hidden;
-        border-radius: 26px;
-        padding: 30px 32px;
+        border-radius: 24px;
+        padding: 24px 26px;
         background: linear-gradient(135deg, #eef2ff 0%, #f7f4ff 48%, #ffffff 100%);
         border: 1px solid rgba(120, 102, 255, 0.14);
-        box-shadow: 0 24px 60px rgba(54, 63, 121, 0.10);
+        box-shadow: 0 18px 44px rgba(54, 63, 121, 0.08);
     }
 
     .list-hero-main::before,
@@ -31,56 +31,56 @@
     }
 
     .list-hero-main::before {
-        width: 240px;
-        height: 240px;
-        right: -70px;
-        top: -110px;
-        background: radial-gradient(circle, rgba(108, 99, 255, 0.20) 0%, rgba(108, 99, 255, 0) 70%);
+        width: 210px;
+        height: 210px;
+        right: -54px;
+        top: -94px;
+        background: radial-gradient(circle, rgba(108, 99, 255, 0.18) 0%, rgba(108, 99, 255, 0) 70%);
     }
 
     .list-hero-main::after {
-        width: 180px;
-        height: 180px;
-        left: -50px;
-        bottom: -80px;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.16) 0%, rgba(139, 92, 246, 0) 70%);
+        width: 160px;
+        height: 160px;
+        left: -42px;
+        bottom: -72px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.14) 0%, rgba(139, 92, 246, 0) 70%);
     }
 
     .list-kicker {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 12px;
+        padding: 7px 11px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.72);
+        background: rgba(255, 255, 255, 0.74);
         border: 1px solid rgba(114, 97, 255, 0.12);
         color: #5b59d9;
-        font-size: 0.74rem;
+        font-size: 0.72rem;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
         position: relative;
         z-index: 1;
     }
 
     .list-title {
-        margin: 0 0 12px;
+        margin: 0 0 10px;
         color: #18233f;
-        font-size: clamp(2.1rem, 3.6vw, 3.25rem);
-        line-height: 0.98;
+        font-size: clamp(1.95rem, 3vw, 2.85rem);
+        line-height: 1.02;
         font-weight: 900;
         letter-spacing: -0.05em;
-        max-width: 12ch;
+        max-width: 10ch;
         position: relative;
         z-index: 1;
     }
 
     .list-subtitle {
         margin: 0;
-        max-width: 58ch;
-        font-size: 1rem;
-        line-height: 1.75;
+        max-width: 56ch;
+        font-size: 0.98rem;
+        line-height: 1.65;
         color: #60708d;
         position: relative;
         z-index: 1;
@@ -88,18 +88,18 @@
 
     .list-note {
         display: grid;
-        gap: 14px;
+        gap: 12px;
         align-content: start;
-        background: rgba(255, 255, 255, 0.86);
+        background: rgba(255, 255, 255, 0.88);
         border: 1px solid #e8ebf8;
-        border-radius: 24px;
-        padding: 24px;
-        box-shadow: 0 18px 40px rgba(44, 52, 92, 0.08);
+        border-radius: 22px;
+        padding: 20px;
+        box-shadow: 0 14px 34px rgba(44, 52, 92, 0.07);
     }
 
     .list-note-label {
         color: #8996ab;
-        font-size: 0.74rem;
+        font-size: 0.72rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -108,15 +108,15 @@
     .list-note-title {
         margin: 0;
         color: #1e2a48;
-        font-size: 1.45rem;
-        line-height: 1.2;
+        font-size: 1.2rem;
+        line-height: 1.22;
         font-weight: 800;
         letter-spacing: -0.03em;
     }
 
     .list-note-list {
         display: grid;
-        gap: 10px;
+        gap: 9px;
         margin: 0;
         padding: 0;
         list-style: none;
@@ -127,8 +127,8 @@
         gap: 10px;
         align-items: flex-start;
         color: #66748f;
-        font-size: 0.95rem;
-        line-height: 1.6;
+        font-size: 0.92rem;
+        line-height: 1.55;
     }
 
     .list-note-list i {
@@ -139,8 +139,8 @@
     .list-surface {
         background: rgba(255, 255, 255, 0.96);
         border: 1px solid #e9edf7;
-        border-radius: 28px;
-        box-shadow: 0 24px 60px rgba(32, 41, 76, 0.08);
+        border-radius: 24px;
+        box-shadow: 0 18px 44px rgba(32, 41, 76, 0.07);
         overflow: hidden;
     }
 
@@ -148,33 +148,53 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        padding: 24px 28px 18px;
+        gap: 14px;
+        padding: 18px 22px 14px;
         border-bottom: 1px solid #edf1f8;
         flex-wrap: wrap;
+    }
+
+    .list-surface-copy {
+        display: grid;
+        gap: 4px;
+    }
+
+    .list-surface-kicker {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: #96a1b6;
+        font-weight: 800;
     }
 
     .list-surface-heading {
         margin: 0;
         color: #1b2747;
-        font-size: 1.2rem;
+        font-size: 1.08rem;
         font-weight: 800;
         letter-spacing: -0.02em;
     }
 
     .list-surface-meta {
-        margin: 6px 0 0;
+        margin: 4px 0 0;
         color: #7b88a0;
-        font-size: 0.92rem;
+        font-size: 0.88rem;
+    }
+
+    .list-surface-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .list-status-chip {
-        padding: 8px 12px;
+        padding: 7px 11px;
         border-radius: 999px;
         background: #f5f6ff;
         color: #5d5ae6;
         border: 1px solid #e3e6ff;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         font-weight: 800;
         white-space: nowrap;
     }
@@ -183,17 +203,38 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        padding: 22px 28px 0;
+        gap: 14px;
+        padding: 16px 22px 0;
         flex-wrap: wrap;
+    }
+
+    .list-status-panel {
+        display: grid;
+        gap: 6px;
+        justify-items: end;
+    }
+
+    .list-status-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: #98a2b3;
+        font-weight: 800;
     }
 
     .list-search-form {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         align-items: center;
         flex-wrap: wrap;
-        width: min(100%, 760px);
+        width: min(100%, 720px);
+    }
+
+    .list-filter-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .list-search-input {
@@ -202,9 +243,9 @@
         display: flex;
         align-items: center;
         border: 1px solid #e1e7f2;
-        border-radius: 18px;
+        border-radius: 16px;
         background: #fbfcff;
-        min-height: 56px;
+        min-height: 50px;
         overflow: hidden;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
@@ -216,14 +257,14 @@
     }
 
     .list-search-input span {
-        width: 54px;
+        width: 48px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         color: #6d7c97;
         background: linear-gradient(180deg, #fbfbff 0%, #f3f6ff 100%);
         border-right: 1px solid #e5eaf4;
-        font-size: 1rem;
+        font-size: 0.96rem;
         flex-shrink: 0;
     }
 
@@ -231,33 +272,33 @@
         border: 0;
         border-radius: 0;
         background: transparent;
-        min-height: 56px;
-        font-size: 1rem;
+        min-height: 50px;
+        font-size: 0.96rem;
         color: #1d2742;
-        padding: 14px 16px;
+        padding: 12px 14px;
         box-shadow: none;
     }
 
     .list-btn {
-        min-height: 48px;
-        padding: 0 20px;
-        border-radius: 14px;
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 12px;
         font-weight: 800;
-        font-size: 0.94rem;
+        font-size: 0.9rem;
     }
 
     .list-btn-primary {
         border: 0;
         color: #fff;
         background: linear-gradient(135deg, #635bff 0%, #7a4dce 100%);
-        box-shadow: 0 16px 30px rgba(99, 91, 255, 0.20);
+        box-shadow: 0 12px 24px rgba(99, 91, 255, 0.18);
     }
 
     .list-btn-light {
         border: 1px solid #dbe3ef;
         background: #fff;
         color: #273350;
-        box-shadow: 0 8px 18px rgba(38, 46, 78, 0.05);
+        box-shadow: 0 6px 14px rgba(38, 46, 78, 0.05);
     }
 
     .list-btn-success {
@@ -266,13 +307,103 @@
         color: #fff;
     }
 
+    .list-import-wrap {
+        margin: 16px 22px 0;
+        padding: 16px 18px;
+        border: 1px dashed #d9e2f2;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fcfdff 0%, #f8faff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .list-import-copy h4 {
+        margin: 0 0 4px;
+        color: #1b2747;
+        font-size: 0.96rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .list-import-kicker {
+        margin-bottom: 6px;
+        color: #96a1b6;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-weight: 800;
+    }
+
+    .list-import-copy p {
+        margin: 0;
+        color: #75839a;
+        font-size: 0.88rem;
+        max-width: 60ch;
+    }
+
+    .list-import-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .list-import-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .list-file-input {
+        margin: 0;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #dbe3ef;
+        border-radius: 12px;
+        background: #fff;
+        min-height: 44px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        color: #273350;
+        font-size: 0.9rem;
+        font-weight: 700;
+        box-shadow: 0 6px 14px rgba(38, 46, 78, 0.05);
+        transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .list-file-input:hover {
+        border-color: #c8d4ea;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(38, 46, 78, 0.08);
+    }
+
+    .list-file-input input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .list-file-input span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+    }
+
     .list-table-wrap {
-        padding: 22px 28px 28px;
+        padding: 16px 22px 22px;
     }
 
     .list-table-card {
         border: 1px solid #edf1f8;
-        border-radius: 22px;
+        border-radius: 20px;
         overflow: hidden;
         background: #fff;
     }
@@ -284,18 +415,18 @@
     .list-table-card thead th {
         background: #fafbff !important;
         color: #52617d !important;
-        font-size: 0.77rem;
+        font-size: 0.74rem;
         font-weight: 800;
         letter-spacing: 0.03em;
         border-bottom: 1px solid #e8edf5;
-        padding: 0.9rem 1rem;
+        padding: 0.8rem 0.95rem;
     }
 
     .list-table-card tbody td {
-        padding: 0.92rem 1rem;
+        padding: 0.8rem 0.95rem;
         vertical-align: middle;
         border-bottom-color: #edf1f7;
-        font-size: 0.93rem;
+        font-size: 0.9rem;
     }
 
     .list-table-card tbody tr:hover {
@@ -303,15 +434,74 @@
     }
 
     .list-empty {
-        padding: 28px;
-        text-align: center;
-        color: #8390a7;
-        font-weight: 600;
+        padding: 24px;
+    }
+
+    .list-sort-link {
+        color: inherit;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: inherit;
+    }
+
+    .list-sort-link:hover {
+        color: #4f46e5;
+    }
+
+    .list-pagination-wrap {
+        padding: 0 22px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .list-pagination-meta {
+        color: #75839a;
+        font-size: 0.88rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+    }
+
+    .list-pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .list-page-number {
+        min-width: 42px;
+        min-height: 42px;
+        border-radius: 12px;
+        border: 1px solid #dbe3ef;
+        background: #fff;
+        color: #273350;
+        font-weight: 800;
+        box-shadow: 0 6px 14px rgba(38, 46, 78, 0.05);
+    }
+
+    .list-page-number.is-active {
+        background: linear-gradient(135deg, #635bff 0%, #7a4dce 100%);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(99, 91, 255, 0.18);
+    }
+
+    .list-page-ellipsis {
+        color: #94a0b4;
+        font-weight: 800;
+        padding: 0 2px;
     }
 
     @@media (max-width: 991px) {
         .list-page {
-            max-width: 100%;
+            width: 100%;
         }
 
         .list-hero {
@@ -322,14 +512,16 @@
         .list-note,
         .list-surface-header,
         .list-search-wrap,
-        .list-table-wrap {
-            padding-left: 22px;
-            padding-right: 22px;
+        .list-table-wrap,
+        .list-import-wrap,
+        .list-pagination-wrap {
+            padding-left: 20px;
+            padding-right: 20px;
         }
 
         .list-title {
             max-width: none;
-            font-size: 2.3rem;
+            font-size: 2.2rem;
         }
     }
 </style>

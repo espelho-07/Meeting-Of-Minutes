@@ -1,0 +1,16 @@
+@model Meeting_Of_Minutes.Models.LoadingStateViewModel
+@{
+    int lines = Model?.Lines > 0 ? Model.Lines : 3;
+}
+
+<div class="mom-loading-state @(Model?.Compact == true ? "is-compact" : string.Empty)" aria-hidden="true">
+    <div class="mom-loading-icon"></div>
+    <div class="mom-loading-title">@Model?.Title</div>
+    <div class="mom-loading-text">@Model?.Description</div>
+    <div class="mom-loading-lines">
+        @for (int i = 0; i < lines; i++)
+        {
+            <span class="mom-loading-line @(i == lines - 1 ? "is-short" : string.Empty)"></span>
+        }
+    </div>
+</div>

@@ -1,0 +1,640 @@
+@model Meeting_Of_Minutes.Models.ActionCenterViewModel
+@{
+    ViewData["Title"] = "Action Center - Meeting Of Minutes";
+    bool isAdminUser = Model.IsAdminUser;
+    var pendingProfileRequests = Model.PendingProfileRequests;
+    var pendingTransferRequests = Model.PendingTransferRequests;
+    var criticalActivity = Model.CriticalActivity;
+    var recentActivity = Model.RecentActivity;
+    var priorityQueue = Model.PriorityQueue;
+    var filteredPriorityQueue = Model.FilteredPriorityQueue;
+    int actionCount = Model.ActionCount;
+}
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+
+<style>
+    .action-page {
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        gap: 24px;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+    }
+
+    .action-priority-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .action-filter-bar {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .action-filter-chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .action-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid #e4e8f5;
+        background: #fff;
+        color: #5f6f89;
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .action-filter-chip.active {
+        background: #f4f5ff;
+        color: #5b5ce6;
+        border-color: #dfe3ff;
+    }
+
+    .action-filter-form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .action-card {
+        background: #fff;
+        border: 1px solid #e8edf5;
+        border-radius: 24px;
+        box-shadow: 0 20px 44px rgba(35, 43, 88, 0.07);
+        padding: 22px;
+    }
+
+    .action-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+
+    .action-card-head h3 {
+        margin: 0 0 6px;
+        color: #1d2752;
+        font-size: 1.15rem;
+        font-weight: 800;
+    }
+
+    .action-card-head p {
+        margin: 0;
+        color: #76839a;
+        font-size: 0.93rem;
+    }
+
+    .action-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .action-item {
+        border: 1px solid #edf1f7;
+        border-radius: 18px;
+        padding: 14px 15px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+    }
+
+    .action-item-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 6px;
+    }
+
+    .action-item-shell {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .action-item-select {
+        margin-top: 3px;
+    }
+
+    .action-item-title,
+    .action-priority-title {
+        font-weight: 800;
+        color: #1d2752;
+    }
+
+    .action-item-text,
+    .action-priority-text {
+        color: #66748f;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .action-item-meta,
+    .action-priority-meta {
+        color: #8793a8;
+        font-size: 0.82rem;
+    }
+
+    .action-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 7px 11px;
+        background: #f4f5ff;
+        color: #5b5ce6;
+        border: 1px solid #e5e6ff;
+        font-size: 0.76rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .action-chip-critical {
+        background: #ffebef;
+        color: #d9485f;
+        border-color: #ffd5dd;
+    }
+
+    .action-cta-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-top: 8px;
+    }
+
+    .action-empty {
+        padding: 24px 12px;
+        text-align: center;
+        color: #8692a8;
+        font-weight: 600;
+    }
+
+    .action-risk-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid #f1e6e7;
+        background: linear-gradient(180deg, #fffafa 0%, #fff6f7 100%);
+    }
+
+    .action-inline-form {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eef2f8;
+    }
+
+    .action-inline-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .action-bulk-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 12px 14px;
+        border: 1px dashed #dfe4f2;
+        border-radius: 16px;
+        background: #fbfcff;
+        margin-bottom: 14px;
+    }
+
+    .action-bulk-toolbar p {
+        margin: 0;
+        color: #6b7891;
+        font-size: 0.88rem;
+    }
+
+    .action-bulk-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .action-stale {
+        background: #fff3e8;
+        color: #c26c11;
+        border-color: #ffe1bd;
+    }
+
+    .action-risk-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffeaee;
+        color: #d9485f;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+    }
+
+    .action-priority-item {
+        border: 1px solid #edf1f7;
+        border-radius: 18px;
+        padding: 14px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+    }
+
+    a.action-priority-item {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    a.action-priority-item:hover {
+        transform: translateY(-2px);
+        border-color: #dfe5f5;
+        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.08);
+    }
+
+    .action-priority-item.is-critical {
+        border-color: #ffd6dc;
+        background: linear-gradient(180deg, #fffafa 0%, #fff6f7 100%);
+    }
+
+    @@media (max-width: 991px) {
+        .action-grid,
+        .action-priority-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item active">Action Center</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="action-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-lightning-charge"></i>@(isAdminUser ? "Admin Workflow" : "Personal Workflow")</div>
+            <h1 class="list-title">Action Center</h1>
+            <p class="list-subtitle">One place to handle the requests, risks and activity that need attention next instead of jumping across multiple screens.</p>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">Open Work</div>
+            <h2 class="list-note-title">@actionCount items currently need attention in this workspace.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>@(isAdminUser ? "Prioritize approvals and investigate suspicious sign-in attempts quickly." : "Track your own pending profile and transfer requests from one place.")</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Use this page as the operational starting point before opening deeper modules.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Recent critical activity stays visible so nothing important gets buried.</span></li>
+            </ul>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="action-chip">@Model.Overdue24Count overdue 24h+</span>
+                <span class="action-chip @(Model.Overdue72Count > 0 ? "action-chip-critical" : string.Empty)">@Model.Overdue72Count overdue 72h+</span>
+            </div>
+        </aside>
+    </section>
+
+    <section class="action-card">
+        <div class="action-card-head">
+            <div>
+                <h3>Priority Queue</h3>
+                <p>Sorted by urgency so the oldest and riskiest items are visible first.</p>
+            </div>
+            <a asp-controller="Activity" asp-action="ActivityLog" class="btn btn-light border">Open Full Activity</a>
+        </div>
+        <div class="action-filter-bar">
+            <div class="action-filter-chips">
+                <a asp-action="Index" asp-route-scope="all" asp-route-searchtext="@Model.SearchText" class="action-filter-chip @(Model.CurrentScope == "all" ? "active" : string.Empty)">All</a>
+                <a asp-action="Index" asp-route-scope="approvals" asp-route-searchtext="@Model.SearchText" class="action-filter-chip @(Model.CurrentScope == "approvals" ? "active" : string.Empty)">Approvals</a>
+                <a asp-action="Index" asp-route-scope="critical" asp-route-searchtext="@Model.SearchText" class="action-filter-chip @(Model.CurrentScope == "critical" ? "active" : string.Empty)">Critical</a>
+                <a asp-action="Index" asp-route-scope="stale" asp-route-searchtext="@Model.SearchText" class="action-filter-chip @(Model.CurrentScope == "stale" ? "active" : string.Empty)">Stale 24h+</a>
+                <a asp-action="Index" asp-route-scope="overdue72" asp-route-searchtext="@Model.SearchText" class="action-filter-chip @(Model.CurrentScope == "overdue72" ? "active" : string.Empty)">Overdue 72h+</a>
+            </div>
+            <form asp-action="Index" method="get" class="action-filter-form">
+                <input type="hidden" name="scope" value="@Model.CurrentScope" />
+                <input type="text" name="searchtext" value="@Model.SearchText" class="form-control" style="min-width: 260px;" placeholder="Search queue..." />
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                <a asp-action="Index" class="btn btn-light border btn-sm">Reset</a>
+            </form>
+        </div>
+        <div class="action-priority-grid">
+            @if (filteredPriorityQueue.Count == 0)
+            {
+                @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                {
+                    IconClass = "bi bi-lightning-charge",
+                    Title = "No priority items",
+                    Description = "Nothing in the current queue scope needs urgent attention right now.",
+                    Compact = true
+                })
+            }
+            else
+            {
+                @foreach (var item in filteredPriorityQueue)
+                {
+                    string priorityTargetUrl = string.IsNullOrWhiteSpace(item.TargetUrl) ? (Url.Action("Index", "ActionCenter") ?? "#") : item.TargetUrl;
+                    <a href="@priorityTargetUrl" class="action-priority-item @(item.IsCritical ? "is-critical" : string.Empty)">
+                        <div class="action-item-top">
+                            <div class="action-priority-title">@item.Title</div>
+                            <span class="action-chip @(item.IsCritical ? "action-chip-critical" : item.IsStale24Hours ? "action-stale" : string.Empty)">@item.PriorityLabel</span>
+                        </div>
+                        <div class="action-priority-text">@item.Description</div>
+                        <div class="action-priority-meta">@item.Meta</div>
+                    </a>
+                }
+            }
+        </div>
+    </section>
+
+    <div class="action-grid">
+        <section class="action-card">
+            <div class="action-card-head">
+                <div>
+                    <h3>@(isAdminUser ? "Approval Inbox" : "My Pending Requests")</h3>
+                    <p>@(isAdminUser ? "Review the requests that still need a decision from your side." : "These requests are still waiting on admin action.")</p>
+                </div>
+                <span class="action-chip"><i class="bi bi-inboxes"></i>@(pendingProfileRequests.Count + pendingTransferRequests.Count) pending</span>
+            </div>
+
+            <div class="action-list">
+                @if (isAdminUser)
+                {
+                    @if (pendingProfileRequests.Count == 0 && pendingTransferRequests.Count == 0)
+                    {
+                        @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                        {
+                            IconClass = "bi bi-inboxes",
+                            Title = "Approval inbox is clear",
+                            Description = "There are no profile or transfer approvals waiting for action right now.",
+                            Compact = true
+                        })
+                    }
+
+                    @if (pendingProfileRequests.Count > 0)
+                    {
+                        <form id="profileBulkForm" asp-controller="Profile" asp-action="BulkApproveProfileUpdateRequests" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@Url.Action("Index", "ActionCenter")" />
+                            <div class="action-bulk-toolbar">
+                                <p>Use bulk actions when the same decision applies to multiple profile requests.</p>
+                                <div class="action-bulk-controls">
+                                    <input type="text" name="adminRemarks" class="form-control" style="min-width: 240px;" placeholder="Shared note for selected profile requests" />
+                                    <button type="submit" class="btn btn-success btn-sm">Approve Selected</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" formaction="@Url.Action("BulkRejectProfileUpdateRequests", "Profile")">Reject Selected</button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+
+                    @foreach (var request in pendingProfileRequests.Take(4))
+                    {
+                        bool isStale = (DateTime.Now - request.Created).TotalHours >= 24;
+                        <div class="action-item">
+                            <div class="action-item-shell">
+                                <div class="action-item-select">
+                                    <input class="form-check-input" type="checkbox" name="selectedRequestIds" value="@request.ProfileUpdateRequestID" form="profileBulkForm" />
+                                </div>
+                                <div>
+                                    <div class="action-item-top">
+                                        <div class="action-item-title">Profile update for @request.CurrentUserName</div>
+                                        <span class="action-chip @(isStale ? "action-stale" : string.Empty)">@(isStale ? "Stale" : "Profile")</span>
+                                    </div>
+                                    <div class="action-item-text">@request.RequestedEmail | @(string.IsNullOrWhiteSpace(request.DepartmentName) ? "No department" : request.DepartmentName)</div>
+                                    <div class="action-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            </div>
+                            <div class="action-inline-form">
+                                <input type="text" name="adminRemarksProfile_@request.ProfileUpdateRequestID" class="form-control" placeholder="Quick note for approve/reject (optional)" />
+                                <div class="action-inline-actions">
+                                    <form asp-controller="Profile" asp-action="ApproveProfileUpdateRequest" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="profileUpdateRequestID" value="@request.ProfileUpdateRequestID" />
+                                        <input type="hidden" name="returnUrl" value="@Url.Action("Index", "ActionCenter")" />
+                                        <input type="hidden" name="adminRemarks" />
+                                        <button type="submit" class="btn btn-success btn-sm action-remark-submit" data-remark-source="adminRemarksProfile_@request.ProfileUpdateRequestID">Approve</button>
+                                    </form>
+                                    <form asp-controller="Profile" asp-action="RejectProfileUpdateRequest" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="profileUpdateRequestID" value="@request.ProfileUpdateRequestID" />
+                                        <input type="hidden" name="returnUrl" value="@Url.Action("Index", "ActionCenter")" />
+                                        <input type="hidden" name="adminRemarks" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm action-remark-submit" data-remark-source="adminRemarksProfile_@request.ProfileUpdateRequestID">Reject</button>
+                                    </form>
+                                    <a asp-controller="Profile" asp-action="ProfileUpdateRequestList" class="btn btn-light border btn-sm">Open Full Review</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (pendingTransferRequests.Count > 0)
+                    {
+                        <form id="transferBulkForm" asp-controller="Staff" asp-action="BulkApproveStaffTransferRequests" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@Url.Action("Index", "ActionCenter")" />
+                            <div class="action-bulk-toolbar">
+                                <p>Batch clear transfer requests when the company move decision is already aligned.</p>
+                                <div class="action-bulk-controls">
+                                    <input type="text" name="adminRemarks" class="form-control" style="min-width: 240px;" placeholder="Shared note for selected transfer requests" />
+                                    <button type="submit" class="btn btn-success btn-sm">Approve Selected</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" formaction="@Url.Action("BulkRejectStaffTransferRequests", "Staff")">Reject Selected</button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+
+                    @foreach (var request in pendingTransferRequests.Take(4))
+                    {
+                        bool isStale = (DateTime.Now - request.Created).TotalHours >= 24;
+                        <div class="action-item">
+                            <div class="action-item-shell">
+                                <div class="action-item-select">
+                                    <input class="form-check-input" type="checkbox" name="selectedRequestIds" value="@request.StaffTransferRequestID" form="transferBulkForm" />
+                                </div>
+                                <div>
+                                    <div class="action-item-top">
+                                        <div class="action-item-title">@request.StaffName transfer request</div>
+                                        <span class="action-chip @(isStale ? "action-stale" : string.Empty)">@(isStale ? "Stale" : "Transfer")</span>
+                                    </div>
+                                    <div class="action-item-text">@request.SourceCompanyName to @request.TargetDepartmentName</div>
+                                    <div class="action-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            </div>
+                            <div class="action-inline-form">
+                                <input type="text" name="adminRemarksTransfer_@request.StaffTransferRequestID" class="form-control" placeholder="Quick note for approve/reject (optional)" />
+                                <div class="action-inline-actions">
+                                    <form asp-controller="Staff" asp-action="ApproveStaffTransferRequest" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="staffTransferRequestID" value="@request.StaffTransferRequestID" />
+                                        <input type="hidden" name="returnUrl" value="@Url.Action("Index", "ActionCenter")" />
+                                        <input type="hidden" name="adminRemarks" />
+                                        <button type="submit" class="btn btn-success btn-sm action-remark-submit" data-remark-source="adminRemarksTransfer_@request.StaffTransferRequestID">Approve</button>
+                                    </form>
+                                    <form asp-controller="Staff" asp-action="RejectStaffTransferRequest" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="staffTransferRequestID" value="@request.StaffTransferRequestID" />
+                                        <input type="hidden" name="returnUrl" value="@Url.Action("Index", "ActionCenter")" />
+                                        <input type="hidden" name="adminRemarks" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm action-remark-submit" data-remark-source="adminRemarksTransfer_@request.StaffTransferRequestID">Reject</button>
+                                    </form>
+                                    <a asp-controller="Staff" asp-action="StaffTransferRequestList" class="btn btn-light border btn-sm">Open Full Review</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="action-cta-row">
+                        <a asp-controller="Profile" asp-action="ProfileUpdateRequestList" class="btn btn-primary">Open Profile Requests</a>
+                        <a asp-controller="Staff" asp-action="StaffTransferRequestList" class="btn btn-light border">Open Transfer Requests</a>
+                    </div>
+                }
+                else
+                {
+                    @if (pendingProfileRequests.Count == 0 && pendingTransferRequests.Count == 0)
+                    {
+                        @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                        {
+                            IconClass = "bi bi-check2-circle",
+                            Title = "No pending requests",
+                            Description = "Your account does not have any profile or transfer requests waiting right now.",
+                            Compact = true
+                        })
+                    }
+
+                    @foreach (var request in pendingProfileRequests.Take(4))
+                    {
+                        <div class="action-item">
+                            <div class="action-item-top">
+                                <div class="action-item-title">Profile update request</div>
+                                <span class="action-chip">@request.RequestStatus</span>
+                            </div>
+                            <div class="action-item-text">Requested email: @request.RequestedEmail</div>
+                            <div class="action-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+
+                    @foreach (var request in pendingTransferRequests.Take(4))
+                    {
+                        <div class="action-item">
+                            <div class="action-item-top">
+                                <div class="action-item-title">Transfer request to @request.TargetCompanyName</div>
+                                <span class="action-chip">@request.RequestStatus</span>
+                            </div>
+                            <div class="action-item-text">Target department: @request.TargetDepartmentName</div>
+                            <div class="action-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+
+                    <div class="action-cta-row">
+                        <a asp-controller="Profile" asp-action="Profile" class="btn btn-primary">Open My Profile</a>
+                        <a asp-controller="Activity" asp-action="ActivityLog" class="btn btn-light border">Open My Activity</a>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="action-card">
+            <div class="action-card-head">
+                <div>
+                    <h3>@(isAdminUser ? "Critical Signals" : "Recent Activity")</h3>
+                    <p>@(isAdminUser ? "Sensitive events that should not get lost in routine workflow." : "A quick look at the latest changes touching your account workspace.")</p>
+                </div>
+                <a asp-controller="Activity" asp-action="ActivityLog" class="btn btn-light border">Open Activity</a>
+            </div>
+
+            <div class="action-list">
+                @if (isAdminUser)
+                {
+                    @if (criticalActivity.Count == 0)
+                    {
+                        @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                        {
+                            IconClass = "bi bi-shield-check",
+                            Title = "No critical events",
+                            Description = "Recent activity is clear of high-risk operational events in this scope.",
+                            Compact = true
+                        })
+                    }
+
+                    @foreach (var log in criticalActivity)
+                    {
+                        <div class="action-risk-item">
+                            <div class="action-risk-icon"><i class="bi bi-shield-exclamation"></i></div>
+                            <div>
+                                <div class="action-item-title">@log.Title</div>
+                                <div class="action-item-text">@log.Description</div>
+                                <div class="action-item-meta">@log.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    @if (recentActivity.Count == 0)
+                    {
+                        @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                        {
+                            IconClass = "bi bi-clock-history",
+                            Title = "No recent activity",
+                            Description = "There are no recent account events to show right now.",
+                            Compact = true
+                        })
+                    }
+
+                    @foreach (var log in recentActivity.Take(6))
+                    {
+                        <div class="action-item">
+                            <div class="action-item-top">
+                                <div class="action-item-title">@log.Title</div>
+                                <span class="action-chip">@log.ActionType</span>
+                            </div>
+                            <div class="action-item-text">@log.Description</div>
+                            <div class="action-item-meta">@log.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.action-remark-submit').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const sourceName = button.getAttribute('data-remark-source');
+            const sourceInput = sourceName ? document.querySelector('input[name="' + sourceName + '"]') : null;
+            const hiddenInput = button.form ? button.form.querySelector('input[name="adminRemarks"]') : null;
+            if (sourceInput && hiddenInput) {
+                hiddenInput.value = sourceInput.value;
+            }
+        });
+    });
+</script>

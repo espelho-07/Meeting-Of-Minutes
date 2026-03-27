@@ -1,4 +1,5 @@
-using Meeting_Of_Minutes.Models;
+﻿using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -37,15 +38,22 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Close();
             }
 
+            if (model.DepartmentID != 0 && !CanAccessDepartment(model.DepartmentID))
+            {
+                return RedirectToAction("DepartmentList");
+            }
+
             return View(model);
         }
         #endregion
 
         #region GetAll
         [HttpGet]
-        public IActionResult DepartmentList()
+        public IActionResult DepartmentList(string? searchtext, int page = 1, string sortBy = "name", string sortDirection = "asc")
         {
-            List<DepartmentModel> departments = GetAllDepartment(null);
+            searchtext = string.IsNullOrWhiteSpace(searchtext) ? null : searchtext;
+            ViewBag.searchtext = searchtext;
+            PagedListViewModel<DepartmentModel> departments = BuildDepartmentPage(searchtext, page, sortBy, sortDirection);
             return View(departments);
         }
 
@@ -53,17 +61,7 @@ namespace Meeting_Of_Minutes.Controllers
         public IActionResult DepartmentList(IFormCollection formdata)
         {
             string? searchtext = formdata["searchtext"].ToString();
-
-            if (string.IsNullOrWhiteSpace(searchtext))
-            {
-                searchtext = null;
-            }
-
-            ViewBag.searchtext = searchtext;
-
-            List<DepartmentModel> departments = GetAllDepartment(searchtext);
-
-            return View(departments);
+            return RedirectToAction(nameof(DepartmentList), new { searchtext });
         }
         #endregion
 
@@ -99,13 +97,44 @@ namespace Meeting_Of_Minutes.Controllers
                 department.CompanyName = sdr["CompanyName"].ToString();
                 department.StaffCount = Convert.ToInt32(sdr["StaffCount"]);
                 department.MeetingsCount = Convert.ToInt32(sdr["MeetingsCount"]);
-                departments.Add(department);
+                if (CanAccessDepartment(department.DepartmentID))
+                {
+                    departments.Add(department);
+                }
             }
 
             sdr.Close();
             con.Close();
 
             return departments;
+        }
+
+        public PagedListViewModel<DepartmentModel> BuildDepartmentPage(string? searchtext, int page, string? sortBy, string? sortDirection)
+        {
+            IEnumerable<DepartmentModel> query = GetAllDepartment(searchtext);
+            bool isDesc = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+            query = (sortBy ?? "name").ToLowerInvariant() switch
+            {
+                "staff" => isDesc ? query.OrderByDescending(x => x.StaffCount).ThenBy(x => x.DepartmentName) : query.OrderBy(x => x.StaffCount).ThenBy(x => x.DepartmentName),
+                "meetings" => isDesc ? query.OrderByDescending(x => x.MeetingsCount).ThenBy(x => x.DepartmentName) : query.OrderBy(x => x.MeetingsCount).ThenBy(x => x.DepartmentName),
+                _ => isDesc ? query.OrderByDescending(x => x.DepartmentName) : query.OrderBy(x => x.DepartmentName)
+            };
+
+            List<DepartmentModel> ordered = query.ToList();
+            const int pageSize = 10;
+            page = Math.Max(page, 1);
+
+            return new PagedListViewModel<DepartmentModel>
+            {
+                Items = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = ordered.Count,
+                SearchText = searchtext,
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
         }
         #endregion
 
@@ -114,38 +143,26 @@ namespace Meeting_Of_Minutes.Controllers
         {
             try
             {
-                DataTable dt = new DataTable();
-
-                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
-                SqlCommand cmd = new SqlCommand();
-                cmd.Connection = con;
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandText = "PR_Department_SelectAll";
-                cmd.Parameters.AddWithValue("@CompanyName", GetCurrentCompanyName());
-                cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
-
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-                dt.Load(dr);
-                dr.Close();
-                con.Close();
+                List<DepartmentModel> items = GetAllDepartment(null);
 
                 using (XLWorkbook workbook = new XLWorkbook())
                 {
                     var worksheet = workbook.Worksheets.Add("Departments");
-
-                    for (int i = 0; i < dt.Columns.Count; i++)
+                    string[] headers = { "DepartmentID", "DepartmentName", "CompanyName", "StaffCount", "MeetingsCount" };
+                    for (int i = 0; i < headers.Length; i++)
                     {
-                        worksheet.Cell(1, i + 1).Value = dt.Columns[i].ColumnName;
+                        worksheet.Cell(1, i + 1).Value = headers[i];
                         worksheet.Cell(1, i + 1).Style.Font.Bold = true;
                     }
 
-                    for (int row = 0; row < dt.Rows.Count; row++)
+                    for (int row = 0; row < items.Count; row++)
                     {
-                        for (int col = 0; col < dt.Columns.Count; col++)
-                        {
-                            worksheet.Cell(row + 2, col + 1).Value = dt.Rows[row][col]?.ToString();
-                        }
+                        DepartmentModel item = items[row];
+                        worksheet.Cell(row + 2, 1).Value = item.DepartmentID;
+                        worksheet.Cell(row + 2, 2).Value = item.DepartmentName;
+                        worksheet.Cell(row + 2, 3).Value = item.CompanyName;
+                        worksheet.Cell(row + 2, 4).Value = item.StaffCount;
+                        worksheet.Cell(row + 2, 5).Value = item.MeetingsCount;
                     }
 
                     worksheet.Columns().AdjustToContents();
@@ -159,11 +176,106 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                TempData["ErrorMessage"] = "Error exporting data. Please try again.";
                 return RedirectToAction("DepartmentList");
             }
+        }
+        #endregion
+
+        #region Import
+        public IActionResult DownloadImportTemplate()
+        {
+            byte[] content = ExcelImportService.BuildTemplate(
+                "DepartmentsImport",
+                new[] { "DepartmentName" },
+                new List<IReadOnlyList<string>>
+                {
+                    new[] { "Human Resources" }
+                });
+
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "DepartmentImportTemplate.xlsx");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ImportFromExcel(IFormFile? excelFile)
+        {
+            if (!ExcelImportService.IsExcelFile(excelFile))
+            {
+                TempData["ErrorMessage"] = $"Please upload a valid Excel file up to {ExcelImportService.MaxFileSizeBytes / (1024 * 1024)} MB.";
+                return RedirectToAction("DepartmentList");
+            }
+
+            if (!ExcelImportService.HasRequiredHeaders(excelFile!, new[] { "DepartmentName" }, out string headerMessage))
+            {
+                TempData["ErrorMessage"] = headerMessage;
+                return RedirectToAction("DepartmentList");
+            }
+
+            List<Dictionary<string, string>> rows = ExcelImportService.ReadRows(excelFile!);
+            if (rows.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Excel file is empty.";
+                return RedirectToAction("DepartmentList");
+            }
+
+            int importedCount = 0;
+            int skippedCount = 0;
+            string companyName = GetCurrentCompanyName();
+            List<ImportReportRowModel> reportRows = new List<ImportReportRowModel>();
+
+            using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            con.Open();
+
+            for (int index = 0; index < rows.Count; index++)
+            {
+                Dictionary<string, string> row = rows[index];
+                string departmentName = ExcelImportService.GetValue(row, "DepartmentName");
+                string summary = departmentName;
+                if (string.IsNullOrWhiteSpace(departmentName))
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "DepartmentName is required.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand checkCmd = new SqlCommand("SELECT COUNT(*) FROM MOM_Department WHERE DepartmentName = @DepartmentName AND CompanyName = @CompanyName", con);
+                checkCmd.Parameters.AddWithValue("@DepartmentName", departmentName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
+
+                if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Department already exists in current company.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand cmd = new SqlCommand("PR_Department_Insert", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@DepartmentName", departmentName);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
+                cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                cmd.ExecuteNonQuery();
+                importedCount++;
+                reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Imported", Message = "Department created successfully.", DataSummary = summary });
+            }
+
+            AuditLogService.Log(
+                companyName,
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "Import",
+                "Department",
+                null,
+                "Departments imported from Excel",
+                $"{importedCount} departments imported and {skippedCount} skipped.");
+
+            TempData["ImportReportPath"] = ImportReportService.SaveReport("DepartmentImport", companyName, HttpContext.Session.GetInt32("UserID"), HttpContext.Session.GetString("UserName"), importedCount, skippedCount, reportRows);
+            TempData["SuccessMessage"] = $"Department import completed. Imported: {importedCount}, Skipped: {skippedCount}.";
+            return RedirectToAction("DepartmentList");
         }
         #endregion
 
@@ -195,6 +307,11 @@ namespace Meeting_Of_Minutes.Controllers
             sdr.Close();
             con.Close();
 
+            if (model.DepartmentID != 0 && !CanAccessDepartment(model.DepartmentID))
+            {
+                return RedirectToAction("DepartmentList");
+            }
+
             return View(model);
         }
 
@@ -205,6 +322,18 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Save(DepartmentModel model)
         {
+            if (model.DepartmentID == 0 && !RoleAccessService.IsSuperAdmin(HttpContext.Session.GetString("UserRole")))
+            {
+                TempData["ErrorMessage"] = "Only the company Super Admin can create new departments.";
+                return RedirectToAction("DepartmentList");
+            }
+
+            if (model.DepartmentID != 0 && !CanAccessDepartment(model.DepartmentID))
+            {
+                TempData["ErrorMessage"] = "You can only manage your own department.";
+                return RedirectToAction("DepartmentList");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View("DepartmentAddEdit", model);
@@ -271,6 +400,16 @@ namespace Meeting_Of_Minutes.Controllers
             TempData["SuccessMessage"] = model.DepartmentID == 0 ? "Department added successfully." : "Department updated successfully.";
             cmd.ExecuteNonQuery();
             con.Close();
+            AuditLogService.Log(
+                GetCurrentCompanyName(),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                model.DepartmentID == 0 ? "Create" : "Update",
+                "Department",
+                model.DepartmentID == 0 ? null : model.DepartmentID.ToString(),
+                model.DepartmentID == 0 ? "Department created" : "Department updated",
+                $"{model.DepartmentName} department was {(model.DepartmentID == 0 ? "created" : "updated")}.");
 
             return RedirectToAction("DepartmentList");
         }
@@ -281,6 +420,12 @@ namespace Meeting_Of_Minutes.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int DepartmentID)
         {
+            if (!CanAccessDepartment(DepartmentID))
+            {
+                TempData["ErrorMessage"] = "You can only manage your own department.";
+                return RedirectToAction("DepartmentList");
+            }
+
             try
             {
                 SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
@@ -293,6 +438,16 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    GetCurrentCompanyName(),
+                    HttpContext.Session.GetInt32("UserID"),
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Delete",
+                    "Department",
+                    DepartmentID.ToString(),
+                    "Department deleted",
+                    $"Department #{DepartmentID} was deleted.");
                 TempData["SuccessMessage"] = "Department deleted successfully.";
             }
             catch
@@ -309,8 +464,21 @@ namespace Meeting_Of_Minutes.Controllers
         {
             return HttpContext.Session.GetString("CompanyName") ?? string.Empty;
         }
+
+        private bool CanAccessDepartment(int departmentId)
+        {
+            if (RoleAccessService.IsSuperAdmin(HttpContext.Session.GetString("UserRole")))
+            {
+                return true;
+            }
+
+            int? currentDepartmentId = HttpContext.Session.GetInt32("DepartmentID");
+            return currentDepartmentId.HasValue && currentDepartmentId.Value == departmentId;
+        }
     }
 }
+
+
 
 
 

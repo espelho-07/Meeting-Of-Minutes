@@ -1,69 +1,67 @@
-@model List<StaffModel>
+@model PagedListViewModel<StaffModel>
 
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSListStyles")
 @{
     ViewData["Title"] = "Staff Members - Meeting Of Minutes";
     int SerialNumber = 1;
+    var heroModel = new ListPageHeroViewModel
+    {
+        IconClass = "bi bi-people",
+        Kicker = "Staff Access",
+        Title = "Staff Members",
+        Subtitle = "Manage staff records, auto-created user access and company participation from the same clean workspace language used in meeting scheduling.",
+        NoteLabel = "Access notes",
+        NoteTitle = $"{Model.TotalItems} staff records are active in the current company scope.",
+        Notes = new List<string>
+        {
+            "Every staff record can create or sync a linked user account automatically.",
+            "Department placement controls meeting visibility and transfer workflows.",
+            "Open staff details to review password state, transfer history and enrolled meetings."
+        }
+    };
+    var toolbarModel = new ListPageToolbarViewModel
+    {
+        Heading = "Staff Directory",
+        Meta = "Search, review and manage staff records from one consistent administrative surface.",
+        SearchAction = "StaffList",
+        SearchController = "Staff",
+        SearchPlaceholder = "Search staff members...",
+        SearchText = ViewBag.searchtext,
+        StatusText = $"Total Records: {Model.TotalItems}",
+        TemplateAction = "DownloadImportTemplate",
+        TemplateController = "Staff",
+        ImportAction = "ImportFromExcel",
+        ImportController = "Staff",
+        Actions = new List<ListToolbarActionViewModel>
+        {
+            new() { Action = "StaffAddEdit", Text = "Add Staff Member", IconClass = "bi bi-person-plus-fill", CssClass = "list-btn-primary" },
+            new() { Action = "ExportToExcel", Text = "Export", IconClass = "bi bi-file-earmark-excel", CssClass = "list-btn-success" }
+        }
+    };
 }
 
-<div class="pagetitle mb-4">
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">Staff Members</li>
-        </ol>
-    </nav>
-</div>
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Staff Members" })
 
 <div class="list-page">
-    <section class="list-hero">
-        <div class="list-hero-main">
-            <div class="list-kicker"><i class="bi bi-people"></i> Staff Access</div>
-            <h1 class="list-title">Staff Members</h1>
-            <p class="list-subtitle">Manage staff records, auto-created user access and company participation from the same clean workspace language used in meeting scheduling.</p>
-        </div>
-        <aside class="list-note">
-            <div class="list-note-label">Access notes</div>
-            <h2 class="list-note-title">@Model.Count staff records are active in the current company scope.</h2>
-            <ul class="list-note-list">
-                <li><i class="bi bi-check2-circle"></i><span>Every staff record can create or sync a linked user account automatically.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Department placement controls meeting visibility and transfer workflows.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Open staff details to review password state, transfer history and enrolled meetings.</span></li>
-            </ul>
-        </aside>
-    </section>
+    @await Html.PartialAsync("_ListPageHero", heroModel)
 
     <section class="list-surface">
-        <div class="list-surface-header">
-            <div>
-                <h3 class="list-surface-heading">Staff Directory</h3>
-                <p class="list-surface-meta">Search, review and manage staff records from one consistent administrative surface.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a asp-action="StaffAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-person-plus-fill me-2"></i>Add Staff Member</a>
-                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
-            </div>
-        </div>
-
-        <div class="list-search-wrap">
-            <form class="list-search-form" asp-action="StaffList" asp-controller="Staff" method="post">
-                @Html.AntiForgeryToken()
-                <div class="list-search-input">
-                    <span><i class="bi bi-search"></i></span>
-                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search staff members..." />
-                </div>
-                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
-                <a href="@Url.Action("StaffList", "Staff")" class="btn list-btn list-btn-light">Clear</a>
-            </form>
-            <div class="list-status-chip">Total Records: @Model.Count</div>
-        </div>
+        @await Html.PartialAsync("_ListPageToolbar", toolbarModel)
 
         <div class="list-table-wrap">
             <div class="list-table-card">
-                @if (Model.Count == 0)
+                @if (Model.Items.Count == 0)
                 {
-                    <div class="list-empty">No staff members found.</div>
+                    @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                    {
+                        IconClass = "bi bi-people",
+                        Title = "No staff members found",
+                        Description = "There are no staff records matching the current query or company scope.",
+                        ActionText = "Add Staff Member",
+                        ActionUrl = Url.Action("StaffAddEdit", "Staff"),
+                        Compact = true
+                    })
                 }
                 else
                 {
@@ -71,14 +69,14 @@
                         <thead>
                             <tr>
                                 <th class="ps-4">#</th>
-                                <th>Staff Member</th>
-                                <th>Department</th>
-                                <th>Mobile & Email</th>
+                                <th><a class="list-sort-link" href="@Url.Action("StaffList", new { searchtext = Model.SearchText, page = 1, sortBy = "name", sortDirection = Model.SortBy == "name" && Model.SortDirection == "asc" ? "desc" : "asc" })">Staff Member <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("StaffList", new { searchtext = Model.SearchText, page = 1, sortBy = "department", sortDirection = Model.SortBy == "department" && Model.SortDirection == "asc" ? "desc" : "asc" })">Department <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("StaffList", new { searchtext = Model.SearchText, page = 1, sortBy = "email", sortDirection = Model.SortBy == "email" && Model.SortDirection == "asc" ? "desc" : "asc" })">Mobile & Email <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var staff in Model)
+                            @foreach (var staff in Model.Items)
                             {
                                 <tr>
                                     <td class="ps-4">@SerialNumber</td>
@@ -117,5 +115,6 @@
                 }
             </div>
         </div>
+        @await Html.PartialAsync("_ListPagination", Model)
     </section>
 </div>

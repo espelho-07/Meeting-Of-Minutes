@@ -14,7 +14,6 @@ namespace Meeting_Of_Minutes.Models
         [Required(ErrorMessage = "Please select role")]
         public string? UserRole { get; set; }
 
-        [Required(ErrorMessage = "Please select company")]
         public string? CompanyName { get; set; }
 
         public int? DepartmentID { get; set; }

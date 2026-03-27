@@ -1,4 +1,4 @@
-@model List<MeetingsModel>
+@model PagedListViewModel<MeetingsModel>
 
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSListStyles")
@@ -6,68 +6,65 @@
     ViewData["Title"] = "Meetings Management - MOM";
     int SerialNumber = 1;
     bool isAdminUser = (Context.Session.GetString("UserRole") ?? string.Empty).Equals("Admin", StringComparison.OrdinalIgnoreCase);
+    var heroModel = new ListPageHeroViewModel
+    {
+        IconClass = "bi bi-calendar2-week",
+        Kicker = "Meeting Operations",
+        Title = "All Meetings",
+        Subtitle = "Review scheduled, completed and cancelled meetings from the same workspace language used while creating them.",
+        NoteLabel = "Operational scope",
+        NoteTitle = $"{Model.TotalItems} meeting records are visible in your current access scope.",
+        Notes = new List<string>
+        {
+            "Admins can schedule and cancel meetings from this list.",
+            "Users only see meetings actually assigned to their meeting membership.",
+            "Open the details workspace to manage attendees and attendance."
+        }
+    };
+    var toolbarModel = new ListPageToolbarViewModel
+    {
+        Heading = "Meeting Register",
+        Meta = "Search, open and manage meeting records from one consistent scheduling surface.",
+        SearchAction = "MeetingsList",
+        SearchController = "Meetings",
+        SearchPlaceholder = "Search meetings...",
+        SearchText = ViewBag.searchtext,
+        StatusText = $"Total Records: {Model.TotalItems}",
+        TemplateAction = isAdminUser ? "DownloadImportTemplate" : null,
+        TemplateController = isAdminUser ? "Meetings" : null,
+        ImportAction = isAdminUser ? "ImportFromExcel" : null,
+        ImportController = isAdminUser ? "Meetings" : null,
+        Actions = isAdminUser
+            ? new List<ListToolbarActionViewModel>
+            {
+                new() { Action = "MeetingsAddEdit", Text = "Schedule Meeting", IconClass = "bi bi-plus-circle", CssClass = "list-btn-primary" },
+                new() { Action = "ExportToExcel", Text = "Export", IconClass = "bi bi-file-earmark-excel", CssClass = "list-btn-success" }
+            }
+            : new List<ListToolbarActionViewModel>()
+    };
 }
 
-<div class="pagetitle mb-4">
-    <nav>
-        <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">Meetings</li>
-        </ol>
-    </nav>
-</div>
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Meetings" })
 
 <div class="list-page">
-    <section class="list-hero">
-        <div class="list-hero-main">
-            <div class="list-kicker"><i class="bi bi-calendar2-week"></i> Meeting Operations</div>
-            <h1 class="list-title">All Meetings</h1>
-            <p class="list-subtitle">Review scheduled, completed and cancelled meetings from the same workspace language used while creating them.</p>
-        </div>
-        <aside class="list-note">
-            <div class="list-note-label">Operational scope</div>
-            <h2 class="list-note-title">@Model.Count meeting records are visible in your current access scope.</h2>
-            <ul class="list-note-list">
-                <li><i class="bi bi-check2-circle"></i><span>Admins can schedule and cancel meetings from this list.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Users only see meetings actually assigned to their meeting membership.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Open the details workspace to manage attendees and attendance.</span></li>
-            </ul>
-        </aside>
-    </section>
+    @await Html.PartialAsync("_ListPageHero", heroModel)
 
     <section class="list-surface">
-        <div class="list-surface-header">
-            <div>
-                <h3 class="list-surface-heading">Meeting Register</h3>
-                <p class="list-surface-meta">Search, open and manage meeting records from one consistent scheduling surface.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                @if (isAdminUser)
-                {
-                    <a asp-action="MeetingsAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Schedule Meeting</a>
-                    <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
-                }
-            </div>
-        </div>
-
-        <div class="list-search-wrap">
-            <form class="list-search-form" asp-action="MeetingsList" asp-controller="Meetings" method="post">
-                @Html.AntiForgeryToken()
-                <div class="list-search-input">
-                    <span><i class="bi bi-search"></i></span>
-                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search meetings..." />
-                </div>
-                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
-                <a href="@Url.Action("MeetingsList", "Meetings")" class="btn list-btn list-btn-light">Clear</a>
-            </form>
-            <div class="list-status-chip">Total Records: @Model.Count</div>
-        </div>
+        @await Html.PartialAsync("_ListPageToolbar", toolbarModel)
 
         <div class="list-table-wrap">
             <div class="list-table-card">
-                @if (Model.Count == 0)
+                @if (Model.Items.Count == 0)
                 {
-                    <div class="list-empty">No meetings found.</div>
+                    @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                    {
+                        IconClass = "bi bi-calendar2-week",
+                        Title = "No meetings found",
+                        Description = "There are no meeting records visible for the current search or access scope.",
+                        ActionText = isAdminUser ? "Schedule Meeting" : null,
+                        ActionUrl = isAdminUser ? Url.Action("MeetingsAddEdit", "Meetings") : null,
+                        Compact = true
+                    })
                 }
                 else
                 {
@@ -75,17 +72,17 @@
                         <thead>
                             <tr>
                                 <th class="ps-4">#</th>
-                                <th>Date & Time</th>
-                                <th>Meeting Type</th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingsList", new { searchtext = Model.SearchText, page = 1, sortBy = "date", sortDirection = Model.SortBy == "date" && Model.SortDirection == "asc" ? "desc" : "asc" })">Date & Time <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingsList", new { searchtext = Model.SearchText, page = 1, sortBy = "type", sortDirection = Model.SortBy == "type" && Model.SortDirection == "asc" ? "desc" : "asc" })">Meeting Type <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th>Description</th>
-                                <th>Department</th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingsList", new { searchtext = Model.SearchText, page = 1, sortBy = "department", sortDirection = Model.SortBy == "department" && Model.SortDirection == "asc" ? "desc" : "asc" })">Department <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th>Venue</th>
-                                <th>Status</th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingsList", new { searchtext = Model.SearchText, page = 1, sortBy = "status", sortDirection = Model.SortBy == "status" && Model.SortDirection == "asc" ? "desc" : "asc" })">Status <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var meeting in Model)
+                            @foreach (var meeting in Model.Items)
                             {
                                 <tr>
                                     <td class="ps-4">@SerialNumber</td>
@@ -133,5 +130,6 @@
                 }
             </div>
         </div>
+        @await Html.PartialAsync("_ListPagination", Model)
     </section>
 </div>

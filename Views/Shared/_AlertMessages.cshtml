@@ -2,6 +2,7 @@
     var successMessage = TempData["SuccessMessage"]?.ToString() ?? TempData["SucessMessage"]?.ToString();
     var errorMessage = TempData["ErrorMessage"]?.ToString();
     var deleteError = TempData["DeleteError"]?.ToString();
+    var importReportPath = TempData["ImportReportPath"]?.ToString();
 }
 
 @if (!string.IsNullOrWhiteSpace(successMessage) || !string.IsNullOrWhiteSpace(errorMessage) || !string.IsNullOrWhiteSpace(deleteError))
@@ -9,12 +10,22 @@
     <div class="mom-inline-alerts">
         @if (!string.IsNullOrWhiteSpace(successMessage))
         {
-            <div class="alert alert-success alert-dismissible fade show mom-alert-box" role="alert">
-                <div class="d-flex align-items-start gap-3">
-                    <i class="bi bi-check-circle-fill fs-4"></i>
-                    <div>
-                        <div class="fw-bold">Success</div>
-                        <div>@successMessage</div>
+            <div class="alert alert-success alert-dismissible fade show mom-alert-box mom-alert-success" role="alert">
+                <div class="mom-alert-body">
+                    <div class="mom-alert-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="mom-alert-copy">
+                        <div class="mom-alert-kicker">Success</div>
+                        <div class="mom-alert-text">@successMessage</div>
+                        @if (!string.IsNullOrWhiteSpace(importReportPath))
+                        {
+                            <div class="mom-alert-actions">
+                                <a href="@importReportPath" class="btn btn-sm btn-light border">
+                                    <i class="bi bi-download me-2"></i>Download Import Report
+                                </a>
+                            </div>
+                        }
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -23,12 +34,14 @@
 
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            <div class="alert alert-danger alert-dismissible fade show mom-alert-box" role="alert">
-                <div class="d-flex align-items-start gap-3">
-                    <i class="bi bi-x-circle-fill fs-4"></i>
-                    <div>
-                        <div class="fw-bold">Error</div>
-                        <div>@errorMessage</div>
+            <div class="alert alert-danger alert-dismissible fade show mom-alert-box mom-alert-danger" role="alert">
+                <div class="mom-alert-body">
+                    <div class="mom-alert-icon">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div class="mom-alert-copy">
+                        <div class="mom-alert-kicker">Error</div>
+                        <div class="mom-alert-text">@errorMessage</div>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -37,60 +50,18 @@
 
         @if (!string.IsNullOrWhiteSpace(deleteError))
         {
-            <div class="alert alert-warning alert-dismissible fade show mom-alert-box" role="alert">
-                <div class="d-flex align-items-start gap-3">
-                    <i class="bi bi-exclamation-triangle-fill fs-4"></i>
-                    <div>
-                        <div class="fw-bold">Warning</div>
-                        <div>@deleteError</div>
+            <div class="alert alert-warning alert-dismissible fade show mom-alert-box mom-alert-warning" role="alert">
+                <div class="mom-alert-body">
+                    <div class="mom-alert-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="mom-alert-copy">
+                        <div class="mom-alert-kicker">Warning</div>
+                        <div class="mom-alert-text">@deleteError</div>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
     </div>
-
-    <style>
-        .mom-inline-alerts {
-            margin-bottom: 20px;
-        }
-
-        .mom-alert-box {
-            border: 0;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-            margin-bottom: 12px;
-            padding: 14px 18px;
-        }
-
-        .mom-inline-alerts .alert-success {
-            background: linear-gradient(90deg, #dff8e8, #d1f6e0);
-            color: #15803d;
-            border-left: 4px solid #17c964;
-        }
-
-        .mom-inline-alerts .alert-danger {
-            background: linear-gradient(90deg, #ffe2e5, #ffd7db);
-            color: #c62828;
-            border-left: 4px solid #ef4444;
-        }
-
-        .mom-inline-alerts .alert-warning {
-            background: linear-gradient(90deg, #fff4d6, #ffefc2);
-            color: #b45309;
-            border-left: 4px solid #f59e0b;
-        }
-    </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(function () {
-                document.querySelectorAll('.mom-alert-box').forEach(function (alertElement) {
-                    if (window.bootstrap) {
-                        bootstrap.Alert.getOrCreateInstance(alertElement).close();
-                    }
-                });
-            }, 3500);
-        });
-    </script>
 }

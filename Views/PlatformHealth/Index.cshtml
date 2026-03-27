@@ -1,0 +1,100 @@
+@model Meeting_Of_Minutes.Models.PlatformHealthViewModel
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "Platform Health - Meeting Of Minutes";
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Platform Health" })
+
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-heart-pulse"></i>Platform Operations</div>
+            <h1 class="list-title">Platform Health</h1>
+            <p class="list-subtitle">Review database readiness, onboarding delivery posture, filesystem access and platform-wide account risk from one Super Admin console.</p>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">Current status</div>
+            <h2 class="list-note-title">@(Model.DatabaseHealthy && Model.FileStorageHealthy ? "Core platform services are currently healthy." : "One or more platform services need attention.")</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Database connectivity and core table checks are validated live.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Invite delivery is checked against SMTP configuration or preview fallback.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Operational flags highlight stale invites, temp passwords and admin risk.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <div class="mom-overview-grid mb-4">
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "purple", IconClass = "bi bi-buildings", Tag = "Companies", Value = Model.TotalCompanies.ToString(), Label = "Tracked companies" })
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "blue", IconClass = "bi bi-people", Tag = "Users", Value = Model.TotalUsers.ToString(), Label = "Platform users" })
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "amber", IconClass = "bi bi-envelope-paper", Tag = "Open Invites", Value = Model.ActiveInvites.ToString(), Label = "Invite links still active" })
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "green", IconClass = "bi bi-key", Tag = "Temporary", Value = Model.TemporaryPasswordUsers.ToString(), Label = "Users on temp credentials" })
+    </div>
+
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Service checks</h3>
+                <p class="list-surface-meta">Live operational checks for the platform dependencies this application relies on.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="list-table-card h-100 p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">Database</h5>
+                        <span class="badge @(Model.DatabaseHealthy ? "bg-success-subtle text-success border border-success-subtle" : "bg-danger-subtle text-danger border border-danger-subtle")">@(Model.DatabaseHealthy ? "Healthy" : "Issue")</span>
+                    </div>
+                    <p class="text-muted mb-0">@Model.DatabaseMessage</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="list-table-card h-100 p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">Invite Delivery</h5>
+                        <span class="badge @(Model.InviteDeliveryConfigured ? "bg-success-subtle text-success border border-success-subtle" : "bg-warning-subtle text-warning border border-warning-subtle")">@(Model.InviteDeliveryConfigured ? "SMTP Ready" : "Preview Fallback")</span>
+                    </div>
+                    <p class="text-muted mb-0">@Model.InviteDeliveryMessage</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="list-table-card h-100 p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">File Storage</h5>
+                        <span class="badge @(Model.FileStorageHealthy ? "bg-success-subtle text-success border border-success-subtle" : "bg-danger-subtle text-danger border border-danger-subtle")">@(Model.FileStorageHealthy ? "Healthy" : "Issue")</span>
+                    </div>
+                    <p class="text-muted mb-0">@Model.FileStorageMessage</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="list-surface mt-4">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Operational Flags</h3>
+                <p class="list-surface-meta">Issues that deserve manual attention before they become support problems.</p>
+            </div>
+            <div class="list-status-chip">@Model.OperationalFlags.Count flags</div>
+        </div>
+
+        <div class="list-table-card p-4">
+            @if (Model.OperationalFlags.Count == 0)
+            {
+                <div class="list-empty">No operational flags are currently open.</div>
+            }
+            else
+            {
+                <ul class="list-note-list mb-0">
+                    @foreach (var flag in Model.OperationalFlags)
+                    {
+                        <li><i class="bi bi-exclamation-circle"></i><span>@flag</span></li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+</div>

@@ -1,6 +1,9 @@
 using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Security;
+using Meeting_Of_Minutes.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using System.Net.Mail;
 using System.Data;
 
 namespace Meeting_Of_Minutes.Controllers
@@ -59,6 +62,12 @@ namespace Meeting_Of_Minutes.Controllers
                 return RedirectToAction("Profile");
             }
 
+            if (!IsValidEmailAddress(requestedEmail))
+            {
+                TempData["ErrorMessage"] = "Enter a valid email address.";
+                return RedirectToAction("Profile");
+            }
+
             bool hasChange =
                 !string.Equals(model.UserName, requestedUserName, StringComparison.Ordinal) ||
                 !string.Equals(model.Email, requestedEmail, StringComparison.OrdinalIgnoreCase) ||
@@ -77,22 +86,11 @@ namespace Meeting_Of_Minutes.Controllers
                 return RedirectToAction("Profile");
             }
 
-            string uploadsFolder = Path.Combine(_environment.WebRootPath, "profile-documents");
-            if (!Directory.Exists(uploadsFolder))
+            if (!FileSecurityService.TrySaveDocument(_environment, proofDocument, "profile-documents", $"profile_{model.UserID}", out string documentPath, out string uploadError))
             {
-                Directory.CreateDirectory(uploadsFolder);
+                TempData["ErrorMessage"] = uploadError;
+                return RedirectToAction("Profile");
             }
-
-            string extension = Path.GetExtension(proofDocument.FileName);
-            string fileName = $"profile_{model.UserID}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid():N}{extension}";
-            string filePath = Path.Combine(uploadsFolder, fileName);
-
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                proofDocument.CopyTo(fileStream);
-            }
-
-            string documentPath = "/profile-documents/" + fileName;
 
             SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             con.Open();
@@ -118,6 +116,7 @@ namespace Meeting_Of_Minutes.Controllers
                 "Profile update requested",
                 $"{model.UserName} requested profile update approval.",
                 model.UserID);
+            AuditLogService.Log(model.CompanyName, model.UserID, model.UserName, model.UserRole, "Submit", "ProfileUpdateRequest", model.UserID.ToString(), "Profile update request submitted", $"{model.UserName} submitted a profile update request.");
 
             TempData["SuccessMessage"] = "Profile update request sent successfully.";
             return RedirectToAction("Profile");
@@ -182,7 +181,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ApproveProfileUpdateRequest(int profileUpdateRequestID, string? adminRemarks)
+        public IActionResult ApproveProfileUpdateRequest(int profileUpdateRequestID, string? adminRemarks, string? returnUrl)
         {
             if (!IsAdminUser())
             {
@@ -209,20 +208,21 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.Parameters.AddWithValue("@AdminRemarks", string.IsNullOrWhiteSpace(adminRemarks) ? DBNull.Value : adminRemarks);
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(HttpContext.Session.GetString("CompanyName"), adminUserId.Value, HttpContext.Session.GetString("UserName"), HttpContext.Session.GetString("UserRole"), "Approve", "ProfileUpdateRequest", profileUpdateRequestID.ToString(), "Profile request approved", $"Profile update request #{profileUpdateRequestID} was approved.");
 
                 TempData["SuccessMessage"] = "Profile update approved successfully.";
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Approve failed: " + ex.Message;
+                TempData["ErrorMessage"] = "Approve failed. Please try again.";
             }
 
-            return RedirectToAction("ProfileUpdateRequestList");
+            return RedirectToLocal(returnUrl, "ProfileUpdateRequestList");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RejectProfileUpdateRequest(int profileUpdateRequestID, string? adminRemarks)
+        public IActionResult RejectProfileUpdateRequest(int profileUpdateRequestID, string? adminRemarks, string? returnUrl)
         {
             if (!IsAdminUser())
             {
@@ -247,9 +247,112 @@ namespace Meeting_Of_Minutes.Controllers
             cmd.Parameters.AddWithValue("@AdminRemarks", string.IsNullOrWhiteSpace(adminRemarks) ? DBNull.Value : adminRemarks);
             cmd.ExecuteNonQuery();
             con.Close();
+            AuditLogService.Log(HttpContext.Session.GetString("CompanyName"), adminUserId.Value, HttpContext.Session.GetString("UserName"), HttpContext.Session.GetString("UserRole"), "Reject", "ProfileUpdateRequest", profileUpdateRequestID.ToString(), "Profile request rejected", $"Profile update request #{profileUpdateRequestID} was rejected.");
 
             TempData["SuccessMessage"] = "Profile update rejected.";
-            return RedirectToAction("ProfileUpdateRequestList");
+            return RedirectToLocal(returnUrl, "ProfileUpdateRequestList");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult BulkApproveProfileUpdateRequests(List<int>? selectedRequestIds, string? adminRemarks, string? returnUrl)
+        {
+            if (!IsAdminUser())
+            {
+                return RedirectToAction("Profile");
+            }
+
+            int? adminUserId = HttpContext.Session.GetInt32("UserID");
+            if (!adminUserId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (selectedRequestIds == null || selectedRequestIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Select at least one profile request.";
+                return RedirectToLocal(returnUrl, "ProfileUpdateRequestList");
+            }
+
+            int successCount = 0;
+
+            foreach (int requestId in selectedRequestIds.Distinct())
+            {
+                try
+                {
+                    using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+                    using SqlCommand cmd = new SqlCommand("PR_MST_ProfileUpdateRequest_Approve", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ProfileUpdateRequestID", requestId);
+                    cmd.Parameters.AddWithValue("@AdminUserID", adminUserId.Value);
+                    cmd.Parameters.AddWithValue("@AdminRemarks", string.IsNullOrWhiteSpace(adminRemarks) ? DBNull.Value : adminRemarks);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+
+                    AuditLogService.Log(HttpContext.Session.GetString("CompanyName"), adminUserId.Value, HttpContext.Session.GetString("UserName"), HttpContext.Session.GetString("UserRole"), "Approve", "ProfileUpdateRequest", requestId.ToString(), "Profile request approved", $"Profile update request #{requestId} was approved in bulk.");
+                    successCount++;
+                }
+                catch
+                {
+                }
+            }
+
+            TempData[successCount > 0 ? "SuccessMessage" : "ErrorMessage"] = successCount > 0
+                ? $"{successCount} profile request(s) approved successfully."
+                : "Bulk approve failed for the selected profile requests.";
+
+            return RedirectToLocal(returnUrl, "ProfileUpdateRequestList");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult BulkRejectProfileUpdateRequests(List<int>? selectedRequestIds, string? adminRemarks, string? returnUrl)
+        {
+            if (!IsAdminUser())
+            {
+                return RedirectToAction("Profile");
+            }
+
+            int? adminUserId = HttpContext.Session.GetInt32("UserID");
+            if (!adminUserId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (selectedRequestIds == null || selectedRequestIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Select at least one profile request.";
+                return RedirectToLocal(returnUrl, "ProfileUpdateRequestList");
+            }
+
+            int successCount = 0;
+
+            foreach (int requestId in selectedRequestIds.Distinct())
+            {
+                try
+                {
+                    using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+                    using SqlCommand cmd = new SqlCommand("PR_MST_ProfileUpdateRequest_Reject", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@ProfileUpdateRequestID", requestId);
+                    cmd.Parameters.AddWithValue("@AdminUserID", adminUserId.Value);
+                    cmd.Parameters.AddWithValue("@AdminRemarks", string.IsNullOrWhiteSpace(adminRemarks) ? DBNull.Value : adminRemarks);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+
+                    AuditLogService.Log(HttpContext.Session.GetString("CompanyName"), adminUserId.Value, HttpContext.Session.GetString("UserName"), HttpContext.Session.GetString("UserRole"), "Reject", "ProfileUpdateRequest", requestId.ToString(), "Profile request rejected", $"Profile update request #{requestId} was rejected in bulk.");
+                    successCount++;
+                }
+                catch
+                {
+                }
+            }
+
+            TempData[successCount > 0 ? "SuccessMessage" : "ErrorMessage"] = successCount > 0
+                ? $"{successCount} profile request(s) rejected."
+                : "Bulk reject failed for the selected profile requests.";
+
+            return RedirectToLocal(returnUrl, "ProfileUpdateRequestList");
         }
 
         [HttpPost]
@@ -291,12 +394,23 @@ namespace Meeting_Of_Minutes.Controllers
 
             SqlCommand checkCmd = new SqlCommand();
             checkCmd.Connection = con;
-            checkCmd.CommandText = "SELECT Password FROM MST_User WHERE UserID = @UserID";
+            checkCmd.CommandText = "SELECT Password, PasswordHash FROM MST_User WHERE UserID = @UserID";
             checkCmd.CommandType = CommandType.Text;
             checkCmd.Parameters.AddWithValue("@UserID", model.UserID);
 
-            string currentPassword = Convert.ToString(checkCmd.ExecuteScalar()) ?? string.Empty;
-            if (currentPassword != formModel.CurrentPassword)
+            string storedPassword = string.Empty;
+            string storedPasswordHash = string.Empty;
+            SqlDataReader reader = checkCmd.ExecuteReader();
+            if (reader.Read())
+            {
+                storedPassword = reader["Password"].ToString() ?? string.Empty;
+                storedPasswordHash = reader["PasswordHash"].ToString() ?? string.Empty;
+            }
+            reader.Close();
+
+            bool needsUpgrade;
+            bool currentPasswordValid = PasswordSecurity.VerifyPassword(storedPasswordHash, storedPassword, formModel.CurrentPassword, out needsUpgrade);
+            if (!currentPasswordValid)
             {
                 con.Close();
                 TempData["ErrorMessage"] = "Current password is incorrect.";
@@ -308,7 +422,8 @@ namespace Meeting_Of_Minutes.Controllers
             cmd.CommandText = "PR_MST_User_UpdatePasswordByPK";
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@UserID", model.UserID);
-            cmd.Parameters.AddWithValue("@NewPassword", formModel.NewPassword);
+            cmd.Parameters.AddWithValue("@NewPassword", string.Empty);
+            cmd.Parameters.AddWithValue("@NewPasswordHash", PasswordSecurity.HashPassword(formModel.NewPassword));
             cmd.ExecuteNonQuery();
             con.Close();
 
@@ -318,6 +433,8 @@ namespace Meeting_Of_Minutes.Controllers
                 "Password changed",
                 $"{model.UserName} changed account password.",
                 model.UserID);
+            HttpContext.Session.Remove("ForcePasswordReset");
+            AuditLogService.Log(model.CompanyName, model.UserID, model.UserName, model.UserRole, "PasswordUpdate", "UserAccount", model.UserID.ToString(), "Password updated", $"{model.UserName} changed account password.");
 
             TempData["SuccessMessage"] = "Password updated successfully.";
             return RedirectToAction("Profile");
@@ -461,7 +578,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         public bool IsAdminUser()
         {
-            return string.Equals(HttpContext.Session.GetString("UserRole"), "Admin", StringComparison.OrdinalIgnoreCase);
+            return RoleAccessService.IsAdminOrHigher(HttpContext.Session.GetString("UserRole"));
         }
 
         public void InsertAdminNotification(string? companyName, string notificationType, string title, string message, int userId)
@@ -481,6 +598,29 @@ namespace Meeting_Of_Minutes.Controllers
             cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
             cmd.ExecuteNonQuery();
             con.Close();
+        }
+
+        public IActionResult RedirectToLocal(string? returnUrl, string fallbackAction)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction(fallbackAction);
+        }
+
+        private bool IsValidEmailAddress(string email)
+        {
+            try
+            {
+                _ = new MailAddress(email);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         #endregion
     }

@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Sign Up | Meeting Of Minutes</title>
+    <title>Company Super Admin Sign Up | Meeting Of Minutes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -231,13 +231,13 @@
             </div>
 
             <div>
-                <h1>Create the admin workspace the whole company will run on.</h1>
-                <p>Admins control departments, staff onboarding, meetings, attendance, profile approvals and company-scoped access.</p>
+                <h1>Create the Super Admin for your company.</h1>
+                <p>Each company can have exactly one Super Admin. That account controls Admin and User creation, role changes and password recovery only inside that company.</p>
 
                 <div class="auth-points">
                     <div class="auth-point">
                         <i class="bi bi-building"></i>
-                        <div><strong>Company-scoped setup</strong><br>Every department, meeting and user flow stays attached to the admin company.</div>
+                        <div><strong>One per company</strong><br>Once a company Super Admin exists, all further Admin and User accounts are created from secured User Management.</div>
                     </div>
                     <div class="auth-point">
                         <i class="bi bi-people"></i>
@@ -253,19 +253,19 @@
 
         <section class="auth-panel">
             <div class="auth-card">
-                <div class="auth-eyebrow"><i class="bi bi-person-plus"></i> Admin Registration</div>
-                <div class="auth-title">Create admin account</div>
-                <div class="auth-subtitle">Only admin signup is available here. User accounts are created automatically when staff members are added.</div>
+                <div class="auth-eyebrow"><i class="bi bi-person-plus"></i> Company Super Admin</div>
+                <div class="auth-title">Create company Super Admin</div>
+                <div class="auth-subtitle">Choose the company that still needs a Super Admin. If that company already has one, signup will be blocked automatically.</div>
 
                 <form method="post" asp-controller="Auth" asp-action="Register">
                     @Html.AntiForgeryToken()
-                    <input asp-for="UserRole" type="hidden" value="Admin" />
+                    <input asp-for="UserRole" type="hidden" value="SuperAdmin" />
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="CompanyName" class="auth-label">Company</label>
-                            <input asp-for="CompanyName" class="form-control auth-control" placeholder="Enter company name" />
+                            <select asp-for="CompanyName" asp-items="ViewBag.CompanyDropDown" class="form-select auth-control">`r`n                                <option value="">Select company</option>`r`n                            </select>
                             <span asp-validation-for="CompanyName" class="text-danger"></span>
                         </div>
 
@@ -323,7 +323,7 @@
                         <div class="rule" id="ruleSpecial"><i class="bi bi-dot"></i> At least 1 special character (!#@@$...)</div>
                     </div>
 
-                    <button type="submit" class="btn auth-submit w-100 text-white">Create Admin</button>
+                    <button type="submit" class="btn auth-submit w-100 text-white">Create Super Admin</button>
                 </form>
 
                 <div class="text-center mt-3">
@@ -384,3 +384,4 @@
     </script>
 </body>
 </html>
+

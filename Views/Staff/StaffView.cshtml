@@ -1,4 +1,5 @@
 @model Meeting_Of_Minutes.Models.StaffModel
+@using Meeting_Of_Minutes.Services
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSViewStyles")
 @{
@@ -88,8 +89,8 @@
                         <div class="view-detail-value">@(string.IsNullOrWhiteSpace(Model.LoginUserName) ? "-" : Model.LoginUserName)</div>
                     </div>
                     <div class="view-detail-item">
-                        <span class="view-detail-label">Login Password</span>
-                        <div class="view-detail-value muted">@(!string.IsNullOrWhiteSpace(Model.LoginPassword) && Model.IsAutoPassword ? Model.LoginPassword : "Hidden (changed by user)")</div>
+                        <span class="view-detail-label">Password Status</span>
+                        <div class="view-detail-value muted">@(Model.IsAutoPassword ? "Securely stored. Visible only at creation time." : "Updated by user and securely hidden.")</div>
                     </div>
                     <div class="view-stat-tile">
                         <div class="view-stat-number">@Model.EnrolledMeetingsCount</div>
@@ -167,7 +168,7 @@
 
                     <div class="col-12">
                         <label class="form-label fw-semibold">Supporting Document</label>
-                        <input type="file" name="transferDocument" class="form-control" />
+                        <input type="file" name="transferDocument" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" />
                     </div>
 
                     <div class="col-12">
@@ -224,9 +225,15 @@
                                 {
                                     <div class="view-list-meta mt-1">Admin Remarks: @request.AdminRemarks</div>
                                 }
-                                <div class="mt-2">
-                                    <a href="@request.DocumentPath" target="_blank" class="btn btn-light btn-sm border">View Document</a>
-                                </div>
+                                @{
+                                    string safeDocumentPath = FileSecurityService.SanitizeStoredDocumentPath(request.DocumentPath);
+                                }
+                                @if (!string.IsNullOrWhiteSpace(safeDocumentPath))
+                                {
+                                    <div class="mt-2">
+                                        <a href="@safeDocumentPath" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm border">View Document</a>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>

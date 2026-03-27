@@ -1,4 +1,5 @@
-using Meeting_Of_Minutes.Models;
+﻿using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data;
@@ -65,26 +66,18 @@ namespace Meeting_Of_Minutes.Controllers
 
 
         [HttpGet]
-        public IActionResult MeetingsList()
+        public IActionResult MeetingsList(string? searchtext, int page = 1, string sortBy = "date", string sortDirection = "desc")
         {
-            List<MeetingsModel> meetingsList = GetAllMeetings(null);
-            return View(meetingsList);
+            searchtext = string.IsNullOrWhiteSpace(searchtext) ? null : searchtext;
+            ViewBag.searchtext = searchtext;
+            return View(BuildMeetingsPage(searchtext, page, sortBy, sortDirection));
         }
 
         [HttpPost]
         public IActionResult MeetingsList(IFormCollection formdata)
         {
             string? searchtext = formdata["searchtext"].ToString();
-
-            if (string.IsNullOrWhiteSpace(searchtext))
-            {
-                searchtext = null;
-            }
-
-            ViewBag.searchtext = searchtext;
-
-            List<MeetingsModel> meetingsList = GetAllMeetings(searchtext);
-            return View(meetingsList);
+            return RedirectToAction(nameof(MeetingsList), new { searchtext });
         }
 
         public List<MeetingsModel> GetAllMeetings(string? searchtext)
@@ -139,6 +132,35 @@ namespace Meeting_Of_Minutes.Controllers
             con.Close();
 
             return meetingsList;
+        }
+
+        public PagedListViewModel<MeetingsModel> BuildMeetingsPage(string? searchtext, int page, string? sortBy, string? sortDirection)
+        {
+            IEnumerable<MeetingsModel> query = GetAllMeetings(searchtext);
+            bool isDesc = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+            query = (sortBy ?? "date").ToLowerInvariant() switch
+            {
+                "type" => isDesc ? query.OrderByDescending(x => x.MeetingTypeName).ThenByDescending(x => x.MeetingDate) : query.OrderBy(x => x.MeetingTypeName).ThenBy(x => x.MeetingDate),
+                "department" => isDesc ? query.OrderByDescending(x => x.DepartmentName).ThenByDescending(x => x.MeetingDate) : query.OrderBy(x => x.DepartmentName).ThenBy(x => x.MeetingDate),
+                "status" => isDesc ? query.OrderByDescending(GetMeetingStatusRank).ThenByDescending(x => x.MeetingDate) : query.OrderBy(GetMeetingStatusRank).ThenBy(x => x.MeetingDate),
+                _ => isDesc ? query.OrderByDescending(x => x.MeetingDate) : query.OrderBy(x => x.MeetingDate)
+            };
+
+            List<MeetingsModel> ordered = query.ToList();
+            const int pageSize = 10;
+            page = Math.Max(page, 1);
+
+            return new PagedListViewModel<MeetingsModel>
+            {
+                Items = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = ordered.Count,
+                SearchText = searchtext,
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
         }
 
 
@@ -260,6 +282,16 @@ namespace Meeting_Of_Minutes.Controllers
             cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
             cmd.ExecuteNonQuery();
             con.Close();
+            AuditLogService.Log(
+                GetCurrentCompanyName(),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "AddMember",
+                "Meeting",
+                viewModel.NewMember.MeetingID.ToString(),
+                "Meeting member added",
+                $"Staff #{viewModel.NewMember.StaffID} was added to meeting #{viewModel.NewMember.MeetingID}.");
 
             TempData["SuccessMessage"] = "Meeting member added successfully.";
             return RedirectToAction("MeetingsDetails", new { id = viewModel.NewMember.MeetingID });
@@ -286,6 +318,16 @@ namespace Meeting_Of_Minutes.Controllers
             con.Open();
             cmd.ExecuteNonQuery();
             con.Close();
+            AuditLogService.Log(
+                GetCurrentCompanyName(),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "AttendanceUpdate",
+                "Meeting",
+                MeetingID.ToString(),
+                "Meeting attendance updated",
+                $"Attendance for meeting member #{MeetingMemberID} was updated to {(IsPresent ? "Present" : "Absent")}.");
 
             TempData["SuccessMessage"] = "Attendance updated successfully.";
             return RedirectToAction("MeetingsDetails", new { id = MeetingID });
@@ -312,6 +354,16 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    GetCurrentCompanyName(),
+                    HttpContext.Session.GetInt32("UserID"),
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "ExcludeMember",
+                    "Meeting",
+                    MeetingID.ToString(),
+                    "Meeting member excluded",
+                    $"Meeting member #{MeetingMemberID} was excluded from meeting #{MeetingID}.");
 
                 TempData["SuccessMessage"] = "Meeting member deleted successfully.";
             }
@@ -376,11 +428,142 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                TempData["ErrorMessage"] = "Error exporting data. Please try again.";
                 return RedirectToAction("MeetingsList");
             }
+        }
+
+        public IActionResult DownloadImportTemplate()
+        {
+            byte[] content = ExcelImportService.BuildTemplate(
+                "MeetingsImport",
+                new[] { "MeetingDate", "MeetingTypeName", "DepartmentName", "MeetingVenueName", "MeetingDescription", "IncludeAllDepartmentsMembers" },
+                new List<IReadOnlyList<string>>
+                {
+                    new[] { "2026-04-05 10:30", "Daily Standup", "Human Resources", "Conference Room A", "Weekly review sync", "No" }
+                });
+
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MeetingsImportTemplate.xlsx");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ImportFromExcel(IFormFile? excelFile)
+        {
+            if (!IsAdmin())
+            {
+                return RedirectToAction("MeetingsList");
+            }
+
+            if (!ExcelImportService.IsExcelFile(excelFile))
+            {
+                TempData["ErrorMessage"] = $"Please upload a valid Excel file up to {ExcelImportService.MaxFileSizeBytes / (1024 * 1024)} MB.";
+                return RedirectToAction("MeetingsList");
+            }
+
+            if (!ExcelImportService.HasRequiredHeaders(excelFile!, new[] { "MeetingDate", "MeetingTypeName", "DepartmentName", "MeetingVenueName", "MeetingDescription", "IncludeAllDepartmentsMembers" }, out string headerMessage))
+            {
+                TempData["ErrorMessage"] = headerMessage;
+                return RedirectToAction("MeetingsList");
+            }
+
+            List<Dictionary<string, string>> rows = ExcelImportService.ReadRows(excelFile!);
+            if (rows.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Excel file is empty.";
+                return RedirectToAction("MeetingsList");
+            }
+
+            int importedCount = 0;
+            int skippedCount = 0;
+            List<ImportReportRowModel> reportRows = new List<ImportReportRowModel>();
+
+            using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            con.Open();
+
+            for (int index = 0; index < rows.Count; index++)
+            {
+                Dictionary<string, string> row = rows[index];
+                string meetingDateValue = ExcelImportService.GetValue(row, "MeetingDate");
+                string meetingTypeName = ExcelImportService.GetValue(row, "MeetingTypeName");
+                string departmentName = ExcelImportService.GetValue(row, "DepartmentName");
+                string meetingVenueName = ExcelImportService.GetValue(row, "MeetingVenueName");
+                string meetingDescription = ExcelImportService.GetValue(row, "MeetingDescription");
+                bool includeAllDepartments = ExcelImportService.ParseBoolean(ExcelImportService.GetValue(row, "IncludeAllDepartmentsMembers"));
+                string summary = $"{meetingDateValue} | {meetingTypeName} | {meetingDescription}";
+
+                if (!DateTime.TryParse(meetingDateValue, out DateTime meetingDate) ||
+                    string.IsNullOrWhiteSpace(meetingTypeName) ||
+                    string.IsNullOrWhiteSpace(meetingVenueName) ||
+                    (!includeAllDepartments && string.IsNullOrWhiteSpace(departmentName)))
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "MeetingDate, MeetingTypeName, MeetingVenueName and DepartmentName are required for normal meeting import.", DataSummary = summary });
+                    continue;
+                }
+
+                int? meetingTypeId = GetLookupIdByName(con, "MOM_MeetingType", "MeetingTypeID", "MeetingTypeName", meetingTypeName, GetCurrentCompanyName());
+                int? meetingVenueId = GetLookupIdByName(con, "MOM_MeetingVenue", "MeetingVenueID", "MeetingVenueName", meetingVenueName, GetCurrentCompanyName());
+                int? departmentId = includeAllDepartments
+                    ? GetFirstDepartmentIdForCompany()
+                    : GetLookupIdByName(con, "MOM_Department", "DepartmentID", "DepartmentName", departmentName, GetCurrentCompanyName());
+
+                if (!meetingTypeId.HasValue || !meetingVenueId.HasValue || !departmentId.HasValue)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Meeting type, venue, or department could not be resolved in current company.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand checkCmd = new SqlCommand(@"SELECT COUNT(*) FROM MOM_Meetings
+                                                            WHERE MeetingDate = @MeetingDate
+                                                              AND MeetingVenueID = @MeetingVenueID
+                                                              AND MeetingTypeID = @MeetingTypeID
+                                                              AND DepartmentID = @DepartmentID", con);
+                checkCmd.Parameters.AddWithValue("@MeetingDate", meetingDate);
+                checkCmd.Parameters.AddWithValue("@MeetingVenueID", meetingVenueId.Value);
+                checkCmd.Parameters.AddWithValue("@MeetingTypeID", meetingTypeId.Value);
+                checkCmd.Parameters.AddWithValue("@DepartmentID", departmentId.Value);
+
+                if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Meeting already exists with the same date, type, venue and department.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand cmd = new SqlCommand("PR_Meetings_Insert", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingDate", meetingDate);
+                cmd.Parameters.AddWithValue("@MeetingVenueID", meetingVenueId.Value);
+                cmd.Parameters.AddWithValue("@MeetingTypeID", meetingTypeId.Value);
+                cmd.Parameters.AddWithValue("@DepartmentID", departmentId.Value);
+                cmd.Parameters.AddWithValue("@MeetingDescription", meetingDescription);
+                cmd.Parameters.AddWithValue("@DocumentPath", string.Empty);
+                cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                int meetingId = Convert.ToInt32(cmd.ExecuteScalar());
+
+                AddDepartmentMembersToMeeting(con, meetingId, departmentId, includeAllDepartments);
+                importedCount++;
+                reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Imported", Message = includeAllDepartments ? "Meeting created and all department members were added." : "Meeting created and selected department members were added.", DataSummary = summary });
+            }
+
+            AuditLogService.Log(
+                GetCurrentCompanyName(),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "Import",
+                "Meeting",
+                null,
+                "Meetings imported from Excel",
+                $"{importedCount} meetings imported and {skippedCount} skipped.");
+
+            TempData["ImportReportPath"] = ImportReportService.SaveReport("MeetingsImport", GetCurrentCompanyName(), HttpContext.Session.GetInt32("UserID"), HttpContext.Session.GetString("UserName"), importedCount, skippedCount, reportRows);
+            TempData["SuccessMessage"] = $"Meeting import completed. Imported: {importedCount}, Skipped: {skippedCount}. Department members were added automatically.";
+            return RedirectToAction("MeetingsList");
         }
 
         [HttpPost]
@@ -423,26 +606,24 @@ namespace Meeting_Of_Minutes.Controllers
                 model.IncludeAllDepartmentsMembers = true;
             }
 
-            string filePath = model.DocumentPath ?? string.Empty;
+            string filePath = string.Empty;
+            bool isNewMeeting = model.MeetingID == 0;
+
+            if (!isNewMeeting)
+            {
+                filePath = FileSecurityService.SanitizeStoredDocumentPath(GetExistingDocumentPath(model.MeetingID));
+            }
 
             if (model.DocumentFile != null)
             {
-                string folder = Path.Combine(_env.WebRootPath, "uploads");
-
-                if (!Directory.Exists(folder))
+                if (!FileSecurityService.TrySaveDocument(_env, model.DocumentFile, "uploads", "meeting", out filePath, out string uploadError))
                 {
-                    Directory.CreateDirectory(folder);
+                    ModelState.AddModelError("DocumentFile", uploadError);
+                    ViewBag.DepartmentDropDown = FillDepartmentDropDown();
+                    ViewBag.MeetingTypeDropDown = FillMeetingTypeDropDown();
+                    ViewBag.MeetingVenueDropDown = FillMeetingVenueDropdown();
+                    return View("MeetingsAddEdit", model);
                 }
-
-                string fileName = Guid.NewGuid() + Path.GetExtension(model.DocumentFile.FileName);
-                string fullPath = Path.Combine(folder, fileName);
-
-                using (FileStream stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    model.DocumentFile.CopyTo(stream);
-                }
-
-                filePath = "/uploads/" + fileName;
             }
 
             SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
@@ -503,8 +684,18 @@ namespace Meeting_Of_Minutes.Controllers
 
             AddDepartmentMembersToMeeting(con, meetingId, model.DepartmentID, model.IncludeAllDepartmentsMembers);
             con.Close();
+            AuditLogService.Log(
+                GetCurrentCompanyName(),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                isNewMeeting ? "Create" : "Update",
+                "Meeting",
+                meetingId.ToString(),
+                isNewMeeting ? "Meeting scheduled" : "Meeting updated",
+                $"{model.MeetingDescription} was {(isNewMeeting ? "scheduled" : "updated")} for {(model.IncludeAllDepartmentsMembers ? "all company departments" : "the selected department")}.");
 
-            TempData["SuccessMessage"] = model.MeetingID == 0
+            TempData["SuccessMessage"] = isNewMeeting
                 ? "Meeting added successfully. Department members added automatically."
                 : "Meeting updated successfully. Department members synced automatically.";
 
@@ -568,6 +759,16 @@ namespace Meeting_Of_Minutes.Controllers
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    GetCurrentCompanyName(),
+                    HttpContext.Session.GetInt32("UserID"),
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Cancel",
+                    "Meeting",
+                    MeetingID.ToString(),
+                    "Meeting cancelled",
+                    $"Meeting #{MeetingID} was cancelled.");
                 TempData["SuccessMessage"] = "Meeting cancelled successfully.";
             }
             catch
@@ -730,6 +931,21 @@ namespace Meeting_Of_Minutes.Controllers
             return list;
         }
 
+        public int? GetLookupIdByName(SqlConnection con, string tableName, string idColumn, string nameColumn, string lookupValue, string companyName)
+        {
+            if (!IsSafeLookup(tableName, idColumn, nameColumn))
+            {
+                throw new InvalidOperationException("Unsupported lookup requested.");
+            }
+
+            string sql = $"SELECT TOP 1 {idColumn} FROM {tableName} WHERE {nameColumn} = @LookupValue AND CompanyName = @CompanyName";
+            using SqlCommand cmd = new SqlCommand(sql, con);
+            cmd.Parameters.AddWithValue("@LookupValue", lookupValue);
+            cmd.Parameters.AddWithValue("@CompanyName", companyName);
+            object? result = cmd.ExecuteScalar();
+            return result == null || result == DBNull.Value ? null : Convert.ToInt32(result);
+        }
+
         public string GetSelectedText(List<SelectListItem> list, int? id)
         {
             if (!id.HasValue)
@@ -750,7 +966,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         public bool IsAdmin()
         {
-            return string.Equals(HttpContext.Session.GetString("UserRole"), "Admin", StringComparison.OrdinalIgnoreCase);
+            return RoleAccessService.IsAdminOrHigher(HttpContext.Session.GetString("UserRole"));
         }
 
         public bool CanAccessDepartmentMeeting(int? departmentId)
@@ -834,6 +1050,21 @@ namespace Meeting_Of_Minutes.Controllers
             con.Close();
 
             return count > 0;
+        }
+
+        public int GetMeetingStatusRank(MeetingsModel meeting)
+        {
+            if (meeting.IsCancelled)
+            {
+                return 2;
+            }
+
+            if (meeting.MeetingDate.HasValue && meeting.MeetingDate.Value > DateTime.Now)
+            {
+                return 0;
+            }
+
+            return 1;
         }
 
         public HashSet<int> GetAllowedDepartmentIdsForCompany()
@@ -973,9 +1204,30 @@ namespace Meeting_Of_Minutes.Controllers
 
             return staffIds;
         }
+
+        private bool IsSafeLookup(string tableName, string idColumn, string nameColumn)
+        {
+            return (tableName, idColumn, nameColumn) switch
+            {
+                ("MOM_MeetingType", "MeetingTypeID", "MeetingTypeName") => true,
+                ("MOM_MeetingVenue", "MeetingVenueID", "MeetingVenueName") => true,
+                ("MOM_Department", "DepartmentID", "DepartmentName") => true,
+                _ => false
+            };
+        }
+
+        private string GetExistingDocumentPath(int meetingId)
+        {
+            using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            using SqlCommand cmd = new SqlCommand("SELECT TOP 1 DocumentPath FROM MOM_Meetings WHERE MeetingID = @MeetingID", con);
+            cmd.Parameters.AddWithValue("@MeetingID", meetingId);
+            con.Open();
+            return Convert.ToString(cmd.ExecuteScalar()) ?? string.Empty;
+        }
         #endregion
     }
 }
+
 
 
 

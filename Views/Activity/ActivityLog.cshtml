@@ -1,0 +1,155 @@
+@model List<Meeting_Of_Minutes.Models.AuditLogModel>
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "Activity Log - Meeting Of Minutes";
+    bool isAdminUser = ViewBag.IsAdminUser != null && (bool)ViewBag.IsAdminUser;
+    string searchText = ViewBag.SearchText as string ?? string.Empty;
+    string selectedActionType = ViewBag.ActionType as string ?? string.Empty;
+    string selectedEntityName = ViewBag.EntityName as string ?? string.Empty;
+    List<string> actionTypes = ViewBag.ActionTypes as List<string> ?? new List<string>();
+    List<string> entityNames = ViewBag.EntityNames as List<string> ?? new List<string>();
+    int criticalCount = Model.Count(x => x.ActionType is "Delete" or "Cancel" or "Reject" or "LoginFailed");
+    int changeCount = Model.Count(x => x.ActionType is "Create" or "Update" or "Approve" or "PasswordUpdate");
+}
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
+            <li class="breadcrumb-item active">Activity Log</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-activity"></i> Operational Memory</div>
+            <h1 class="list-title">Activity Log</h1>
+            <p class="list-subtitle">Track important account, approval and staff actions through a reviewable operational timeline instead of relying on memory or guesswork.</p>
+            <div class="d-flex gap-2 flex-wrap mt-3">
+                <span class="list-status-chip">Total: @Model.Count</span>
+                <span class="list-status-chip">Change Events: @changeCount</span>
+                <span class="list-status-chip">Critical Events: @criticalCount</span>
+            </div>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">Scope</div>
+            <h2 class="list-note-title">@Model.Count activity records are currently visible in this workspace.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>@(isAdminUser ? "Admins see company-wide operational activity." : "Users see their own account and request activity.")</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Every critical action should eventually leave a trail here.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>This is the foundation for enterprise-grade accountability.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Recent Activity</h3>
+                <p class="list-surface-meta">Review the latest operational actions recorded by the platform.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="ExportToExcel" asp-route-searchtext="@searchText" asp-route-actionType="@selectedActionType" asp-route-entityName="@selectedEntityName" class="btn btn-primary">
+                    <i class="bi bi-download me-2"></i>Export Activity
+                </a>
+                <div class="list-status-chip">Visible Records: @Model.Count</div>
+            </div>
+        </div>
+
+        <div class="mom-search-card">
+            <form asp-action="ActivityLog" method="get" class="mom-search-form">
+                <div class="mom-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchtext" value="@searchText" class="form-control" placeholder="Search title, description, user, or entity..." />
+                </div>
+                <select name="actionType" class="form-select" style="max-width: 190px;">
+                    <option value="">All Actions</option>
+                    @foreach (string action in actionTypes)
+                    {
+                        if (selectedActionType == action)
+                        {
+                            <option value="@action" selected>@action</option>
+                        }
+                        else
+                        {
+                            <option value="@action">@action</option>
+                        }
+                    }
+                </select>
+                <select name="entityName" class="form-select" style="max-width: 210px;">
+                    <option value="">All Entities</option>
+                    @foreach (string entity in entityNames)
+                    {
+                        if (selectedEntityName == entity)
+                        {
+                            <option value="@entity" selected>@entity</option>
+                        }
+                        else
+                        {
+                            <option value="@entity">@entity</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-2"></i>Apply
+                </button>
+                <a asp-action="ActivityLog" class="btn btn-light border">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                </a>
+            </form>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
+                {
+                    <div class="list-empty">No activity logs found.</div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Entity</th>
+                                <th>Summary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-semibold text-dark">@log.Created.ToString("dd MMM yyyy")</div>
+                                        <div class="small text-muted">@log.Created.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@log.UserName</div>
+                                        <div class="small text-muted">@log.UserRole</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(log.ActionType == "Delete" || log.ActionType == "Cancel" || log.ActionType == "Reject" || log.ActionType == "LoginFailed" ? "bg-danger-subtle text-danger border border-danger-subtle" : log.ActionType == "Create" || log.ActionType == "Approve" ? "bg-success-subtle text-success border border-success-subtle" : "bg-light text-dark border")">@log.ActionType</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@log.EntityName</div>
+                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(log.EntityID) ? "-" : log.EntityID)</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@log.Title</div>
+                                        <div class="small text-muted">@log.Description</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
+</div>

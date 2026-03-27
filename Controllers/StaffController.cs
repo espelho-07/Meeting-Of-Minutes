@@ -1,4 +1,6 @@
-using Meeting_Of_Minutes.Models;
+﻿using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Security;
+using Meeting_Of_Minutes.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -9,6 +11,13 @@ namespace Meeting_Of_Minutes.Controllers
 {
     public class StaffController : Controller
     {
+        private readonly IWebHostEnvironment _environment;
+
+        public StaffController(IWebHostEnvironment environment)
+        {
+            _environment = environment;
+        }
+
         #region Actions
         public IActionResult StaffAddEdit(int? id)
         {
@@ -59,15 +68,16 @@ namespace Meeting_Of_Minutes.Controllers
 
 
         [HttpGet]
-        public IActionResult StaffList()
+        public IActionResult StaffList(string? searchtext, int page = 1, string sortBy = "name", string sortDirection = "asc")
         {
             if (!IsAdminUser())
             {
                 return RedirectToAction("DashBoard", "DashBoard");
             }
 
-            List<StaffModel> staffList = GetAllStaff(null);
-            return View(staffList);
+            searchtext = string.IsNullOrWhiteSpace(searchtext) ? null : searchtext;
+            ViewBag.searchtext = searchtext;
+            return View(BuildStaffPage(searchtext, page, sortBy, sortDirection));
         }
 
         [HttpPost]
@@ -79,16 +89,7 @@ namespace Meeting_Of_Minutes.Controllers
             }
 
             string? searchtext = formdata["searchtext"].ToString();
-
-            if (string.IsNullOrWhiteSpace(searchtext))
-            {
-                searchtext = null;
-            }
-
-            ViewBag.searchtext = searchtext;
-
-            List<StaffModel> staffList = GetAllStaff(searchtext);
-            return View(staffList);
+            return RedirectToAction(nameof(StaffList), new { searchtext });
         }
 
         public List<StaffModel> GetAllStaff(string? searchtext)
@@ -135,6 +136,34 @@ namespace Meeting_Of_Minutes.Controllers
             con.Close();
 
             return staffList;
+        }
+
+        public PagedListViewModel<StaffModel> BuildStaffPage(string? searchtext, int page, string? sortBy, string? sortDirection)
+        {
+            IEnumerable<StaffModel> query = GetAllStaff(searchtext);
+            bool isDesc = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+            query = (sortBy ?? "name").ToLowerInvariant() switch
+            {
+                "department" => isDesc ? query.OrderByDescending(x => x.DepartmentName).ThenBy(x => x.StaffName) : query.OrderBy(x => x.DepartmentName).ThenBy(x => x.StaffName),
+                "email" => isDesc ? query.OrderByDescending(x => x.EmailAddress).ThenBy(x => x.StaffName) : query.OrderBy(x => x.EmailAddress).ThenBy(x => x.StaffName),
+                _ => isDesc ? query.OrderByDescending(x => x.StaffName) : query.OrderBy(x => x.StaffName)
+            };
+
+            List<StaffModel> ordered = query.ToList();
+            const int pageSize = 10;
+            page = Math.Max(page, 1);
+
+            return new PagedListViewModel<StaffModel>
+            {
+                Items = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = ordered.Count,
+                SearchText = searchtext,
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
         }
 
         public IActionResult StaffView(int id)
@@ -257,37 +286,28 @@ namespace Meeting_Of_Minutes.Controllers
 
             try
             {
-                DataTable dt = new DataTable();
-
-                SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
-                SqlCommand cmd = new SqlCommand();
-                cmd.Connection = con;
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandText = "PR_Staff_SelectAll";
-                cmd.Parameters.AddWithValue("@searchtext", DBNull.Value);
-
-                con.Open();
-                SqlDataReader dr = cmd.ExecuteReader();
-                dt.Load(dr);
-                dr.Close();
-                con.Close();
+                List<StaffModel> staffItems = GetAllStaff(null);
 
                 using (XLWorkbook workbook = new XLWorkbook())
                 {
                     var worksheet = workbook.Worksheets.Add("Staff");
-
-                    for (int i = 0; i < dt.Columns.Count; i++)
+                    string[] headers = { "StaffID", "DepartmentName", "CompanyName", "StaffName", "MobileNo", "EmailAddress", "Remarks" };
+                    for (int i = 0; i < headers.Length; i++)
                     {
-                        worksheet.Cell(1, i + 1).Value = dt.Columns[i].ColumnName;
+                        worksheet.Cell(1, i + 1).Value = headers[i];
                         worksheet.Cell(1, i + 1).Style.Font.Bold = true;
                     }
 
-                    for (int row = 0; row < dt.Rows.Count; row++)
+                    for (int row = 0; row < staffItems.Count; row++)
                     {
-                        for (int col = 0; col < dt.Columns.Count; col++)
-                        {
-                            worksheet.Cell(row + 2, col + 1).Value = dt.Rows[row][col]?.ToString();
-                        }
+                        StaffModel item = staffItems[row];
+                        worksheet.Cell(row + 2, 1).Value = item.StaffID;
+                        worksheet.Cell(row + 2, 2).Value = item.DepartmentName;
+                        worksheet.Cell(row + 2, 3).Value = item.CompanyName;
+                        worksheet.Cell(row + 2, 4).Value = item.StaffName;
+                        worksheet.Cell(row + 2, 5).Value = item.MobileNo;
+                        worksheet.Cell(row + 2, 6).Value = item.EmailAddress;
+                        worksheet.Cell(row + 2, 7).Value = item.Remarks;
                     }
 
                     worksheet.Columns().AdjustToContents();
@@ -301,11 +321,156 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                TempData["ErrorMessage"] = "Error exporting data. Please try again.";
                 return RedirectToAction("StaffList");
             }
+        }
+
+        public IActionResult DownloadImportTemplate()
+        {
+            byte[] content = ExcelImportService.BuildTemplate(
+                "StaffImport",
+                new[] { "DepartmentName", "StaffName", "MobileNo", "EmailAddress", "Remarks" },
+                new List<IReadOnlyList<string>>
+                {
+                    new[] { "Human Resources", "Neel Patel", "9876543210", "neel@example.com", "Core team member" }
+                });
+
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "StaffImportTemplate.xlsx");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ImportFromExcel(IFormFile? excelFile)
+        {
+            if (!IsAdminUser())
+            {
+                return RedirectToAction("DashBoard", "DashBoard");
+            }
+
+            if (!ExcelImportService.IsExcelFile(excelFile))
+            {
+                TempData["ErrorMessage"] = $"Please upload a valid Excel file up to {ExcelImportService.MaxFileSizeBytes / (1024 * 1024)} MB.";
+                return RedirectToAction("StaffList");
+            }
+
+            if (!ExcelImportService.HasRequiredHeaders(excelFile!, new[] { "DepartmentName", "StaffName", "MobileNo", "EmailAddress", "Remarks" }, out string headerMessage))
+            {
+                TempData["ErrorMessage"] = headerMessage;
+                return RedirectToAction("StaffList");
+            }
+
+            List<Dictionary<string, string>> rows = ExcelImportService.ReadRows(excelFile!);
+            if (rows.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Excel file is empty.";
+                return RedirectToAction("StaffList");
+            }
+
+            int importedCount = 0;
+            int skippedCount = 0;
+            string companyName = GetCurrentCompanyName();
+            List<ImportReportRowModel> reportRows = new List<ImportReportRowModel>();
+
+            using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            con.Open();
+
+            for (int index = 0; index < rows.Count; index++)
+            {
+                Dictionary<string, string> row = rows[index];
+                string departmentName = ExcelImportService.GetValue(row, "DepartmentName");
+                string staffName = ExcelImportService.GetValue(row, "StaffName");
+                string mobileNo = ExcelImportService.GetValue(row, "MobileNo");
+                string emailAddress = ExcelImportService.GetValue(row, "EmailAddress");
+                string remarks = ExcelImportService.GetValue(row, "Remarks");
+                string summary = $"{staffName} | {emailAddress}";
+
+                if (string.IsNullOrWhiteSpace(departmentName) ||
+                    string.IsNullOrWhiteSpace(staffName) ||
+                    string.IsNullOrWhiteSpace(mobileNo) ||
+                    string.IsNullOrWhiteSpace(emailAddress))
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "DepartmentName, StaffName, MobileNo and EmailAddress are required.", DataSummary = summary });
+                    continue;
+                }
+
+                int? departmentId = GetDepartmentIdByNameForImport(con, departmentName, companyName);
+                if (!departmentId.HasValue)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Department was not found in current company.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand emailCheckCmd = new SqlCommand("SELECT COUNT(*) FROM MOM_Staff WHERE EmailAddress = @EmailAddress", con);
+                emailCheckCmd.Parameters.AddWithValue("@EmailAddress", emailAddress);
+                if (Convert.ToInt32(emailCheckCmd.ExecuteScalar()) > 0)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Email already exists.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlTransaction transaction = con.BeginTransaction();
+                try
+                {
+                    using SqlCommand staffCmd = new SqlCommand("PR_Staff_Insert", con, transaction);
+                    staffCmd.CommandType = CommandType.StoredProcedure;
+                    staffCmd.Parameters.AddWithValue("@DepartmentID", departmentId.Value);
+                    staffCmd.Parameters.AddWithValue("@StaffName", staffName);
+                    staffCmd.Parameters.AddWithValue("@MobileNo", mobileNo);
+                    staffCmd.Parameters.AddWithValue("@EmailAddress", emailAddress);
+                    staffCmd.Parameters.AddWithValue("@Remarks", remarks);
+                    staffCmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                    int staffId = Convert.ToInt32(staffCmd.ExecuteScalar());
+
+                    string password = GenerateStaffPassword(companyName, staffId, staffName);
+                    string loginUserName = GenerateStaffUserName(staffName, staffId);
+                    string passwordHash = PasswordSecurity.HashPassword(password);
+
+                    using SqlCommand userCmd = new SqlCommand("PR_MST_User_UpsertForStaff", con, transaction);
+                    userCmd.CommandType = CommandType.StoredProcedure;
+                    userCmd.Parameters.AddWithValue("@StaffID", staffId);
+                    userCmd.Parameters.AddWithValue("@UserName", loginUserName);
+                    userCmd.Parameters.AddWithValue("@Email", emailAddress);
+                    userCmd.Parameters.AddWithValue("@Password", string.Empty);
+                    userCmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                    userCmd.Parameters.AddWithValue("@ContactNo", mobileNo);
+                    userCmd.Parameters.AddWithValue("@City", string.Empty);
+                    userCmd.Parameters.AddWithValue("@CompanyName", companyName);
+                    userCmd.Parameters.AddWithValue("@DepartmentID", departmentId.Value);
+                    userCmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                    userCmd.ExecuteNonQuery();
+
+                    transaction.Commit();
+                    importedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Imported", Message = "Staff and linked user account created successfully.", DataSummary = summary });
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Staff import failed during save.", DataSummary = summary });
+                }
+            }
+
+            AuditLogService.Log(
+                companyName,
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "Import",
+                "Staff",
+                null,
+                "Staff imported from Excel",
+                $"{importedCount} staff records imported and {skippedCount} skipped.");
+
+            TempData["ImportReportPath"] = ImportReportService.SaveReport("StaffImport", companyName, HttpContext.Session.GetInt32("UserID"), HttpContext.Session.GetString("UserName"), importedCount, skippedCount, reportRows);
+            TempData["SuccessMessage"] = $"Staff import completed. Imported: {importedCount}, Skipped: {skippedCount}. User accounts were auto-created for imported staff.";
+            return RedirectToAction("StaffList");
         }
 
         [HttpPost]
@@ -317,6 +482,8 @@ namespace Meeting_Of_Minutes.Controllers
             {
                 return RedirectToAction("DashBoard", "DashBoard");
             }
+
+            bool isNewStaff = model.StaffID == 0;
 
             if (!ModelState.IsValid)
             {
@@ -401,6 +568,7 @@ namespace Meeting_Of_Minutes.Controllers
                 string companyName = GetCurrentCompanyName();
                 string password = GenerateStaffPassword(companyName, model.StaffID, model.StaffName);
                 string loginUserName = GenerateStaffUserName(model.StaffName, model.StaffID);
+                string passwordHash = PasswordSecurity.HashPassword(password);
 
                 SqlCommand userCmd = new SqlCommand();
                 userCmd.Connection = con;
@@ -410,7 +578,8 @@ namespace Meeting_Of_Minutes.Controllers
                 userCmd.Parameters.AddWithValue("@StaffID", model.StaffID);
                 userCmd.Parameters.AddWithValue("@UserName", loginUserName);
                 userCmd.Parameters.AddWithValue("@Email", model.EmailAddress);
-                userCmd.Parameters.AddWithValue("@Password", password);
+                userCmd.Parameters.AddWithValue("@Password", string.Empty);
+                userCmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
                 userCmd.Parameters.AddWithValue("@ContactNo", model.MobileNo);
                 userCmd.Parameters.AddWithValue("@City", string.Empty);
                 userCmd.Parameters.AddWithValue("@CompanyName", companyName);
@@ -421,7 +590,18 @@ namespace Meeting_Of_Minutes.Controllers
                 transaction.Commit();
                 con.Close();
 
-                TempData["SuccessMessage"] = model.StaffID == 0
+                AuditLogService.Log(
+                    companyName,
+                    HttpContext.Session.GetInt32("UserID"),
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    isNewStaff ? "Create" : "Update",
+                    "Staff",
+                    model.StaffID.ToString(),
+                    isNewStaff ? "Staff created" : "Staff updated",
+                    $"{model.StaffName} staff record was {(isNewStaff ? "created" : "updated")}.");
+
+                TempData["SuccessMessage"] = isNewStaff
                     ? $"Staff added successfully. Auto password: {password}"
                     : "Staff updated successfully. User account updated automatically.";
 
@@ -508,22 +688,11 @@ namespace Meeting_Of_Minutes.Controllers
                 return RedirectToAction("StaffView", new { id = staffID });
             }
 
-            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "transfer-documents");
-            if (!Directory.Exists(uploadsFolder))
+            if (!FileSecurityService.TrySaveDocument(_environment, transferDocument, "transfer-documents", $"transfer_{staffID}", out string documentPath, out string uploadError))
             {
-                Directory.CreateDirectory(uploadsFolder);
+                TempData["ErrorMessage"] = uploadError;
+                return RedirectToAction("StaffView", new { id = staffID });
             }
-
-            string extension = Path.GetExtension(transferDocument.FileName);
-            string fileName = $"transfer_{staffID}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid():N}{extension}";
-            string filePath = Path.Combine(uploadsFolder, fileName);
-
-            using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                transferDocument.CopyTo(fileStream);
-            }
-
-            string documentPath = "/transfer-documents/" + fileName;
             int requestedByUserId = HttpContext.Session.GetInt32("UserID") ?? 0;
             int? userId = GetUserIdByStaffId(staffID);
 
@@ -554,12 +723,22 @@ namespace Meeting_Of_Minutes.Controllers
                     "Staff transfer requested",
                     $"{staff.StaffName} transfer request arrived from {staff.CompanyName}.",
                     requestedByUserId);
+                AuditLogService.Log(
+                    staff.CompanyName,
+                    requestedByUserId,
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Submit",
+                    "StaffTransferRequest",
+                    staffID.ToString(),
+                    "Staff transfer request submitted",
+                    $"{staff.StaffName} transfer was requested to {targetCompanyName}.");
 
                 TempData["SuccessMessage"] = "Staff transfer request sent successfully.";
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Transfer request failed: " + ex.Message;
+                TempData["ErrorMessage"] = "Transfer request failed. Please try again.";
             }
 
             return RedirectToAction("StaffView", new { id = staffID });
@@ -567,7 +746,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ApproveStaffTransferRequest(int staffTransferRequestID, string? adminRemarks)
+        public IActionResult ApproveStaffTransferRequest(int staffTransferRequestID, string? adminRemarks, string? returnUrl)
         {
             if (!IsAdminUser())
             {
@@ -593,20 +772,30 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    HttpContext.Session.GetString("CompanyName"),
+                    adminUserId.Value,
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Approve",
+                    "StaffTransferRequest",
+                    staffTransferRequestID.ToString(),
+                    "Staff transfer approved",
+                    $"Staff transfer request #{staffTransferRequestID} was approved.");
 
                 TempData["SuccessMessage"] = "Staff transfer approved successfully.";
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Approve failed: " + ex.Message;
+                TempData["ErrorMessage"] = "Approve failed. Please try again.";
             }
 
-            return RedirectToAction("StaffTransferRequestList");
+            return RedirectToLocal(returnUrl, "StaffTransferRequestList");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RejectStaffTransferRequest(int staffTransferRequestID, string? adminRemarks)
+        public IActionResult RejectStaffTransferRequest(int staffTransferRequestID, string? adminRemarks, string? returnUrl)
         {
             if (!IsAdminUser())
             {
@@ -632,15 +821,127 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    HttpContext.Session.GetString("CompanyName"),
+                    adminUserId.Value,
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Reject",
+                    "StaffTransferRequest",
+                    staffTransferRequestID.ToString(),
+                    "Staff transfer rejected",
+                    $"Staff transfer request #{staffTransferRequestID} was rejected.");
 
                 TempData["SuccessMessage"] = "Staff transfer rejected.";
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Reject failed: " + ex.Message;
+                TempData["ErrorMessage"] = "Reject failed. Please try again.";
             }
 
-            return RedirectToAction("StaffTransferRequestList");
+            return RedirectToLocal(returnUrl, "StaffTransferRequestList");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult BulkApproveStaffTransferRequests(List<int>? selectedRequestIds, string? adminRemarks, string? returnUrl)
+        {
+            if (!IsAdminUser())
+            {
+                return RedirectToAction("StaffList");
+            }
+
+            int? adminUserId = HttpContext.Session.GetInt32("UserID");
+            if (!adminUserId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (selectedRequestIds == null || selectedRequestIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Select at least one transfer request.";
+                return RedirectToLocal(returnUrl, "StaffTransferRequestList");
+            }
+
+            int successCount = 0;
+
+            foreach (int requestId in selectedRequestIds.Distinct())
+            {
+                try
+                {
+                    using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+                    using SqlCommand cmd = new SqlCommand("PR_MST_StaffTransferRequest_Approve", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@StaffTransferRequestID", requestId);
+                    cmd.Parameters.AddWithValue("@AdminUserID", adminUserId.Value);
+                    cmd.Parameters.AddWithValue("@AdminRemarks", string.IsNullOrWhiteSpace(adminRemarks) ? DBNull.Value : adminRemarks);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+
+                    AuditLogService.Log(HttpContext.Session.GetString("CompanyName"), adminUserId.Value, HttpContext.Session.GetString("UserName"), HttpContext.Session.GetString("UserRole"), "Approve", "StaffTransferRequest", requestId.ToString(), "Transfer request approved", $"Staff transfer request #{requestId} was approved in bulk.");
+                    successCount++;
+                }
+                catch
+                {
+                }
+            }
+
+            TempData[successCount > 0 ? "SuccessMessage" : "ErrorMessage"] = successCount > 0
+                ? $"{successCount} transfer request(s) approved successfully."
+                : "Bulk approve failed for the selected transfer requests.";
+
+            return RedirectToLocal(returnUrl, "StaffTransferRequestList");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult BulkRejectStaffTransferRequests(List<int>? selectedRequestIds, string? adminRemarks, string? returnUrl)
+        {
+            if (!IsAdminUser())
+            {
+                return RedirectToAction("StaffList");
+            }
+
+            int? adminUserId = HttpContext.Session.GetInt32("UserID");
+            if (!adminUserId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (selectedRequestIds == null || selectedRequestIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Select at least one transfer request.";
+                return RedirectToLocal(returnUrl, "StaffTransferRequestList");
+            }
+
+            int successCount = 0;
+
+            foreach (int requestId in selectedRequestIds.Distinct())
+            {
+                try
+                {
+                    using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+                    using SqlCommand cmd = new SqlCommand("PR_MST_StaffTransferRequest_Reject", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@StaffTransferRequestID", requestId);
+                    cmd.Parameters.AddWithValue("@AdminUserID", adminUserId.Value);
+                    cmd.Parameters.AddWithValue("@AdminRemarks", string.IsNullOrWhiteSpace(adminRemarks) ? DBNull.Value : adminRemarks);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+
+                    AuditLogService.Log(HttpContext.Session.GetString("CompanyName"), adminUserId.Value, HttpContext.Session.GetString("UserName"), HttpContext.Session.GetString("UserRole"), "Reject", "StaffTransferRequest", requestId.ToString(), "Transfer request rejected", $"Staff transfer request #{requestId} was rejected in bulk.");
+                    successCount++;
+                }
+                catch
+                {
+                }
+            }
+
+            TempData[successCount > 0 ? "SuccessMessage" : "ErrorMessage"] = successCount > 0
+                ? $"{successCount} transfer request(s) rejected."
+                : "Bulk reject failed for the selected transfer requests.";
+
+            return RedirectToLocal(returnUrl, "StaffTransferRequestList");
         }
 
 
@@ -686,9 +987,17 @@ namespace Meeting_Of_Minutes.Controllers
         {
             HashSet<int> departmentIds = new HashSet<int>();
             string companyName = GetCurrentCompanyName();
+            int? currentDepartmentId = HttpContext.Session.GetInt32("DepartmentID");
+            bool isSuperAdmin = RoleAccessService.IsSuperAdmin(HttpContext.Session.GetString("UserRole"));
 
             if (string.IsNullOrWhiteSpace(companyName))
             {
+                return departmentIds;
+            }
+
+            if (!isSuperAdmin && currentDepartmentId.HasValue)
+            {
+                departmentIds.Add(currentDepartmentId.Value);
                 return departmentIds;
             }
 
@@ -711,6 +1020,21 @@ namespace Meeting_Of_Minutes.Controllers
             return departmentIds;
         }
 
+        public int? GetDepartmentIdByNameForImport(SqlConnection con, string departmentName, string companyName)
+        {
+            using SqlCommand cmd = new SqlCommand("SELECT TOP 1 DepartmentID FROM MOM_Department WHERE DepartmentName = @DepartmentName AND CompanyName = @CompanyName", con);
+            cmd.Parameters.AddWithValue("@DepartmentName", departmentName);
+            cmd.Parameters.AddWithValue("@CompanyName", companyName);
+            object? result = cmd.ExecuteScalar();
+            if (result == null || result == DBNull.Value)
+            {
+                return null;
+            }
+
+            int departmentId = Convert.ToInt32(result);
+            return GetAllowedDepartmentIdsForCompany().Contains(departmentId) ? departmentId : null;
+        }
+
         public string GetCurrentCompanyName()
         {
             return HttpContext.Session.GetString("CompanyName") ?? string.Empty;
@@ -718,7 +1042,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         public bool IsAdminUser()
         {
-            return string.Equals(HttpContext.Session.GetString("UserRole"), "Admin", StringComparison.OrdinalIgnoreCase);
+            return RoleAccessService.IsAdminOrHigher(HttpContext.Session.GetString("UserRole"));
         }
 
         public List<SelectListItem> FillCompanyDropDown()
@@ -822,6 +1146,7 @@ namespace Meeting_Of_Minutes.Controllers
         public List<StaffTransferRequestModel> GetIncomingTransferRequests()
         {
             List<StaffTransferRequestModel> requests = new List<StaffTransferRequestModel>();
+            HashSet<int> allowedDepartmentIds = GetAllowedDepartmentIdsForCompany();
             SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = con;
@@ -853,7 +1178,10 @@ namespace Meeting_Of_Minutes.Controllers
                 request.AdminRemarks = reader["AdminRemarks"].ToString() ?? string.Empty;
                 request.Created = Convert.ToDateTime(reader["Created"]);
                 request.DecisionDate = reader["DecisionDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["DecisionDate"]);
-                requests.Add(request);
+                if (allowedDepartmentIds.Contains(request.TargetDepartmentID))
+                {
+                    requests.Add(request);
+                }
             }
             reader.Close();
             con.Close();
@@ -862,22 +1190,7 @@ namespace Meeting_Of_Minutes.Controllers
 
         public string GenerateStaffPassword(string companyName, int staffId, string? staffName)
         {
-            string cleanCompany = new string((companyName ?? string.Empty).Where(char.IsLetterOrDigit).ToArray());
-            string cleanStaff = new string((staffName ?? string.Empty).Where(char.IsLetterOrDigit).ToArray());
-
-            if (string.IsNullOrWhiteSpace(cleanCompany))
-            {
-                cleanCompany = "MOM";
-            }
-
-            if (string.IsNullOrWhiteSpace(cleanStaff))
-            {
-                cleanStaff = "Staff";
-            }
-
-            string companyPart = cleanCompany.Length > 4 ? cleanCompany.Substring(0, 4) : cleanCompany;
-            string staffPart = cleanStaff.Length > 4 ? cleanStaff.Substring(0, 4) : cleanStaff;
-            return $"{char.ToUpper(companyPart[0])}{companyPart.Substring(1)}{staffId}{char.ToUpper(staffPart[0])}{staffPart.Substring(1)}@1a";
+            return PasswordSecurity.GenerateTemporaryPassword();
         }
 
         public string GenerateStaffUserName(string? staffName, int staffId)
@@ -891,9 +1204,21 @@ namespace Meeting_Of_Minutes.Controllers
             string staffPart = cleanStaff.Length > 10 ? cleanStaff.Substring(0, 10) : cleanStaff;
             return $"{staffPart}{staffId}";
         }
+
+        public IActionResult RedirectToLocal(string? returnUrl, string fallbackAction)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction(fallbackAction);
+        }
         #endregion
     }
 }
+
+
 
 
 

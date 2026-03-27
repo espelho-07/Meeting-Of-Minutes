@@ -1,69 +1,67 @@
-@model List<MeetingTypeModel>
+@model PagedListViewModel<MeetingTypeModel>
 
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSListStyles")
 @{
     ViewData["Title"] = "Meeting Types - Meeting Of Minutes";
     int SerialNumber = 1;
+    var heroModel = new ListPageHeroViewModel
+    {
+        IconClass = "bi bi-tags",
+        Kicker = "Meeting Taxonomy",
+        Title = "Meeting Types",
+        Subtitle = "Define the meeting labels that drive reporting, scheduling and cleaner categorization across your company workspace.",
+        NoteLabel = "Usage guidance",
+        NoteTitle = $"{Model.TotalItems} configured meeting types in the current company scope.",
+        Notes = new List<string>
+        {
+            "Keep names short and recognizable so meeting records stay easy to scan.",
+            "Remarks help admins understand where each meeting category should be used.",
+            "Only company-scoped types appear while scheduling new meetings."
+        }
+    };
+    var toolbarModel = new ListPageToolbarViewModel
+    {
+        Heading = "Meeting Type Directory",
+        Meta = "Search, review and maintain type definitions from one clean operational surface.",
+        SearchAction = "MeetingsTypeList",
+        SearchController = "MeetingsType",
+        SearchPlaceholder = "Search meeting type name...",
+        SearchText = ViewBag.searchtext,
+        StatusText = $"Total Records: {Model.TotalItems}",
+        TemplateAction = "DownloadImportTemplate",
+        TemplateController = "MeetingsType",
+        ImportAction = "ImportFromExcel",
+        ImportController = "MeetingsType",
+        Actions = new List<ListToolbarActionViewModel>
+        {
+            new() { Action = "MeetingsTypeAddEdit", Text = "Add New Type", IconClass = "bi bi-plus-circle", CssClass = "list-btn-primary" },
+            new() { Action = "ExportToExcel", Text = "Export", IconClass = "bi bi-file-earmark-excel", CssClass = "list-btn-success" }
+        }
+    };
 }
 
-<div class="pagetitle mb-4">
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">Meeting Types</li>
-        </ol>
-    </nav>
-</div>
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Meeting Types" })
 
 <div class="list-page">
-    <section class="list-hero">
-        <div class="list-hero-main">
-            <div class="list-kicker"><i class="bi bi-tags"></i> Meeting Taxonomy</div>
-            <h1 class="list-title">Meeting Types</h1>
-            <p class="list-subtitle">Define the meeting labels that drive reporting, scheduling and cleaner categorization across your company workspace.</p>
-        </div>
-        <aside class="list-note">
-            <div class="list-note-label">Usage guidance</div>
-            <h2 class="list-note-title">@Model.Count configured meeting types in the current company scope.</h2>
-            <ul class="list-note-list">
-                <li><i class="bi bi-check2-circle"></i><span>Keep names short and recognizable so meeting records stay easy to scan.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Remarks help admins understand where each meeting category should be used.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Only company-scoped types appear while scheduling new meetings.</span></li>
-            </ul>
-        </aside>
-    </section>
+    @await Html.PartialAsync("_ListPageHero", heroModel)
 
     <section class="list-surface">
-        <div class="list-surface-header">
-            <div>
-                <h3 class="list-surface-heading">Meeting Type Directory</h3>
-                <p class="list-surface-meta">Search, review and maintain type definitions from one clean operational surface.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a asp-action="MeetingsTypeAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Add New Type</a>
-                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
-            </div>
-        </div>
-
-        <div class="list-search-wrap">
-            <form class="list-search-form" asp-action="MeetingsTypeList" asp-controller="MeetingsType" method="post">
-                @Html.AntiForgeryToken()
-                <div class="list-search-input">
-                    <span><i class="bi bi-search"></i></span>
-                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search meeting type name..." />
-                </div>
-                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
-                <a href="@Url.Action("MeetingsTypeList", "MeetingsType")" class="btn list-btn list-btn-light">Clear</a>
-            </form>
-            <div class="list-status-chip">Total Records: @Model.Count</div>
-        </div>
+        @await Html.PartialAsync("_ListPageToolbar", toolbarModel)
 
         <div class="list-table-wrap">
             <div class="list-table-card">
-                @if (Model.Count == 0)
+                @if (Model.Items.Count == 0)
                 {
-                    <div class="list-empty">No meeting types found.</div>
+                    @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                    {
+                        IconClass = "bi bi-tags",
+                        Title = "No meeting types found",
+                        Description = "There are no meeting type definitions matching the current result set.",
+                        ActionText = "Add New Type",
+                        ActionUrl = Url.Action("MeetingsTypeAddEdit", "MeetingsType"),
+                        Compact = true
+                    })
                 }
                 else
                 {
@@ -71,13 +69,13 @@
                         <thead>
                             <tr>
                                 <th class="ps-4">#</th>
-                                <th>Meeting Type Name</th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingsTypeList", new { searchtext = Model.SearchText, page = 1, sortBy = "name", sortDirection = Model.SortBy == "name" && Model.SortDirection == "asc" ? "desc" : "asc" })">Meeting Type Name <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th>Remarks</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var meetingType in Model)
+                            @foreach (var meetingType in Model.Items)
                             {
                                 <tr>
                                     <td class="ps-4">@SerialNumber</td>
@@ -103,5 +101,6 @@
                 }
             </div>
         </div>
+        @await Html.PartialAsync("_ListPagination", Model)
     </section>
 </div>

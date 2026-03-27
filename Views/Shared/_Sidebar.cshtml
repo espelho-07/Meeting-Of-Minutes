@@ -1,0 +1,92 @@
+@model Meeting_Of_Minutes.Models.AppShellViewModel
+@{
+    string NavClass(string controller, string action = "")
+    {
+        bool isActive = Model.CurrentController.Equals(controller, StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(action))
+        {
+            isActive = isActive && Model.CurrentAction.Equals(action, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return isActive ? "mom-nav-link is-active" : "mom-nav-link";
+    }
+}
+
+<aside class="mom-sidebar" id="momSidebar">
+    <div class="mom-sidebar-brand">
+        <div class="mom-brand-mark">M</div>
+        <div class="mom-sidebar-brand-copy">
+            <div class="mom-brand-eyebrow">Operations OS</div>
+            <div class="mom-brand-title">Meeting Of Minutes</div>
+            <div class="mom-brand-subtitle">@(Model.IsSuperAdminUser ? "Company super admin workspace" : Model.IsAdminUser ? "Department admin workspace" : "Personal workspace")</div>
+        </div>
+    </div>
+
+    <div class="mom-sidebar-scroll">
+        <div class="mom-nav-section">
+            <div class="mom-nav-heading">Workspace</div>
+            <a class="@NavClass("DashBoard", "DashBoard")" asp-controller="DashBoard" asp-action="DashBoard">
+                <i class="bi bi-grid-1x2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="@NavClass("ActionCenter", "Index")" asp-controller="ActionCenter" asp-action="Index">
+                <i class="bi bi-lightning-charge"></i>
+                <span>@(Model.IsAdminUser ? "Action Center" : "My Actions")</span>
+                @if (Model.OpenActionCount > 0)
+                {
+                    <span class="mom-nav-badge @(Model.CriticalActionCount > 0 ? "is-critical" : string.Empty)">@Model.OpenActionCount</span>
+                }
+            </a>
+            <a class="@NavClass("Activity", "ActivityLog")" asp-controller="Activity" asp-action="ActivityLog">
+                <i class="bi bi-activity"></i>
+                <span>@(Model.IsAdminUser ? "Activity Logs" : "My Activity")</span>
+            </a>
+            <a class="@NavClass("Analytics", "Analytics")" asp-controller="Analytics" asp-action="Analytics">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Analytics</span>
+            </a>
+        </div>
+
+        @if (Model.IsAdminUser)
+        {
+            <div class="mom-nav-section">
+                <div class="mom-nav-heading">Master Data</div>
+                <a class="@NavClass("MeetingsType", "MeetingsTypeList")" asp-controller="MeetingsType" asp-action="MeetingsTypeList"><i class="bi bi-tags"></i><span>Meeting Types</span></a>
+                <a class="@NavClass("Department", "DepartmentList")" asp-controller="Department" asp-action="DepartmentList"><i class="bi bi-building"></i><span>Departments</span></a>
+                <a class="@NavClass("MeetingVenue", "MeetingVenueList")" asp-controller="MeetingVenue" asp-action="MeetingVenueList"><i class="bi bi-geo-alt"></i><span>Venues</span></a>
+                <a class="@NavClass("Staff", "StaffList")" asp-controller="Staff" asp-action="StaffList"><i class="bi bi-people"></i><span>Staff Members</span></a>
+            </div>
+        }
+
+        <div class="mom-nav-section">
+            <div class="mom-nav-heading">Meetings</div>
+            <a class="@NavClass("Meetings", "MeetingsList")" asp-controller="Meetings" asp-action="MeetingsList"><i class="bi bi-calendar-event"></i><span>@(Model.IsAdminUser ? "All Meetings" : "My Meetings")</span></a>
+            @if (Model.IsAdminUser)
+            {
+                <a class="@NavClass("Meetings", "MeetingsAddEdit")" asp-controller="Meetings" asp-action="MeetingsAddEdit"><i class="bi bi-calendar-plus"></i><span>Schedule Meeting</span></a>
+                <a class="@NavClass("MeetingMember", "MeetingMemberList")" asp-controller="MeetingMember" asp-action="MeetingMemberList"><i class="bi bi-person-check"></i><span>Attendance</span></a>
+            }
+        </div>
+
+        <div class="mom-nav-section">
+            <div class="mom-nav-heading">Account</div>
+            <a class="@NavClass("Profile", "Profile")" asp-controller="Profile" asp-action="Profile"><i class="bi bi-person-circle"></i><span>My Profile</span></a>
+            @if (Model.IsAdminUser)
+            {
+                <a class="@NavClass("Profile", "ProfileUpdateRequestList")" asp-controller="Profile" asp-action="ProfileUpdateRequestList"><i class="bi bi-shield-check"></i><span>Profile Requests</span></a>
+                <a class="@NavClass("Staff", "StaffTransferRequestList")" asp-controller="Staff" asp-action="StaffTransferRequestList"><i class="bi bi-arrow-left-right"></i><span>Transfer Requests</span></a>
+                <a class="@NavClass("UserManagement", "Index")" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-person-gear"></i><span>@(Model.IsSuperAdminUser ? "Company Users" : "User Management")</span></a>
+                <a class="@NavClass("ImportHistory", "Index")" asp-controller="ImportHistory" asp-action="Index"><i class="bi bi-clock-history"></i><span>Import History</span></a>
+            }
+        </div>
+    </div>
+
+    <div class="mom-sidebar-foot">
+        <div class="mom-sidebar-foot-title">Current scope</div>
+        <div class="mom-sidebar-foot-value">@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "No company" : Model.CompanyName)</div>
+        <div class="mom-sidebar-foot-chip">@(Model.IsSuperAdminUser ? "Company control" : Model.IsAdminUser ? "Department control" : "Personal access")</div>
+        <div class="mom-sidebar-foot-meta">@(Model.IsSuperAdminUser ? "You can manage only the current company from this workspace." : Model.IsAdminUser ? "You can manage only your department from this workspace." : "Your access is limited to assigned meetings and requests.")</div>
+    </div>
+</aside>
+
+

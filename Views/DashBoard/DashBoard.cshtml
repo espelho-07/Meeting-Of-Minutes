@@ -7,10 +7,15 @@
     var departmentLabels = ViewBag.DepartmentLabels as List<string> ?? new List<string>();
     var departmentValues = ViewBag.DepartmentValues as List<int> ?? new List<int>();
     var adminNotifications = ViewBag.AdminNotifications as List<AdminNotificationModel> ?? new List<AdminNotificationModel>();
+    var recentActivityLogs = ViewBag.RecentActivityLogs as List<AuditLogModel> ?? new List<AuditLogModel>();
+    var failedLoginLogs = ViewBag.FailedLoginLogs as List<AuditLogModel> ?? new List<AuditLogModel>();
     var pendingProfileRequests = ViewBag.PendingProfileRequests as List<ProfileUpdateRequestModel> ?? new List<ProfileUpdateRequestModel>();
     var pendingTransferRequests = ViewBag.PendingTransferRequests as List<StaffTransferRequestModel> ?? new List<StaffTransferRequestModel>();
+    var actionCenterSummary = ViewBag.ActionCenterSummary as ActionCenterSummaryModel ?? new ActionCenterSummaryModel();
     var nextMeeting = ViewBag.NextMeeting as MeetingsModel;
-    bool isAdminUser = (Context.Session.GetString("UserRole") ?? string.Empty).Equals("Admin", StringComparison.OrdinalIgnoreCase);
+    bool isSuperAdminDashboard = ViewBag.IsSuperAdminDashboard is bool superAdminFlag && superAdminFlag;
+    int platformCompanyCount = ViewBag.PlatformCompanyCount is int companyCount ? companyCount : 1;
+    bool isAdminUser = (Context.Session.GetString("UserRole") ?? string.Empty).Equals("Admin", StringComparison.OrdinalIgnoreCase) || (Context.Session.GetString("UserRole") ?? string.Empty).Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase);
 }
 
 @await Html.PartialAsync("_AlertMessages")
@@ -24,455 +29,39 @@
     </nav>
 </div>
 
-<style>
-    .mom-hero-band {
-        display: grid;
-        grid-template-columns: 1.2fr 0.8fr;
-        gap: 20px;
-        padding: 24px;
-        border-radius: 24px;
-        background: linear-gradient(135deg, #171f46 0%, #24306d 42%, #5563ea 100%);
-        color: #fff;
-        overflow: hidden;
-        position: relative;
-        box-shadow: 0 18px 40px rgba(31, 41, 88, 0.14);
-    }
-
-    .mom-hero-band::after {
-        content: "";
-        position: absolute;
-        right: -80px;
-        top: -60px;
-        width: 260px;
-        height: 260px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-    .mom-hero-band::before {
-        content: "";
-        position: absolute;
-        left: 42%;
-        bottom: -90px;
-        width: 240px;
-        height: 240px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.06);
-    }
-
-    .mom-hero-copy,
-    .mom-hero-side {
-        position: relative;
-        z-index: 1;
-    }
-
-    .mom-hero-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border-radius: 999px;
-        padding: 8px 12px;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        font-size: 0.8rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        margin-bottom: 16px;
-    }
-
-    .mom-hero-title {
-        font-size: clamp(2.4rem, 4vw, 4rem);
-        line-height: 0.96;
-        font-weight: 900;
-        margin-bottom: 14px;
-        max-width: 640px;
-    }
-
-    .mom-hero-subtitle {
-        color: rgba(255,255,255,0.76);
-        max-width: 580px;
-        font-size: 1rem;
-        margin-bottom: 22px;
-    }
-
-    .mom-hero-tags {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .mom-hero-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border-radius: 999px;
-        padding: 10px 14px;
-        background: rgba(255, 255, 255, 0.11);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        font-weight: 700;
-    }
-
-    .mom-hero-side {
-        display: grid;
-        gap: 14px;
-        align-content: center;
-    }
-
-    .mom-hero-metric {
-        padding: 14px 16px;
-        border-radius: 18px;
-        background: rgba(255,255,255,0.10);
-        border: 1px solid rgba(255,255,255,0.14);
-        backdrop-filter: blur(8px);
-    }
-
-    .mom-hero-metric-label {
-        color: rgba(255,255,255,0.68);
-        font-size: 0.74rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-weight: 800;
-        margin-bottom: 8px;
-    }
-
-    .mom-hero-metric-value {
-        font-size: 2rem;
-        line-height: 1;
-        font-weight: 900;
-        margin-bottom: 6px;
-    }
-
-    .mom-hero-metric-sub {
-        color: rgba(255,255,255,0.76);
-        font-size: 0.9rem;
-    }
-
-    .mom-dash-shell {
-        display: grid;
-        gap: 22px;
-    }
-
-    .mom-dash-title h1 {
-        margin-bottom: 6px;
-        font-size: 2.55rem;
-        font-weight: 800;
-        color: #1c2550;
-    }
-
-    .mom-dash-title p {
-        color: #6f7d95;
-        margin-bottom: 0;
-        font-size: 1.02rem;
-    }
-
-    .mom-overview-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-    }
-
-    .mom-overview-card {
-        border-radius: 20px;
-        padding: 18px 18px 16px;
-        min-height: 148px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.07);
-        border: 1px solid rgba(255,255,255,0.8);
-    }
-
-    .mom-overview-card::after {
-        content: "";
-        position: absolute;
-        inset: auto -40px -40px auto;
-        width: 130px;
-        height: 130px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.28);
-    }
-
-    .mom-overview-card.purple { background: linear-gradient(135deg, #f3efff 0%, #f7f1ff 100%); }
-    .mom-overview-card.blue { background: linear-gradient(135deg, #edf4ff 0%, #f4f8ff 100%); }
-    .mom-overview-card.amber { background: linear-gradient(135deg, #fff7dd 0%, #fffbed 100%); }
-    .mom-overview-card.green { background: linear-gradient(135deg, #e8fff4 0%, #effff7 100%); }
-
-    .mom-overview-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 18px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .mom-overview-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 1.15rem;
-        box-shadow: 0 10px 22px rgba(35, 43, 88, 0.12);
-    }
-
-    .mom-overview-icon.purple { background: linear-gradient(135deg, #6b57f5, #8766ff); }
-    .mom-overview-icon.blue { background: linear-gradient(135deg, #2f7bf0, #4c95ff); }
-    .mom-overview-icon.amber { background: linear-gradient(135deg, #ff9800, #ffb300); }
-    .mom-overview-icon.green { background: linear-gradient(135deg, #0dbb86, #2acb9a); }
-
-    .mom-overview-tag {
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #596682;
-        background: rgba(255,255,255,0.76);
-        padding: 7px 12px;
-        border-radius: 999px;
-    }
-
-    .mom-overview-value {
-        font-size: 2.5rem;
-        line-height: 1;
-        font-weight: 800;
-        margin-bottom: 6px;
-        color: #1b2545;
-        position: relative;
-        z-index: 1;
-    }
-
-    .mom-overview-label {
-        font-size: 0.93rem;
-        font-weight: 700;
-        color: #48556f;
-        position: relative;
-        z-index: 1;
-    }
-
-    .mom-chart-card {
-        border-radius: 20px;
-        background: #fff;
-        border: 1px solid #e8edf5;
-        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.06);
-        overflow: hidden;
-        height: 100%;
-    }
-
-    .mom-chart-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 22px;
-        border-bottom: 1px solid #eef2f8;
-    }
-
-    .mom-chart-head h5 {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: #1d2752;
-    }
-
-    .mom-chart-action {
-        width: 34px;
-        height: 34px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #f7f9fc;
-        color: #7b88a0;
-    }
-
-    .mom-chart-body {
-        padding: 16px 16px 10px;
-        min-height: 330px;
-    }
-
-    .mom-logs-card {
-        border-radius: 20px;
-        background: #fff;
-        border: 1px solid #e8edf5;
-        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.06);
-        padding: 20px;
-    }
-
-    .mom-notify-card {
-        border-radius: 20px;
-        background: #ffffff;
-        border: 1px solid #e8edf5;
-        box-shadow: 0 12px 28px rgba(35, 43, 88, 0.06);
-        padding: 20px;
-    }
-
-    .mom-notify-list {
-        display: grid;
-        gap: 12px;
-    }
-
-    .mom-notify-item {
-        display: flex;
-        gap: 14px;
-        align-items: flex-start;
-        border: 1px solid #edf1f7;
-        border-radius: 16px;
-        padding: 14px;
-        background: #fbfcff;
-    }
-
-    .mom-notify-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-size: 1.05rem;
-        color: #fff;
-        background: linear-gradient(135deg, #5f67f8, #8156d6);
-    }
-
-    .mom-notify-title {
-        font-weight: 800;
-        color: #1c2550;
-        margin-bottom: 4px;
-    }
-
-    .mom-notify-text {
-        color: #6f7d95;
-        margin-bottom: 4px;
-    }
-
-    .mom-notify-time {
-        color: #8a96aa;
-        font-size: 0.83rem;
-    }
-
-    .mom-notify-meta {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 6px;
-    }
-
-    .mom-soft-tag {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 0.74rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        background: #eef2ff;
-        color: #5864dd;
-    }
-
-    .mom-logs-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 18px;
-        flex-wrap: wrap;
-    }
-
-    .mom-logs-head h5 {
-        margin: 0;
-        font-weight: 800;
-        color: #1d2752;
-    }
-
-    .mom-log-row {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr 0.9fr 0.9fr;
-        gap: 16px;
-        align-items: center;
-        padding: 14px 16px;
-        border: 1px solid #eef2f8;
-        border-radius: 16px;
-        margin-bottom: 12px;
-        background: #fbfcff;
-    }
-
-    .mom-log-title {
-        font-weight: 700;
-        color: #1e274e;
-        margin-bottom: 2px;
-    }
-
-    .mom-log-sub {
-        color: #7a889e;
-        font-size: 0.88rem;
-    }
-
-    .mom-dash-empty {
-        text-align: center;
-        color: #8591a6;
-        padding: 24px 10px 8px;
-    }
-
-    @@media (max-width: 1199px) {
-        .mom-overview-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @@media (max-width: 767px) {
-        .mom-hero-band {
-            grid-template-columns: 1fr;
-            padding: 22px;
-        }
-
-        .mom-overview-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .mom-log-row {
-            grid-template-columns: 1fr;
-        }
-
-        .mom-dash-title h1 {
-            font-size: 2rem;
-        }
-    }
-</style>
-
-<section class="mom-dash-shell">
+<section class="mom-dash-shell mom-dashboard-page">
     <div class="mom-hero-band">
         <div class="mom-hero-copy">
-            <div class="mom-hero-kicker"><i class="bi bi-stars"></i>@(isAdminUser ? "Admin Command Center" : "My Meeting Workspace")</div>
+            <div class="mom-hero-kicker"><i class="bi bi-stars"></i>@(isSuperAdminDashboard ? "Super Admin Command Center" : isAdminUser ? "Admin Command Center" : "My Meeting Workspace")</div>
             <div class="mom-hero-title">Welcome back, @Context.Session.GetString("UserName")</div>
             <div class="mom-hero-subtitle">
-                @(isAdminUser
+                @(isSuperAdminDashboard
+                    ? "You are looking at platform-wide meeting volume, account readiness and approval pressure across every company in the system."
+                    : isAdminUser
                     ? "Monitor company-wide meeting flow, resolve profile actions quickly and keep scheduling, attendance and staff coordination in one operational surface."
                     : "See only the meetings assigned to you, track approval progress and stay ready for your next meeting from one clean personal workspace.")
             </div>
             <div class="mom-hero-tags">
-                <span class="mom-hero-tag"><i class="bi bi-buildings"></i>@(string.IsNullOrWhiteSpace(Context.Session.GetString("CompanyName")) ? "No Company" : Context.Session.GetString("CompanyName"))</span>
-                <span class="mom-hero-tag"><i class="bi bi-grid-1x2"></i>@(isAdminUser ? "Full access workspace" : "Assigned meeting access")</span>
-                <span class="mom-hero-tag"><i class="bi bi-arrow-clockwise"></i>@(isAdminUser ? "Live operational view" : "My next actions")</span>
+                <span class="mom-hero-tag"><i class="bi bi-buildings"></i>@(isSuperAdminDashboard ? $"{platformCompanyCount} companies in scope" : (string.IsNullOrWhiteSpace(Context.Session.GetString("CompanyName")) ? "No Company" : Context.Session.GetString("CompanyName")))</span>
+                <span class="mom-hero-tag"><i class="bi bi-grid-1x2"></i>@(isSuperAdminDashboard ? "Platform governance workspace" : isAdminUser ? "Full access workspace" : "Assigned meeting access")</span>
+                <span class="mom-hero-tag"><i class="bi bi-arrow-clockwise"></i>@(isSuperAdminDashboard ? "Global operational view" : isAdminUser ? "Live operational view" : "My next actions")</span>
             </div>
         </div>
         <div class="mom-hero-side">
             <div class="mom-hero-metric">
-                <div class="mom-hero-metric-label">@(isAdminUser ? "Meetings in System" : "Meetings Assigned")</div>
+                <div class="mom-hero-metric-label">@(isSuperAdminDashboard ? "Meetings Across Platform" : isAdminUser ? "Meetings in System" : "Meetings Assigned")</div>
                 <div class="mom-hero-metric-value">@ViewBag.TotalMeetings</div>
-                <div class="mom-hero-metric-sub">@(isAdminUser ? "Visible scheduled records across your current access scope." : "Meetings currently available to your account access.")</div>
+                <div class="mom-hero-metric-sub">@(isSuperAdminDashboard ? "All visible scheduled records across every company scope." : isAdminUser ? "Visible scheduled records across your current access scope." : "Meetings currently available to your account access.")</div>
             </div>
             <div class="mom-hero-metric">
-                <div class="mom-hero-metric-label">@(isAdminUser ? "Current Activity" : "Pending Requests")</div>
+                <div class="mom-hero-metric-label">@(isSuperAdminDashboard ? "Open Platform Actions" : isAdminUser ? "Current Activity" : "Pending Requests")</div>
                 <div class="mom-hero-metric-value">@(isAdminUser ? ViewBag.ActiveMeetings : (pendingProfileRequests.Count + pendingTransferRequests.Count))</div>
-                <div class="mom-hero-metric-sub">@(isAdminUser ? "Upcoming or in-flow meetings that still need operational attention." : "Profile and transfer approvals still waiting on admin action.")</div>
+                <div class="mom-hero-metric-sub">@(isSuperAdminDashboard ? "Upcoming meetings and pending approvals still waiting on platform attention." : isAdminUser ? "Upcoming or in-flow meetings that still need operational attention." : "Profile and transfer approvals still waiting on admin action.")</div>
             </div>
             <div class="mom-hero-metric">
-                <div class="mom-hero-metric-label">@(isAdminUser ? "Attendance Logged" : "Next Meeting")</div>
+                <div class="mom-hero-metric-label">@(isSuperAdminDashboard ? "Platform Attendance" : isAdminUser ? "Attendance Logged" : "Next Meeting")</div>
                 <div class="mom-hero-metric-value">@(isAdminUser ? ViewBag.TotalAttendees : (nextMeeting?.MeetingDate?.ToString("dd MMM") ?? "None"))</div>
-                <div class="mom-hero-metric-sub">@(isAdminUser ? "Attendance entries recorded inside the current visible meeting set." : (nextMeeting == null ? "No upcoming meeting is currently assigned." : $"{nextMeeting.MeetingDescription}"))</div>
+                <div class="mom-hero-metric-sub">@(isSuperAdminDashboard ? "Attendance entries recorded across all currently visible meetings." : isAdminUser ? "Attendance entries recorded inside the current visible meeting set." : (nextMeeting == null ? "No upcoming meeting is currently assigned." : $"{nextMeeting.MeetingDescription}"))</div>
             </div>
         </div>
     </div>
@@ -480,7 +69,7 @@
     <div class="mom-page-header">
         <div class="mom-dash-title">
             <h1>Overview</h1>
-            <p>@(isAdminUser ? "Live meeting analytics, approval activity and company scheduling posture." : "Your own meeting timeline, request status and upcoming work queue.")</p>
+            <p>@(isSuperAdminDashboard ? "Platform-wide meeting analytics, access health and cross-company operational posture." : isAdminUser ? "Live meeting analytics, approval activity and company scheduling posture." : "Your own meeting timeline, request status and upcoming work queue.")</p>
         </div>
         <div class="mom-toolbar">
             <button class="btn btn-light px-4" onclick="location.reload();"><i class="bi bi-arrow-clockwise me-2"></i>Refresh Data</button>
@@ -492,87 +81,265 @@
     </div>
 
     <div class="mom-overview-grid">
-        <div class="mom-overview-card purple">
-            <div class="mom-overview-top">
-                <div class="mom-overview-icon purple"><i class="bi bi-calendar-event"></i></div>
-                <div class="mom-overview-tag">All Time</div>
-            </div>
-            <div class="mom-overview-value">@ViewBag.TotalMeetings</div>
-            <div class="mom-overview-label">Total Scheduled Meetings</div>
-        </div>
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "purple", IconClass = "bi bi-calendar-event", Tag = "All Time", Value = Convert.ToString(ViewBag.TotalMeetings) ?? "0", Label = "Total Scheduled Meetings" })
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "blue", IconClass = "bi bi-check2-circle", Tag = "Active", Value = Convert.ToString(isAdminUser ? ViewBag.ActiveMeetings : ViewBag.CompletedMeetings) ?? "0", Label = isAdminUser ? "Completed / Upcoming" : "Completed Meetings" })
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "amber", IconClass = "bi bi-x-octagon", Tag = isAdminUser ? "Recorded" : "Requests", Value = Convert.ToString(isAdminUser ? ViewBag.CancelledMeetings : pendingProfileRequests.Count) ?? "0", Label = isAdminUser ? "Cancelled Meetings" : "Profile Requests Pending" })
+        @await Html.PartialAsync("_MetricCard", new StatCardViewModel { Tone = "green", IconClass = "bi bi-people", Tag = isAdminUser ? "Records" : "Transfer", Value = Convert.ToString(isAdminUser ? ViewBag.TotalAttendees : pendingTransferRequests.Count) ?? "0", Label = isAdminUser ? "Total Attendees Logged" : "Transfer Requests Pending" })
+    </div>
 
-        <div class="mom-overview-card blue">
-            <div class="mom-overview-top">
-                <div class="mom-overview-icon blue"><i class="bi bi-check2-circle"></i></div>
-                <div class="mom-overview-tag">Active</div>
-            </div>
-            <div class="mom-overview-value">@(isAdminUser ? ViewBag.ActiveMeetings : ViewBag.CompletedMeetings)</div>
-            <div class="mom-overview-label">@(isAdminUser ? "Completed / Upcoming" : "Completed Meetings")</div>
+    <div class="mom-queue-snapshot">
+        <div class="mom-logs-head mb-3">
+            <h5>Queue Snapshot</h5>
+            <a asp-controller="ActionCenter" asp-action="Index" class="mom-section-link"><i class="bi bi-arrow-right-circle"></i>Open Action Center</a>
         </div>
-
-        <div class="mom-overview-card amber">
-            <div class="mom-overview-top">
-                <div class="mom-overview-icon amber"><i class="bi bi-x-octagon"></i></div>
-                <div class="mom-overview-tag">@(isAdminUser ? "Recorded" : "Requests")</div>
+        <div class="mom-queue-snapshot-grid">
+            <div class="mom-queue-snapshot-metrics">
+                <div class="mom-queue-snapshot-card">
+                    <div class="mom-hero-metric-label">Open Queue</div>
+                    <div class="mom-queue-snapshot-value">@actionCenterSummary.OpenActionCount</div>
+                    <div class="mom-activity-meta">Current action items visible in this workspace.</div>
+                </div>
+                <div class="mom-queue-snapshot-card">
+                    <div class="mom-hero-metric-label">SLA Watch</div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="mom-soft-tag">@actionCenterSummary.Overdue24Count overdue 24h+</span>
+                        <span class="mom-soft-tag @(actionCenterSummary.Overdue72Count > 0 ? "text-danger border border-danger-subtle bg-danger-subtle" : string.Empty)">@actionCenterSummary.Overdue72Count overdue 72h+</span>
+                    </div>
+                </div>
             </div>
-            <div class="mom-overview-value">@(isAdminUser ? ViewBag.CancelledMeetings : pendingProfileRequests.Count)</div>
-            <div class="mom-overview-label">@(isAdminUser ? "Cancelled Meetings" : "Profile Requests Pending")</div>
-        </div>
-
-        <div class="mom-overview-card green">
-            <div class="mom-overview-top">
-                <div class="mom-overview-icon green"><i class="bi bi-people"></i></div>
-                <div class="mom-overview-tag">@(isAdminUser ? "Records" : "Transfer")</div>
+            <div class="mom-queue-preview-list">
+                @if (actionCenterSummary.PreviewItems.Count == 0)
+                {
+                    @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                    {
+                        IconClass = "bi bi-lightning-charge",
+                        Title = "Queue is clear",
+                        Description = "There are no live action items visible in this workspace right now.",
+                        Compact = true
+                    })
+                }
+                @foreach (var item in actionCenterSummary.PreviewItems)
+                {
+                    string queueTargetUrl = string.IsNullOrWhiteSpace(item.TargetUrl) ? Url.Action("Index", "ActionCenter") ?? "#" : item.TargetUrl;
+                    <a href="@queueTargetUrl" class="mom-queue-preview-item">
+                        <div class="mom-activity-top">
+                            <div class="mom-activity-title">@item.Title</div>
+                            <span class="mom-soft-tag @(item.IsCritical ? "text-danger border border-danger-subtle bg-danger-subtle" : item.IsStale24Hours ? "text-warning border border-warning-subtle bg-warning-subtle" : string.Empty)">@item.PriorityLabel</span>
+                        </div>
+                        <div class="mom-notify-text">@item.Description</div>
+                        <div class="mom-activity-meta">@item.Meta</div>
+                    </a>
+                }
             </div>
-            <div class="mom-overview-value">@(isAdminUser ? ViewBag.TotalAttendees : pendingTransferRequests.Count)</div>
-            <div class="mom-overview-label">@(isAdminUser ? "Total Attendees Logged" : "Transfer Requests Pending")</div>
         </div>
     </div>
 
-    @if (isAdminUser)
-    {
-        <div class="mom-notify-card">
-            <div class="mom-logs-head mb-3">
-                <h5>Admin Notifications</h5>
-                <div class="text-muted small">Profile update requests, password changes and user activity.</div>
+    <div class="mom-inbox-grid">
+        <div class="mom-inbox-card">
+            <div class="mom-inbox-head">
+                <div>
+                    <h5>@(isAdminUser ? "Action Inbox" : "My Action Inbox")</h5>
+                    <p>@(isAdminUser ? "High-priority approvals and requests that still need a decision." : "Pending items and approvals connected to your account.")</p>
+                </div>
+                <span class="mom-soft-tag">@ViewBag.ActionInboxCount items</span>
             </div>
-
-            @if (adminNotifications.Count == 0)
-            {
-                <div class="mom-dash-empty">No recent notifications found.</div>
-            }
-            else
-            {
-                <div class="mom-notify-list">
-                    @foreach (var notification in adminNotifications)
+            <div class="mom-inbox-list">
+                @if (isAdminUser)
+                {
+                    @if (pendingProfileRequests.Count == 0 && pendingTransferRequests.Count == 0)
                     {
-                        <div class="mom-notify-item">
-                            <div class="mom-notify-icon">
-                                @if (notification.NotificationType == "PasswordChanged")
-                                {
-                                    <i class="bi bi-key"></i>
-                                }
-                                else if (notification.NotificationType == "StaffTransferRequest")
-                                {
-                                    <i class="bi bi-arrow-left-right"></i>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-person-lines-fill"></i>
-                                }
+                        <div class="mom-dash-empty">No pending approvals right now.</div>
+                    }
+                    @foreach (var request in pendingProfileRequests.Take(3))
+                    {
+                        <div class="mom-inbox-item">
+                            <div class="mom-inbox-item-top">
+                                <div class="mom-inbox-item-title">Profile update for @request.CurrentUserName</div>
+                                <span class="mom-soft-tag">Profile</span>
                             </div>
+                            <div class="mom-inbox-item-text">@request.RequestedEmail • @(string.IsNullOrWhiteSpace(request.DepartmentName) ? "No department" : request.DepartmentName)</div>
+                            <div class="mom-inbox-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+                    @foreach (var request in pendingTransferRequests.Take(3))
+                    {
+                        <div class="mom-inbox-item">
+                            <div class="mom-inbox-item-top">
+                                <div class="mom-inbox-item-title">@request.StaffName transfer request</div>
+                                <span class="mom-soft-tag">Transfer</span>
+                            </div>
+                            <div class="mom-inbox-item-text">@request.SourceCompanyName to @request.TargetDepartmentName</div>
+                            <div class="mom-inbox-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+                    <div class="d-flex gap-2 flex-wrap pt-2">
+                        <a asp-controller="Profile" asp-action="ProfileUpdateRequestList" class="mom-section-link"><i class="bi bi-arrow-right-circle"></i>Review profile requests</a>
+                        <a asp-controller="Staff" asp-action="StaffTransferRequestList" class="mom-section-link"><i class="bi bi-arrow-right-circle"></i>Review transfer requests</a>
+                    </div>
+                }
+                else
+                {
+                    @if (pendingProfileRequests.Count == 0 && pendingTransferRequests.Count == 0)
+                    {
+                        <div class="mom-dash-empty">No pending requests right now. Your workspace looks clear.</div>
+                    }
+                    @foreach (var request in pendingProfileRequests.Take(3))
+                    {
+                        <div class="mom-inbox-item">
+                            <div class="mom-inbox-item-top">
+                                <div class="mom-inbox-item-title">Profile update request</div>
+                                <span class="mom-soft-tag">@request.RequestStatus</span>
+                            </div>
+                            <div class="mom-inbox-item-text">Requested email: @request.RequestedEmail</div>
+                            <div class="mom-inbox-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+                    @foreach (var request in pendingTransferRequests.Take(3))
+                    {
+                        <div class="mom-inbox-item">
+                            <div class="mom-inbox-item-top">
+                                <div class="mom-inbox-item-title">Transfer request to @request.TargetCompanyName</div>
+                                <span class="mom-soft-tag">@request.RequestStatus</span>
+                            </div>
+                            <div class="mom-inbox-item-text">Target department: @request.TargetDepartmentName</div>
+                            <div class="mom-inbox-item-meta">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                        </div>
+                    }
+                    <div class="pt-2">
+                        <a asp-controller="Profile" asp-action="Profile" class="mom-section-link"><i class="bi bi-arrow-right-circle"></i>Open my profile workspace</a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mom-inbox-card">
+            <div class="mom-inbox-head">
+                <div>
+                    <h5>@(isAdminUser ? "Access & Risk Signals" : "My Workspace Signals")</h5>
+                    <p>@(isAdminUser ? "Surface suspicious sign-ins and sensitive events before they become problems." : "Quick context on what needs your attention next.")</p>
+                </div>
+                <a asp-controller="Activity" asp-action="ActivityLog" class="mom-section-link"><i class="bi bi-activity"></i>Open activity center</a>
+            </div>
+            @if (isAdminUser)
+            {
+                <div class="mom-risk-list">
+                    @if (failedLoginLogs.Count == 0)
+                    {
+                        <div class="mom-dash-empty">No failed login attempts found in recent activity.</div>
+                    }
+                    @foreach (var log in failedLoginLogs)
+                    {
+                        <div class="mom-risk-item">
+                            <div class="mom-risk-icon"><i class="bi bi-shield-exclamation"></i></div>
                             <div>
-                                <div class="mom-notify-title">@notification.Title</div>
-                                <div class="mom-notify-text">@notification.Message</div>
-                                <div class="mom-notify-meta">
-                                    <span class="mom-soft-tag">@(notification.NotificationType == "PasswordChanged" ? "Password" : notification.NotificationType == "StaffTransferRequest" ? "Transfer Request" : "Profile Request")</span>
-                                    <div class="mom-notify-time">@notification.Created.ToString("dd MMM yyyy hh:mm tt")</div>
-                                </div>
+                                <div class="mom-inbox-item-title">@log.Title</div>
+                                <div class="mom-inbox-item-text">@log.Description</div>
+                                <div class="mom-inbox-item-meta">@log.Created.ToString("dd MMM yyyy hh:mm tt")</div>
                             </div>
                         </div>
                     }
                 </div>
             }
+            else
+            {
+                <div class="mom-notify-list">
+                    <div class="mom-notify-item">
+                        <div class="mom-notify-icon"><i class="bi bi-calendar2-week"></i></div>
+                        <div>
+                            <div class="mom-notify-title">Next meeting</div>
+                            <div class="mom-notify-text">@(nextMeeting == null ? "No upcoming meeting assigned right now." : nextMeeting.MeetingDescription)</div>
+                            <div class="mom-notify-time">@(nextMeeting?.MeetingDate?.ToString("dd MMM yyyy hh:mm tt") ?? "Waiting for schedule")</div>
+                        </div>
+                    </div>
+                    <div class="mom-notify-item">
+                        <div class="mom-notify-icon"><i class="bi bi-person-gear"></i></div>
+                        <div>
+                            <div class="mom-notify-title">Account readiness</div>
+                            <div class="mom-notify-text">@((pendingProfileRequests.Count + pendingTransferRequests.Count) == 0 ? "No pending account requests. Your profile workspace is clear." : "You still have pending profile or transfer requests awaiting action.")</div>
+                            <div class="mom-notify-time">Review them from your profile workspace.</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (isAdminUser)
+    {
+        <div class="row g-4">
+            <div class="col-xl-6">
+                <div class="mom-notify-card h-100">
+                    <div class="mom-logs-head mb-3">
+                        <h5>Admin Notifications</h5>
+                        <div class="text-muted small">Profile update requests, password changes and user activity.</div>
+                    </div>
+
+                    @if (adminNotifications.Count == 0)
+                    {
+                        <div class="mom-dash-empty">No recent notifications found.</div>
+                    }
+                    else
+                    {
+                        <div class="mom-notify-list">
+                            @foreach (var notification in adminNotifications)
+                            {
+                                <div class="mom-notify-item">
+                                    <div class="mom-notify-icon">
+                                        @if (notification.NotificationType == "PasswordChanged")
+                                        {
+                                            <i class="bi bi-key"></i>
+                                        }
+                                        else if (notification.NotificationType == "StaffTransferRequest")
+                                        {
+                                            <i class="bi bi-arrow-left-right"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-lines-fill"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <div class="mom-notify-title">@notification.Title</div>
+                                        <div class="mom-notify-text">@notification.Message</div>
+                                        <div class="mom-notify-meta">
+                                            <span class="mom-soft-tag">@(notification.NotificationType == "PasswordChanged" ? "Password" : notification.NotificationType == "StaffTransferRequest" ? "Transfer Request" : "Profile Request")</span>
+                                            <div class="mom-notify-time">@notification.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-xl-6">
+                <div class="mom-notify-card h-100">
+                    <div class="mom-logs-head mb-3">
+                        <h5>Activity Stream</h5>
+                        <div class="text-muted small">Real operational actions happening across your company workspace.</div>
+                    </div>
+                    @if (recentActivityLogs.Count == 0)
+                    {
+                        <div class="mom-dash-empty">No activity recorded yet.</div>
+                    }
+                    else
+                    {
+                        <div class="mom-activity-list">
+                            @foreach (var log in recentActivityLogs)
+                            {
+                                <div class="mom-activity-item">
+                                    <div class="mom-activity-top">
+                                        <div class="mom-activity-title">@log.Title</div>
+                                        <span class="mom-soft-tag">@log.ActionType</span>
+                                    </div>
+                                    <div class="mom-notify-text">@log.Description</div>
+                                    <div class="mom-activity-meta">@log.UserName | @log.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     }
 
@@ -653,34 +420,23 @@
             <div class="col-xl-5">
                 <div class="mom-notify-card h-100">
                     <div class="mom-logs-head mb-3">
-                        <h5>My Request Status</h5>
-                        <div class="text-muted small">Profile and transfer approvals connected to your account.</div>
+                        <h5>My Activity</h5>
+                        <div class="text-muted small">Recent account and request actions connected to your workspace.</div>
                     </div>
 
                     <div class="mom-notify-list">
-                        @if (pendingProfileRequests.Count == 0 && pendingTransferRequests.Count == 0)
+                        @if (recentActivityLogs.Count == 0)
                         {
-                            <div class="mom-dash-empty">No pending requests right now.</div>
+                            <div class="mom-dash-empty">No recent activity right now.</div>
                         }
-                        @foreach (var request in pendingProfileRequests)
+                        @foreach (var log in recentActivityLogs)
                         {
                             <div class="mom-notify-item">
-                                <div class="mom-notify-icon"><i class="bi bi-person-lines-fill"></i></div>
+                                <div class="mom-notify-icon"><i class="bi bi-activity"></i></div>
                                 <div>
-                                    <div class="mom-notify-title">Profile update pending</div>
-                                    <div class="mom-notify-text">@request.RequestedEmail</div>
-                                    <div class="mom-notify-time">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
-                                </div>
-                            </div>
-                        }
-                        @foreach (var request in pendingTransferRequests)
-                        {
-                            <div class="mom-notify-item">
-                                <div class="mom-notify-icon"><i class="bi bi-arrow-left-right"></i></div>
-                                <div>
-                                    <div class="mom-notify-title">Transfer request pending</div>
-                                    <div class="mom-notify-text">@request.TargetCompanyName | @request.TargetDepartmentName</div>
-                                    <div class="mom-notify-time">@request.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                    <div class="mom-notify-title">@log.Title</div>
+                                    <div class="mom-notify-text">@log.Description</div>
+                                    <div class="mom-notify-time">@log.Created.ToString("dd MMM yyyy hh:mm tt")</div>
                                 </div>
                             </div>
                         }
@@ -801,3 +557,5 @@
         });
     }
 </script>
+
+

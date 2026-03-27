@@ -1,0 +1,128 @@
+@model Meeting_Of_Minutes.Models.SystemSettingsModel
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSFormStyles")
+@{
+    ViewData["Title"] = "System Settings - Meeting Of Minutes";
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "System Settings" })
+
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-sliders"></i>Platform Governance</div>
+            <h1 class="form-title">System Settings</h1>
+            <p class="form-subtitle">Maintain global platform identity, support routing and registration behavior from one controlled Super Admin panel.</p>
+        </div>
+        <aside class="form-note">
+            <div class="form-note-label">Operational notes</div>
+            <h2 class="form-note-title">These settings apply at platform scope.</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Public admin registration stays disabled once bootstrap is complete.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Invite email delivery falls back to HTML previews when SMTP is not configured.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Changes are captured in the activity log for governance review.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Fallback JSON storage is used if database settings table is not yet provisioned.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="form-card">
+        <div class="form-card-head">
+            <div>
+                <h3>Platform configuration</h3>
+                <p>Update high-level product identity and secure operational defaults.</p>
+            </div>
+        </div>
+
+        <form asp-action="Save" method="post" class="form-grid">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="PlatformName" class="form-label">Platform name</label>
+                    <input asp-for="PlatformName" class="form-control form-control-shell" />
+                    <span asp-validation-for="PlatformName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SupportEmail" class="form-label">Support email</label>
+                    <input asp-for="SupportEmail" class="form-control form-control-shell" />
+                    <span asp-validation-for="SupportEmail" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SessionTimeoutMinutes" class="form-label">Session timeout (minutes)</label>
+                    <input asp-for="SessionTimeoutMinutes" class="form-control form-control-shell" type="number" min="15" max="240" />
+                    <span asp-validation-for="SessionTimeoutMinutes" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check form-switch ps-0">
+                        <label class="form-label d-block">Registration policy</label>
+                        <input asp-for="AllowAdminSelfRegistration" class="form-check-input ms-0" type="checkbox" />
+                        <label asp-for="AllowAdminSelfRegistration" class="form-check-label ms-2">Allow public admin self-registration</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label asp-for="MaintenanceBanner" class="form-label">Maintenance banner</label>
+                    <textarea asp-for="MaintenanceBanner" class="form-control form-control-shell" rows="4" placeholder="Optional banner text shown when platform-wide maintenance is scheduled."></textarea>
+                    <span asp-validation-for="MaintenanceBanner" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 mt-2">
+                    <hr />
+                    <h5 class="mb-1">Invite delivery</h5>
+                    <p class="text-muted mb-0">Configure SMTP for real onboarding emails. If left blank, the system generates HTML previews in App_Data.</p>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="InviteBaseUrl" class="form-label">Invite base URL</label>
+                    <input asp-for="InviteBaseUrl" class="form-control form-control-shell" placeholder="https://app.yourdomain.com" />
+                    <span asp-validation-for="InviteBaseUrl" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SmtpHost" class="form-label">SMTP host</label>
+                    <input asp-for="SmtpHost" class="form-control form-control-shell" placeholder="smtp.yourprovider.com" />
+                    <span asp-validation-for="SmtpHost" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SmtpPort" class="form-label">SMTP port</label>
+                    <input asp-for="SmtpPort" class="form-control form-control-shell" type="number" min="1" max="65535" />
+                    <span asp-validation-for="SmtpPort" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SmtpUsername" class="form-label">SMTP username</label>
+                    <input asp-for="SmtpUsername" class="form-control form-control-shell" />
+                    <span asp-validation-for="SmtpUsername" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SmtpPassword" class="form-label">SMTP password</label>
+                    <input asp-for="SmtpPassword" class="form-control form-control-shell" type="password" />
+                    <span asp-validation-for="SmtpPassword" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SmtpFromEmail" class="form-label">From email</label>
+                    <input asp-for="SmtpFromEmail" class="form-control form-control-shell" />
+                    <span asp-validation-for="SmtpFromEmail" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SmtpFromName" class="form-label">From name</label>
+                    <input asp-for="SmtpFromName" class="form-control form-control-shell" />
+                    <span asp-validation-for="SmtpFromName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check form-switch ps-0">
+                        <label class="form-label d-block">Transport security</label>
+                        <input asp-for="SmtpUseSsl" class="form-check-input ms-0" type="checkbox" />
+                        <label asp-for="SmtpUseSsl" class="form-check-label ms-2">Use SSL / TLS for SMTP delivery</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn form-btn form-btn-primary"><i class="bi bi-check2-circle me-2"></i>Save settings</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<partial name="_ValidationScriptsPartial" />

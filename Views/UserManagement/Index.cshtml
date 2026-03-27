@@ -1,0 +1,251 @@
+@model Meeting_Of_Minutes.Models.PagedListViewModel<Meeting_Of_Minutes.Models.UserManagementModel>
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "User Management - Meeting Of Minutes";
+    string searchText = ViewBag.SearchText as string ?? string.Empty;
+    string roleFilter = ViewBag.RoleFilter as string ?? string.Empty;
+    string statusFilter = ViewBag.StatusFilter as string ?? string.Empty;
+    bool isSuperAdmin = ViewBag.IsSuperAdmin is bool flag && flag;
+    var adminOptionsByDepartment = ViewBag.AdminOptionsByDepartment as IDictionary<int, List<SelectListItem>> ?? new Dictionary<int, List<SelectListItem>>();
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "User Management" })
+
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-person-gear"></i>@(isSuperAdmin ? "Company Super Admin Control" : "Department Admin Control")</div>
+            <h1 class="list-title">User Management</h1>
+            <p class="list-subtitle">@(isSuperAdmin ? "Manage Admin and User accounts only inside your current company. You control role changes, password recovery and user ownership for that company." : "Manage only the standard users that belong to your department. Department scope stays enforced here.")</p>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">Scope summary</div>
+            <h2 class="list-note-title">@Model.TotalItems user accounts are currently visible in this workspace.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Only the company Super Admin can create Admin accounts and change elevated roles.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Department admins only manage standard users within their own department.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Every sensitive user action is pushed into the audit trail.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">@(isSuperAdmin ? "Company Users" : "Department Users")</h3>
+                <p class="list-surface-meta">Review role assignment, admin ownership, password state and activation posture.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                @if (isSuperAdmin)
+                {
+                    <a asp-action="Create" class="btn list-btn list-btn-primary"><i class="bi bi-person-plus me-2"></i>Create user</a>
+                }
+                <div class="list-status-chip">Total Users: @Model.TotalItems</div>
+            </div>
+        </div>
+
+        <div class="list-search-wrap">
+            <form asp-action="Index" method="get" class="list-search-form">
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="searchtext" value="@searchText" type="text" placeholder="Search user, email, or department..." />
+                </div>
+                <select name="roleFilter" class="form-select" style="max-width: 180px;">
+                    <option value="">All Roles</option>
+                    @foreach (var role in (isSuperAdmin ? new[] { "SuperAdmin", "Admin", "User" } : new[] { "Admin", "User" }))
+                    {
+                        if (roleFilter == role)
+                        {
+                            <option value="@role" selected>@role</option>
+                        }
+                        else
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    }
+                </select>
+                <select name="statusFilter" class="form-select" style="max-width: 180px;">
+                    <option value="">All Status</option>
+                    @if (statusFilter == "active") { <option value="active" selected>Active</option> } else { <option value="active">Active</option> }
+                    @if (statusFilter == "inactive") { <option value="inactive" selected>Inactive</option> } else { <option value="inactive">Inactive</option> }
+                </select>
+                <button class="btn list-btn list-btn-primary" type="submit">Apply</button>
+                <a asp-action="Index" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="list-empty">No users found.</div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4"><a class="list-sort-link" href="@Url.Action("Index", new { searchtext = Model.SearchText, roleFilter, statusFilter, page = 1, sortBy = "name", sortDirection = Model.SortBy == "name" && Model.SortDirection == "asc" ? "desc" : "asc" })">User <i class="bi bi-arrow-down-up"></i></a></th>
+                                @if (isSuperAdmin)
+                                {
+                                    <th><a class="list-sort-link" href="@Url.Action("Index", new { searchtext = Model.SearchText, roleFilter, statusFilter, page = 1, sortBy = "company", sortDirection = Model.SortBy == "company" && Model.SortDirection == "asc" ? "desc" : "asc" })">Company <i class="bi bi-arrow-down-up"></i></a></th>
+                                }
+                                <th><a class="list-sort-link" href="@Url.Action("Index", new { searchtext = Model.SearchText, roleFilter, statusFilter, page = 1, sortBy = "department", sortDirection = Model.SortBy == "department" && Model.SortDirection == "asc" ? "desc" : "asc" })">Department <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("Index", new { searchtext = Model.SearchText, roleFilter, statusFilter, page = 1, sortBy = "manager", sortDirection = Model.SortBy == "manager" && Model.SortDirection == "asc" ? "desc" : "asc" })">Assigned Admin <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("Index", new { searchtext = Model.SearchText, roleFilter, statusFilter, page = 1, sortBy = "role", sortDirection = Model.SortBy == "role" && Model.SortDirection == "asc" ? "desc" : "asc" })">Role <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th>Password State</th>
+                                <th><a class="list-sort-link" href="@Url.Action("Index", new { searchtext = Model.SearchText, roleFilter, statusFilter, page = 1, sortBy = "status", sortDirection = Model.SortBy == "status" && Model.SortDirection == "asc" ? "desc" : "asc" })">Status <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.Items)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">@user.UserName</div>
+                                        <div class="small text-muted">@user.Email</div>
+                                    </td>
+                                    @if (isSuperAdmin)
+                                    {
+                                        <td>
+                                            <div class="fw-semibold text-dark">@user.CompanyName</div>
+                                            <div class="small text-muted">@user.ContactNo</div>
+                                        </td>
+                                    }
+                                    <td>
+                                        <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(user.DepartmentName) ? "-" : user.DepartmentName)</div>
+                                        @if (!isSuperAdmin)
+                                        {
+                                            <div class="small text-muted">@user.ContactNo</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (string.Equals(user.UserRole, "User", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            if (isSuperAdmin)
+                                            {
+                                                var currentOptions = user.DepartmentID.HasValue && adminOptionsByDepartment.ContainsKey(user.DepartmentID.Value)
+                                                    ? adminOptionsByDepartment[user.DepartmentID.Value]
+                                                    : new List<SelectListItem>();
+                                                <form asp-action="UpdateManagedAdmin" method="post" class="d-flex gap-2 align-items-center flex-wrap">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@user.UserID" />
+                                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                    <select name="managedByAdminUserID" class="form-select form-select-sm" style="min-width: 170px;">
+                                                        <option value="">Select admin</option>
+                                                        @foreach (var option in currentOptions)
+                                                        {
+                                                            if (option.Value == user.ManagedByAdminUserID?.ToString())
+                                                            {
+                                                                <option value="@option.Value" selected>@option.Text</option>
+                                                            }
+                                                            else
+                                                            {
+                                                                <option value="@option.Value">@option.Text</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                    <button type="submit" class="btn btn-sm list-btn list-btn-light">Save</button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark border">@(string.IsNullOrWhiteSpace(user.ManagedByAdminName) ? "Unassigned" : user.ManagedByAdminName)</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">Department owner</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (isSuperAdmin && !string.Equals(user.UserRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <form asp-action="UpdateRole" method="post" class="d-flex gap-2 align-items-center justify-content-center flex-wrap">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="userId" value="@user.UserID" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                <select name="userRole" class="form-select form-select-sm" style="min-width: 120px;">
+                                                    @if (user.UserRole == "Admin") { <option value="Admin" selected>Admin</option> } else { <option value="Admin">Admin</option> }
+                                                    @if (user.UserRole == "User") { <option value="User" selected>User</option> } else { <option value="User">User</option> }
+                                                </select>
+                                                <button type="submit" class="btn btn-sm list-btn list-btn-light">Save</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark border">@user.UserRole</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (user.IsAutoPassword)
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Temporary</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-dark border">Custom</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                            @if (isSuperAdmin)
+                                            {
+                                                @if (user.IsAutoPassword)
+                                                {
+                                                    <form asp-action="ResendInvite" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="userId" value="@user.UserID" />
+                                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                        <button type="submit" class="btn list-btn list-btn-light">
+                                                            <i class="bi bi-envelope-paper me-2"></i>Resend Invite
+                                                        </button>
+                                                    </form>
+                                                }
+                                                <form asp-action="ResetPassword" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@user.UserID" />
+                                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                    <button type="submit" class="btn list-btn list-btn-light">
+                                                        <i class="bi bi-key me-2"></i>Reset Password
+                                                    </button>
+                                                </form>
+                                            }
+                                            @if (!(string.Equals(user.UserRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase) && !isSuperAdmin))
+                                            {
+                                                <form asp-action="ToggleActive" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@user.UserID" />
+                                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                    <button type="submit" class="btn list-btn @(user.IsActive ? "list-btn-light" : "list-btn-primary")">
+                                                        <i class="bi @(user.IsActive ? "bi-pause-circle" : "bi-play-circle") me-2"></i>
+                                                        @(user.IsActive ? "Deactivate" : "Activate")
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+
+        @await Html.PartialAsync("_ListPagination", Model)
+    </section>
+</div>

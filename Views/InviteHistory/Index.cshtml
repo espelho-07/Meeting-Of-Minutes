@@ -1,0 +1,137 @@
+@model Meeting_Of_Minutes.Models.PagedListViewModel<Meeting_Of_Minutes.Models.InviteHistoryEntryModel>
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "Invite History - Meeting Of Minutes";
+    string searchText = ViewBag.SearchText as string ?? string.Empty;
+    string statusFilter = ViewBag.StatusFilter as string ?? string.Empty;
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Invite History" })
+
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-envelope-check"></i>Onboarding Operations</div>
+            <h1 class="list-title">Invite History</h1>
+            <p class="list-subtitle">Track onboarding delivery, invite completion, preview fallback files and expired links from one Super Admin workspace.</p>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">Delivery visibility</div>
+            <h2 class="list-note-title">@Model.TotalItems invites are currently visible in the onboarding log.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>SMTP sent and HTML preview deliveries are tracked together.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Used invites close automatically after onboarding completes.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Expired links remain visible for support and resend workflows.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Invite delivery log</h3>
+                <p class="list-surface-meta">Review delivery channel, completion status and preview fallbacks.</p>
+            </div>
+            <div class="list-status-chip">Super Admin only</div>
+        </div>
+
+        <div class="list-search-wrap">
+            <form asp-action="Index" method="get" class="list-search-form">
+                <div class="list-search-input">
+                    <span><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="searchtext" value="@searchText" type="text" placeholder="Search by user, email or company..." />
+                </div>
+                <select name="statusFilter" class="form-select" style="max-width: 180px;">
+                    <option value="">All status</option>
+                    @if (statusFilter == "open") { <option value="open" selected>Open</option> } else { <option value="open">Open</option> }
+                    @if (statusFilter == "used") { <option value="used" selected>Used</option> } else { <option value="used">Used</option> }
+                    @if (statusFilter == "expired") { <option value="expired" selected>Expired</option> } else { <option value="expired">Expired</option> }
+                </select>
+                <button class="btn list-btn list-btn-primary" type="submit">Apply</button>
+                <a asp-action="Index" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="list-empty">No invites found.</div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">User</th>
+                                <th>Company</th>
+                                <th>Delivery</th>
+                                <th>Status</th>
+                                <th>Timeline</th>
+                                <th class="text-center">Preview</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                bool isExpired = !item.IsUsed && item.ExpiresAt < DateTime.Now;
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">@item.UserName</div>
+                                        <div class="small text-muted">@item.InviteEmail</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@item.CompanyName</div>
+                                        <div class="small text-muted">@item.UserRole</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@item.DeliveryChannel</span>
+                                        <div class="small text-muted mt-1">@item.DeliveryStatus</div>
+                                    </td>
+                                    <td>
+                                        @if (item.IsUsed)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Completed</span>
+                                        }
+                                        else if (isExpired)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Expired</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Open</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="small text-dark">Created: @item.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                        <div class="small text-muted">Expires: @item.ExpiresAt.ToString("dd MMM yyyy hh:mm tt")</div>
+                                        @if (item.UsedAt.HasValue)
+                                        {
+                                            <div class="small text-success">Used: @item.UsedAt.Value.ToString("dd MMM yyyy hh:mm tt")</div>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (!string.IsNullOrWhiteSpace(item.PreviewPath))
+                                        {
+                                            <a asp-action="Preview" asp-route-id="@item.UserInviteID" target="_blank" rel="noopener noreferrer" class="btn list-btn list-btn-light">
+                                                <i class="bi bi-file-earmark-richtext me-2"></i>Open
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No preview</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+
+        @await Html.PartialAsync("_ListPagination", Model)
+    </section>
+</div>

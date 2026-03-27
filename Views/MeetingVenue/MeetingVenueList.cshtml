@@ -1,68 +1,67 @@
-@model List<MeetingVenueModel>
+@model PagedListViewModel<MeetingVenueModel>
 
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSListStyles")
 @{
     ViewData["Title"] = "Meeting Venues - Meeting Of Minutes";
     int SerialNumber = 1;
+    var heroModel = new ListPageHeroViewModel
+    {
+        IconClass = "bi bi-geo-alt",
+        Kicker = "Venue Directory",
+        Title = "Meeting Venues",
+        Subtitle = "Keep physical rooms and virtual locations ready so meetings can be scheduled against approved venue records inside the company workspace.",
+        NoteLabel = "Venue readiness",
+        NoteTitle = $"{Model.TotalItems} venues are currently available for scheduling.",
+        Notes = new List<string>
+        {
+            "Venues listed here appear directly in the Schedule Meeting form.",
+            "Keep names clean so meeting details stay readable and consistent.",
+            "Each company maintains only its own venue records."
+        }
+    };
+    var toolbarModel = new ListPageToolbarViewModel
+    {
+        Heading = "Venue Records",
+        Meta = "Search, review and manage venue definitions from one consistent scheduling surface.",
+        SearchAction = "MeetingVenueList",
+        SearchController = "MeetingVenue",
+        SearchPlaceholder = "Search venues...",
+        SearchText = ViewBag.searchtext,
+        StatusText = $"Total Venues: {Model.TotalItems}",
+        TemplateAction = "DownloadImportTemplate",
+        TemplateController = "MeetingVenue",
+        ImportAction = "ImportFromExcel",
+        ImportController = "MeetingVenue",
+        Actions = new List<ListToolbarActionViewModel>
+        {
+            new() { Action = "MeetingVenueAddEdit", Text = "Add Venue", IconClass = "bi bi-plus-circle", CssClass = "list-btn-primary" },
+            new() { Action = "ExportToExcel", Text = "Export", IconClass = "bi bi-file-earmark-excel", CssClass = "list-btn-success" }
+        }
+    };
 }
 
-<div class="pagetitle mb-4">
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">Meeting Venues</li>
-        </ol>
-    </nav>
-</div>
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Meeting Venues" })
 
 <div class="list-page">
-    <section class="list-hero">
-        <div class="list-hero-main">
-            <div class="list-kicker"><i class="bi bi-geo-alt"></i> Venue Directory</div>
-            <h1 class="list-title">Meeting Venues</h1>
-            <p class="list-subtitle">Keep physical rooms and virtual locations ready so meetings can be scheduled against approved venue records inside the company workspace.</p>
-        </div>
-        <aside class="list-note">
-            <div class="list-note-label">Venue readiness</div>
-            <h2 class="list-note-title">@Model.Count venues are currently available for scheduling.</h2>
-            <ul class="list-note-list">
-                <li><i class="bi bi-check2-circle"></i><span>Venues listed here appear directly in the Schedule Meeting form.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Keep names clean so meeting details stay readable and consistent.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Each company maintains only its own venue records.</span></li>
-            </ul>
-        </aside>
-    </section>
+    @await Html.PartialAsync("_ListPageHero", heroModel)
 
     <section class="list-surface">
-        <div class="list-surface-header">
-            <div>
-                <h3 class="list-surface-heading">Venue Records</h3>
-                <p class="list-surface-meta">Search, review and manage venue definitions from one consistent scheduling surface.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a asp-action="MeetingVenueAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Venue</a>
-                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
-            </div>
-        </div>
-
-        <div class="list-search-wrap">
-            <div class="list-search-form">
-                <div class="list-search-input">
-                    <span><i class="bi bi-search"></i></span>
-                    <input id="venueSearchInput" class="form-control" type="text" placeholder="Search venues..." onkeyup="filterVenueRows()" />
-                </div>
-                <button type="button" class="btn list-btn list-btn-primary" onclick="filterVenueRows()">Search</button>
-                <button type="button" class="btn list-btn list-btn-light" onclick="resetVenueSearch()">Clear</button>
-            </div>
-            <div class="list-status-chip">Total Venues: @Model.Count</div>
-        </div>
+        @await Html.PartialAsync("_ListPageToolbar", toolbarModel)
 
         <div class="list-table-wrap">
             <div class="list-table-card">
-                @if (Model.Count == 0)
+                @if (Model.Items.Count == 0)
                 {
-                    <div class="list-empty">No venues found.</div>
+                    @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                    {
+                        IconClass = "bi bi-geo-alt",
+                        Title = "No venues found",
+                        Description = "There are no venue records matching the current filters or search term.",
+                        ActionText = "Add Venue",
+                        ActionUrl = Url.Action("MeetingVenueAddEdit", "MeetingVenue"),
+                        Compact = true
+                    })
                 }
                 else
                 {
@@ -70,16 +69,16 @@
                         <thead>
                             <tr>
                                 <th class="ps-4">#</th>
-                                <th>Venue Name</th>
-                                <th>Venue Code</th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingVenueList", new { searchtext = Model.SearchText, page = 1, sortBy = "name", sortDirection = Model.SortBy == "name" && Model.SortDirection == "asc" ? "desc" : "asc" })">Venue Name <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("MeetingVenueList", new { searchtext = Model.SearchText, page = 1, sortBy = "id", sortDirection = Model.SortBy == "id" && Model.SortDirection == "asc" ? "desc" : "asc" })">Venue Code <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th>Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var venue in Model)
+                            @foreach (var venue in Model.Items)
                             {
-                                <tr class="venue-row" data-venue-name="@venue.MeetingVenueName">
+                                <tr>
                                     <td class="ps-4">@SerialNumber</td>
                                     <td>
                                         <div class="fw-bold text-dark">@venue.MeetingVenueName</div>
@@ -103,24 +102,6 @@
                 }
             </div>
         </div>
+        @await Html.PartialAsync("_ListPagination", Model)
     </section>
 </div>
-
-<script>
-    function filterVenueRows() {
-        var input = document.getElementById("venueSearchInput");
-        var filter = (input.value || "").toUpperCase();
-        var rows = document.querySelectorAll(".venue-row");
-
-        rows.forEach(function (row) {
-            var venueName = (row.getAttribute("data-venue-name") || "").toUpperCase();
-            row.style.display = venueName.indexOf(filter) > -1 ? "" : "none";
-        });
-    }
-
-    function resetVenueSearch() {
-        var input = document.getElementById("venueSearchInput");
-        input.value = "";
-        filterVenueRows();
-    }
-</script>

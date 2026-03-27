@@ -1,5 +1,6 @@
 @model Meeting_Of_Minutes.Models.UserProfileModel
 @using Microsoft.AspNetCore.Http
+@using Meeting_Of_Minutes.Services
 
 @{
     ViewData["Title"] = "My Profile - Meeting Of Minutes";
@@ -7,6 +8,19 @@
 }
 
 @await Html.PartialAsync("_AlertMessages")
+
+@if (Model.IsAutoPassword)
+{
+    <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert" style="border-radius:18px;">
+        <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-shield-lock-fill fs-4"></i>
+            <div>
+                <div class="fw-bold">Password change required</div>
+                <div>You are currently using a temporary password. Please update it now to unlock the rest of the workspace.</div>
+            </div>
+        </div>
+    </div>
+}
 
 <style>
     .mom-profile-shell {
@@ -308,8 +322,8 @@
 
                             <div class="mom-file-drop mb-3">
                                 <label class="form-label fw-semibold">Upload Proof Document</label>
-                                <input type="file" name="proofDocument" class="form-control" />
-                                <div class="small text-muted mt-2">Upload one supporting proof for any requested field change.</div>
+                                <input type="file" name="proofDocument" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" />
+                                <div class="small text-muted mt-2">Upload one supporting proof document up to 5 MB.</div>
                             </div>
 
                             <button type="submit" class="btn btn-primary px-4">
@@ -356,9 +370,15 @@
                                         }
                                     </div>
                                     <div>
-                                        <a href="@request.DocumentPath" target="_blank" class="btn btn-light btn-sm border">
-                                            <i class="bi bi-paperclip me-1"></i>View Document
-                                        </a>
+                                        @{
+                                            string safeDocumentPath = FileSecurityService.SanitizeStoredDocumentPath(request.DocumentPath);
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(safeDocumentPath))
+                                        {
+                                            <a href="@safeDocumentPath" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm border">
+                                                <i class="bi bi-paperclip me-1"></i>View Document
+                                            </a>
+                                        }
                                     </div>
                                 </div>
                             }

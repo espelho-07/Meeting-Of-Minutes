@@ -1,0 +1,204 @@
+@model Meeting_Of_Minutes.Models.ManagedUserCreateModel
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSFormStyles")
+@{
+    ViewData["Title"] = "Create Managed User - Meeting Of Minutes";
+    bool isSuperAdmin = Context.Session.GetString("UserRole") == "SuperAdmin";
+    string currentCompany = Context.Session.GetString("CompanyName") ?? string.Empty;
+    string currentDepartment = Context.Session.GetString("DepartmentName") ?? string.Empty;
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Create Managed User" })
+
+<div class="form-page">
+    <section class="form-hero">
+        <div class="form-hero-main">
+            <div class="form-kicker"><i class="bi bi-person-plus"></i>@(isSuperAdmin ? "Company Super Admin Provisioning" : "Department Admin Provisioning")</div>
+            <h1 class="form-title">Create workspace user</h1>
+            <p class="form-subtitle">@(isSuperAdmin ? "Create Admin or User accounts inside your current company. All new accounts receive an onboarding invite and must set a password on first login." : "Create standard users only for your department. Department scope is locked automatically.")</p>
+        </div>
+        <aside class="form-note">
+            <div class="form-note-label">Provisioning rules</div>
+            <h2 class="form-note-title">@(isSuperAdmin ? "Admin creation is locked to the company Super Admin." : "Department admins can create only standard users.")</h2>
+            <ul class="form-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>All accounts stay inside <strong>@currentCompany</strong>.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>User accounts require department assignment.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Passwords are generated as temporary credentials only.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Every creation action is written into the audit trail.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="form-card">
+        <div class="form-card-head">
+            <div>
+                <h3>Account details</h3>
+                <p>Define identity, role, and department scope before provisioning the new account.</p>
+            </div>
+            <a asp-action="Index" class="btn form-btn form-btn-light"><i class="bi bi-arrow-left me-2"></i>Back to user management</a>
+        </div>
+
+        <form asp-action="Create" method="post" class="form-grid">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="UserRole" class="form-label">Role</label>
+                    @if (isSuperAdmin)
+                    {
+                        <select asp-for="UserRole" class="form-select form-control-shell" id="createRole">
+                            <option value="Admin">Admin</option>
+                            <option value="User">User</option>
+                        </select>
+                    }
+                    else
+                    {
+                        <input asp-for="UserRole" type="hidden" value="User" />
+                        <input class="form-control form-control-shell" value="User" disabled />
+                    }
+                    <span asp-validation-for="UserRole" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="CompanyName" class="form-label">Company</label>
+                    <input asp-for="CompanyName" class="form-control form-control-shell" value="@currentCompany" readonly />
+                    <span asp-validation-for="CompanyName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="UserName" class="form-label">User name</label>
+                    <input asp-for="UserName" class="form-control form-control-shell" placeholder="Enter user name" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control form-control-shell" placeholder="Enter email address" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="ContactNo" class="form-label">Contact no</label>
+                    <input asp-for="ContactNo" class="form-control form-control-shell" placeholder="Enter contact number" />
+                    <span asp-validation-for="ContactNo" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="City" class="form-label">City</label>
+                    <input asp-for="City" class="form-control form-control-shell" placeholder="Enter city" />
+                    <span asp-validation-for="City" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6" id="departmentWrap">
+                    <label asp-for="DepartmentID" class="form-label">Department</label>
+                    @if (isSuperAdmin)
+                    {
+                        <select asp-for="DepartmentID" asp-items="ViewBag.DepartmentDropDown" class="form-select form-control-shell" id="createDepartment">
+                            <option value="">Select department</option>
+                        </select>
+                    }
+                    else
+                    {
+                        <input asp-for="DepartmentID" type="hidden" value="@Context.Session.GetInt32("DepartmentID")" />
+                        <input class="form-control form-control-shell" value="@currentDepartment" readonly />
+                    }
+                    <span asp-validation-for="DepartmentID" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6" id="managedAdminWrap">
+                    <label asp-for="ManagedByAdminUserID" class="form-label">Assigned Admin</label>
+                    @if (isSuperAdmin)
+                    {
+                        <select asp-for="ManagedByAdminUserID" asp-items="ViewBag.ManagedAdminDropDown" class="form-select form-control-shell" id="createManagedAdmin">
+                            <option value="">Select assigned admin</option>
+                        </select>
+                    }
+                    else
+                    {
+                        <input asp-for="ManagedByAdminUserID" type="hidden" value="@Context.Session.GetInt32("UserID")" />
+                        <input class="form-control form-control-shell" value="Assigned to you" readonly />
+                    }
+                    <span asp-validation-for="ManagedByAdminUserID" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check form-switch ps-0">
+                        <label class="form-label d-block">Account status</label>
+                        <input asp-for="IsActive" class="form-check-input ms-0" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label ms-2">Provision account as active</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Index" class="btn form-btn form-btn-light">Cancel</a>
+                <button type="submit" class="btn form-btn form-btn-primary"><i class="bi bi-person-plus me-2"></i>Create account</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<partial name="_ValidationScriptsPartial" />
+<script>
+    const managedAdminSelect = document.getElementById('createManagedAdmin');
+
+    async function loadManagedDepartments(companyName, selectedDepartmentId) {
+        const department = document.getElementById('createDepartment');
+        if (!department) return;
+        department.innerHTML = '<option value=\"\">Select department</option>';
+        if (!companyName) return;
+        const response = await fetch(`/Auth/GetDepartmentsByCompany?companyName=${encodeURIComponent(companyName)}`);
+        const data = await response.json();
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.value;
+            option.text = item.text;
+            if (selectedDepartmentId && selectedDepartmentId === item.value) {
+                option.selected = true;
+            }
+            department.appendChild(option);
+        });
+    }
+
+    async function loadManagedAdmins(companyName, departmentId, selectedAdminId) {
+        if (!managedAdminSelect) return;
+        managedAdminSelect.innerHTML = '<option value=\"\">Select assigned admin</option>';
+        if (!companyName) return;
+        const query = `/UserManagement/GetAdminsByCompany?companyName=${encodeURIComponent(companyName)}&departmentId=${encodeURIComponent(departmentId || '')}`;
+        const response = await fetch(query);
+        const data = await response.json();
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.value;
+            option.text = item.text;
+            if (selectedAdminId && selectedAdminId === item.value) {
+                option.selected = true;
+            }
+            managedAdminSelect.appendChild(option);
+        });
+    }
+
+    function syncDepartmentVisibility() {
+        const role = document.getElementById('createRole');
+        const departmentWrap = document.getElementById('departmentWrap');
+        const managedWrap = document.getElementById('managedAdminWrap');
+        if (!role || !departmentWrap || !managedWrap) return;
+        const isUser = role.value === 'User';
+        departmentWrap.style.display = isUser ? '' : 'none';
+        managedWrap.style.display = isUser ? '' : 'none';
+        if (!isUser && managedAdminSelect) {
+            managedAdminSelect.value = '';
+        }
+    }
+
+    document.getElementById('createDepartment')?.addEventListener('change', function () {
+        loadManagedAdmins(document.getElementById('createCompany')?.value || '', this.value, '');
+    });
+
+    document.getElementById('createRole')?.addEventListener('change', syncDepartmentVisibility);
+    syncDepartmentVisibility();
+    loadManagedAdmins(document.getElementById('createCompany')?.value || '', document.getElementById('createDepartment')?.value || '', '@(Model.ManagedByAdminUserID?.ToString() ?? string.Empty)');
+</script>
+

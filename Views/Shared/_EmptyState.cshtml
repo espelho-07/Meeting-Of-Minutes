@@ -1,0 +1,15 @@
+@model Meeting_Of_Minutes.Models.EmptyStateViewModel
+
+<div class="mom-empty-state @(Model.Compact ? "is-compact" : string.Empty) tone-@Model.Tone">
+    <div class="mom-empty-icon">
+        <i class="@Model.IconClass"></i>
+    </div>
+    <div class="mom-empty-title">@Model.Title</div>
+    <div class="mom-empty-text">@Model.Description</div>
+    @if (!string.IsNullOrWhiteSpace(Model.ActionText) && !string.IsNullOrWhiteSpace(Model.ActionUrl))
+    {
+        <div class="mom-empty-actions">
+            <a href="@Model.ActionUrl" class="btn btn-light">@Model.ActionText</a>
+        </div>
+    }
+</div>

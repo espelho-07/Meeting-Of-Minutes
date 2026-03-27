@@ -1,0 +1,12 @@
+@model Meeting_Of_Minutes.Models.StatCardViewModel
+<div class="mom-overview-card @Model.Tone">
+    <div class="mom-overview-top">
+        <div class="mom-overview-icon @Model.Tone"><i class="@Model.IconClass"></i></div>
+        <div class="mom-overview-tag">@Model.Tag</div>
+    </div>
+    <div class="mom-overview-value">@Model.Value</div>
+    <div class="mom-overview-label">@Model.Label</div>
+    <div class="mom-overview-foot">
+        <span class="mom-overview-note">Live workspace signal</span>
+    </div>
+</div>

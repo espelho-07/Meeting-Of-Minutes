@@ -1,4 +1,4 @@
-using Meeting_Of_Minutes.Models;
+﻿using Meeting_Of_Minutes.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -125,9 +125,9 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                TempData["ErrorMessage"] = "Error exporting data. Please try again.";
                 return RedirectToAction("MeetingMemberList");
             }
         }
@@ -297,6 +297,8 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
     }
 }
+
+
 
 
 

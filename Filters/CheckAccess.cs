@@ -1,30 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Meeting_Of_Minutes.Services;
+using Meeting_Of_Minutes.Models;
 
 namespace Meeting_Of_Minutes.Filters
 {
     public class CheckAccess : ActionFilterAttribute
     {
-        private static readonly HashSet<string> AdminOnlyControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "Department",
-            "Staff",
-            "MeetingsType",
-            "MeetingVenue",
-            "MeetingMember"
-        };
-
-        private static readonly HashSet<string> MeetingsAdminOnlyActions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "MeetingsAddEdit",
-            "Save",
-            "Delete",
-            "ExportToExcel",
-            "AddMeetingMember",
-            "UpdateMeetingMemberAttendance",
-            "DeleteMeetingMember"
-        };
-
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             bool isAllowAnonymous = context.ActionDescriptor.EndpointMetadata
@@ -43,18 +25,28 @@ namespace Meeting_Of_Minutes.Filters
                 string controllerName = context.RouteData.Values["controller"]?.ToString() ?? string.Empty;
                 string actionName = context.RouteData.Values["action"]?.ToString() ?? string.Empty;
                 string userRole = context.HttpContext.Session.GetString("UserRole") ?? string.Empty;
+                bool forcePasswordReset = string.Equals(context.HttpContext.Session.GetString("ForcePasswordReset"), "true", StringComparison.OrdinalIgnoreCase);
 
-                if (!userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                if (forcePasswordReset &&
+                    !controllerName.Equals("Profile", StringComparison.OrdinalIgnoreCase) &&
+                    !controllerName.Equals("Auth", StringComparison.OrdinalIgnoreCase))
                 {
-                    bool isAdminOnlyRoute = AdminOnlyControllers.Contains(controllerName)
-                        || (controllerName.Equals("Meetings", StringComparison.OrdinalIgnoreCase) && MeetingsAdminOnlyActions.Contains(actionName));
+                    context.Result = new RedirectToActionResult("Profile", "Profile", null);
+                    base.OnActionExecuting(context);
+                    return;
+                }
 
-                    if (isAdminOnlyRoute)
-                    {
-                        context.Result = new RedirectToActionResult("DashBoard", "DashBoard", null);
-                        base.OnActionExecuting(context);
-                        return;
-                    }
+                if (!RoleAccessService.CanAccessRoute(context.HttpContext, controllerName, actionName))
+                {
+                    context.Result = new RedirectToActionResult("DashBoard", "DashBoard", null);
+                    base.OnActionExecuting(context);
+                    return;
+                }
+
+                if (context.Controller is Controller controller)
+                {
+                    AppShellViewModel shellModel = ShellService.Build(context.HttpContext, context.RouteData);
+                    controller.ViewData["AppShellModel"] = shellModel;
                 }
             }
 

@@ -1,4 +1,5 @@
 @model List<Meeting_Of_Minutes.Models.StaffTransferRequestModel>
+@using Meeting_Of_Minutes.Services
 
 @{
     ViewData["Title"] = "Staff Transfer Requests - Meeting Of Minutes";
@@ -327,9 +328,15 @@
                                 <span> | Decision on @request.DecisionDate.Value.ToString("dd MMM yyyy hh:mm tt")</span>
                             }
                         </div>
-                        <a href="@request.DocumentPath" target="_blank" class="mom-transfer-proof">
-                            <i class="bi bi-file-earmark-arrow-down"></i>View Transfer Document
-                        </a>
+                        @{
+                            string safeDocumentPath = FileSecurityService.SanitizeStoredDocumentPath(request.DocumentPath);
+                        }
+                        @if (!string.IsNullOrWhiteSpace(safeDocumentPath))
+                        {
+                            <a href="@safeDocumentPath" target="_blank" rel="noopener noreferrer" class="mom-transfer-proof">
+                                <i class="bi bi-file-earmark-arrow-down"></i>View Transfer Document
+                            </a>
+                        }
                     </div>
 
                     @if (!string.IsNullOrWhiteSpace(request.AdminRemarks))

@@ -1,4 +1,8 @@
 @model Meeting_Of_Minutes.Models.MeetingDetailsViewModel
+@using Meeting_Of_Minutes.Services
+@{
+    string safeMeetingDocumentPath = FileSecurityService.SanitizeStoredDocumentPath(Model.Meeting.DocumentPath);
+}
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSViewStyles")
 @{
@@ -85,10 +89,10 @@
                 <div class="view-detail-item">
                     <span class="view-detail-label">Document</span>
                     <div class="view-detail-value">
-                        @if (!string.IsNullOrWhiteSpace(Model.Meeting.DocumentPath))
-                        {
-                            <a href="@Model.Meeting.DocumentPath" target="_blank">View Uploaded File</a>
-                        }
+                    @if (!string.IsNullOrWhiteSpace(safeMeetingDocumentPath))
+                    {
+                        <a href="@safeMeetingDocumentPath" target="_blank" rel="noopener noreferrer">View Uploaded File</a>
+                    }
                         else
                         {
                             <span class="view-detail-value muted">-</span>

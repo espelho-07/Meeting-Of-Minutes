@@ -1,4 +1,5 @@
-using Meeting_Of_Minutes.Models;
+﻿using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -10,26 +11,18 @@ namespace Meeting_Of_Minutes.Controllers
     {
         #region Actions
         [HttpGet]
-        public IActionResult MeetingsTypeList()
+        public IActionResult MeetingsTypeList(string? searchtext, int page = 1, string sortBy = "name", string sortDirection = "asc")
         {
-            List<MeetingTypeModel> meetingTypesList = GetAllMeetingTypes(null);
-            return View(meetingTypesList);
+            searchtext = string.IsNullOrWhiteSpace(searchtext) ? null : searchtext;
+            ViewBag.searchtext = searchtext;
+            return View(BuildMeetingTypePage(searchtext, page, sortBy, sortDirection));
         }
 
         [HttpPost]
         public IActionResult MeetingsTypeList(IFormCollection formdata)
         {
             string? searchtext = formdata["searchtext"].ToString();
-
-            if (string.IsNullOrWhiteSpace(searchtext))
-            {
-                searchtext = null;
-            }
-
-            ViewBag.searchtext = searchtext;
-
-            List<MeetingTypeModel> meetingTypesList = GetAllMeetingTypes(searchtext);
-            return View(meetingTypesList);
+            return RedirectToAction(nameof(MeetingsTypeList), new { searchtext });
         }
 
         public List<MeetingTypeModel> GetAllMeetingTypes(string? searchtext)
@@ -71,6 +64,33 @@ namespace Meeting_Of_Minutes.Controllers
             con.Close();
 
             return meetingTypesList;
+        }
+
+        public PagedListViewModel<MeetingTypeModel> BuildMeetingTypePage(string? searchtext, int page, string? sortBy, string? sortDirection)
+        {
+            IEnumerable<MeetingTypeModel> query = GetAllMeetingTypes(searchtext);
+            bool isDesc = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+            query = (sortBy ?? "name").ToLowerInvariant() switch
+            {
+                "created" => isDesc ? query.OrderByDescending(x => x.Created).ThenBy(x => x.MeetingTypeName) : query.OrderBy(x => x.Created).ThenBy(x => x.MeetingTypeName),
+                _ => isDesc ? query.OrderByDescending(x => x.MeetingTypeName) : query.OrderBy(x => x.MeetingTypeName)
+            };
+
+            List<MeetingTypeModel> ordered = query.ToList();
+            const int pageSize = 10;
+            page = Math.Max(page, 1);
+
+            return new PagedListViewModel<MeetingTypeModel>
+            {
+                Items = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = ordered.Count,
+                SearchText = searchtext,
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
         }
 
 
@@ -156,11 +176,107 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                TempData["ErrorMessage"] = "Error exporting data. Please try again.";
                 return RedirectToAction("MeetingsTypeList");
             }
+        }
+
+        public IActionResult DownloadImportTemplate()
+        {
+            byte[] content = ExcelImportService.BuildTemplate(
+                "MeetingTypesImport",
+                new[] { "MeetingTypeName", "Remarks" },
+                new List<IReadOnlyList<string>>
+                {
+                    new[] { "Daily Standup", "Short team sync" }
+                });
+
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MeetingTypeImportTemplate.xlsx");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ImportFromExcel(IFormFile? excelFile)
+        {
+            if (!ExcelImportService.IsExcelFile(excelFile))
+            {
+                TempData["ErrorMessage"] = $"Please upload a valid Excel file up to {ExcelImportService.MaxFileSizeBytes / (1024 * 1024)} MB.";
+                return RedirectToAction("MeetingsTypeList");
+            }
+
+            if (!ExcelImportService.HasRequiredHeaders(excelFile!, new[] { "MeetingTypeName", "Remarks" }, out string headerMessage))
+            {
+                TempData["ErrorMessage"] = headerMessage;
+                return RedirectToAction("MeetingsTypeList");
+            }
+
+            List<Dictionary<string, string>> rows = ExcelImportService.ReadRows(excelFile!);
+            if (rows.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Excel file is empty.";
+                return RedirectToAction("MeetingsTypeList");
+            }
+
+            int importedCount = 0;
+            int skippedCount = 0;
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
+            List<ImportReportRowModel> reportRows = new List<ImportReportRowModel>();
+
+            using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            con.Open();
+
+            for (int index = 0; index < rows.Count; index++)
+            {
+                Dictionary<string, string> row = rows[index];
+                string meetingTypeName = ExcelImportService.GetValue(row, "MeetingTypeName");
+                string remarks = ExcelImportService.GetValue(row, "Remarks");
+                string summary = meetingTypeName;
+
+                if (string.IsNullOrWhiteSpace(meetingTypeName))
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "MeetingTypeName is required.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand checkCmd = new SqlCommand("SELECT COUNT(*) FROM MOM_MeetingType WHERE MeetingTypeName = @MeetingTypeName AND CompanyName = @CompanyName", con);
+                checkCmd.Parameters.AddWithValue("@MeetingTypeName", meetingTypeName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
+
+                if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Meeting type already exists in current company.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand cmd = new SqlCommand("PR_MeetingType_Insert", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingTypeName", meetingTypeName);
+                cmd.Parameters.AddWithValue("@Remarks", remarks);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
+                cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                cmd.ExecuteNonQuery();
+                importedCount++;
+                reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Imported", Message = "Meeting type created successfully.", DataSummary = summary });
+            }
+
+            AuditLogService.Log(
+                companyName,
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "Import",
+                "MeetingType",
+                null,
+                "Meeting types imported from Excel",
+                $"{importedCount} meeting types imported and {skippedCount} skipped.");
+
+            TempData["ImportReportPath"] = ImportReportService.SaveReport("MeetingTypeImport", companyName, HttpContext.Session.GetInt32("UserID"), HttpContext.Session.GetString("UserName"), importedCount, skippedCount, reportRows);
+            TempData["SuccessMessage"] = $"Meeting type import completed. Imported: {importedCount}, Skipped: {skippedCount}.";
+            return RedirectToAction("MeetingsTypeList");
         }
 
 
@@ -267,6 +383,16 @@ namespace Meeting_Of_Minutes.Controllers
             TempData["SuccessMessage"] = model.MeetingTypeID == 0 ? "Meeting type added successfully." : "Meeting type updated successfully.";
             cmd.ExecuteNonQuery();
             con.Close();
+            AuditLogService.Log(
+                HttpContext.Session.GetString("CompanyName"),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                model.MeetingTypeID == 0 ? "Create" : "Update",
+                "MeetingType",
+                model.MeetingTypeID == 0 ? null : model.MeetingTypeID.ToString(),
+                model.MeetingTypeID == 0 ? "Meeting type created" : "Meeting type updated",
+                $"{model.MeetingTypeName} meeting type was {(model.MeetingTypeID == 0 ? "created" : "updated")}.");
 
             return RedirectToAction("MeetingsTypeList");
         }
@@ -287,6 +413,16 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    HttpContext.Session.GetString("CompanyName"),
+                    HttpContext.Session.GetInt32("UserID"),
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Delete",
+                    "MeetingType",
+                    MeetingTypeID.ToString(),
+                    "Meeting type deleted",
+                    $"Meeting type #{MeetingTypeID} was deleted.");
                 TempData["SuccessMessage"] = "Meeting type deleted successfully.";
             }
             catch
@@ -299,6 +435,8 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
     }
 }
+
+
 
 
 

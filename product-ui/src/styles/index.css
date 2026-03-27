@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: 245 247 251;
+  --panel: 255 255 255;
+  --line: 229 234 242;
+  --ink: 18 24 38;
+  --muted: 102 112 133;
+  --brand: 83 92 255;
+  --accent: 124 92 255;
+  --success: 22 163 74;
+  --warning: 217 119 6;
+  --danger: 220 38 38;
+}
+
+.dark {
+  --canvas: 10 14 24;
+  --panel: 16 21 35;
+  --line: 35 42 61;
+  --ink: 241 245 249;
+  --muted: 148 163 184;
+  --brand: 110 130 255;
+  --accent: 151 118 255;
+  --success: 34 197 94;
+  --warning: 251 191 36;
+  --danger: 248 113 113;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+  font-feature-settings: "ss01" 1, "cv01" 1, "cv11" 1;
+  background-image:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 32%),
+    radial-gradient(circle at 85% 0%, rgba(14, 165, 233, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,0.44), rgba(255,255,255,0));
+}
+
+.dark body {
+  background-image:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 30%),
+    radial-gradient(circle at 85% 0%, rgba(59, 130, 246, 0.14), transparent 26%),
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+}
+
+::selection {
+  background: rgba(83, 92, 255, 0.18);
+}

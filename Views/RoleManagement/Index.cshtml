@@ -1,0 +1,91 @@
+@model Meeting_Of_Minutes.Models.RoleManagementViewModel
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "Role Management - Meeting Of Minutes";
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Role Management" })
+
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-diagram-3"></i>Platform Access Matrix</div>
+            <h1 class="list-title">Role Management</h1>
+            <p class="list-subtitle">Review the system roles, verify permission coverage, and keep Super Admin controls clearly separated from Admin and User workspaces.</p>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">System roles</div>
+            <h2 class="list-note-title">@Model.Roles.Count protected roles are currently enforced by the platform.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Super Admin owns platform-wide governance and sensitive access operations.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Admin is limited to company-level operations and standard user lifecycle management.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>User remains scoped to self-service, assigned meetings and personal requests.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Permission matrix</h3>
+                <p class="list-surface-meta">Super Admin stays hard-protected. Admin and User permissions now load from the database and can be updated here.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <div class="list-status-chip">Managed by Super Admin</div>
+                <form asp-action="Save" method="post" id="roleMatrixForm">
+                    @Html.AntiForgeryToken()
+                </form>
+                <button type="submit" form="roleMatrixForm" class="btn list-btn list-btn-primary"><i class="bi bi-shield-check me-2"></i>Save access matrix</button>
+            </div>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Permission</th>
+                            <th>Module</th>
+                            @foreach (var role in Model.Roles)
+                            {
+                                <th class="text-center">@role</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var permission in Model.Permissions)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@permission.Description</div>
+                                    <div class="small text-muted">@permission.PermissionKey</div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">@permission.ModuleName</span></td>
+                                @foreach (var role in Model.Roles)
+                                {
+                                    bool hasAccess = permission.RoleAccess.TryGetValue(role, out bool enabled) && enabled;
+                                    <td class="text-center">
+                                        @if (string.Equals(role, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <i class="bi bi-lock-fill me-1"></i>Fixed
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <div class="form-check d-inline-flex justify-content-center m-0">
+                                                <input class="form-check-input" type="checkbox" form="roleMatrixForm" name="permissionSelection" value="@($"{role}|{permission.PermissionKey}")" @(hasAccess ? "checked" : null) />
+                                            </div>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>

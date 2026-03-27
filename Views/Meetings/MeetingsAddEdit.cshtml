@@ -91,16 +91,16 @@
                 <div class="col-md-6">
                     <div class="form-field">
                         <label class="form-label-modern">Meeting Document</label>
-                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-paperclip"></i></span><input asp-for="DocumentFile" type="file" class="form-control" /></div>
-                        <p class="form-help">Optional. Upload a note, agenda or supporting document.</p>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-paperclip"></i></span><input asp-for="DocumentFile" type="file" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" /></div>
+                        <p class="form-help">Optional. Upload a note, agenda or supporting document up to 5 MB.</p>
                         <span asp-validation-for="DocumentFile" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-field">
-                        <label class="form-label-modern">Document Path</label>
-                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-folder2-open"></i></span><input asp-for="DocumentPath" type="text" class="form-control" placeholder="Enter manual document path" /></div>
-                        <p class="form-help">Optional manual reference when the file already exists elsewhere.</p>
+                        <label class="form-label-modern">Current Document</label>
+                        <div class="form-input-shell"><span class="form-input-icon"><i class="bi bi-folder2-open"></i></span><input asp-for="DocumentPath" type="text" class="form-control" readonly placeholder="No document uploaded yet" /></div>
+                        <p class="form-help">Existing document paths are preserved automatically. Manual paths are disabled for security.</p>
                     </div>
                 </div>
                 <div class="col-12 form-actions-modern">

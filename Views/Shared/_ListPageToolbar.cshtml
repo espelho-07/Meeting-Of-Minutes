@@ -1,0 +1,80 @@
+@model Meeting_Of_Minutes.Models.ListPageToolbarViewModel
+
+<div class="list-surface-header">
+    <div class="list-surface-copy">
+        <div class="list-surface-kicker">Management Surface</div>
+        <h3 class="list-surface-heading">@Model.Heading</h3>
+        <p class="list-surface-meta">@Model.Meta</p>
+    </div>
+    @if (Model.Actions.Count > 0)
+    {
+        <div class="list-surface-actions">
+            @foreach (var action in Model.Actions)
+            {
+                if (!string.IsNullOrWhiteSpace(action.Url))
+                {
+                    <a href="@action.Url" class="btn list-btn @action.CssClass"><i class="@action.IconClass me-2"></i>@action.Text</a>
+                }
+                else
+                {
+                    <a asp-action="@action.Action" asp-controller="@(string.IsNullOrWhiteSpace(action.Controller) ? null : action.Controller)" class="btn list-btn @action.CssClass"><i class="@action.IconClass me-2"></i>@action.Text</a>
+                }
+            }
+        </div>
+    }
+</div>
+
+<div class="list-search-wrap">
+    <form class="list-search-form" asp-action="@Model.SearchAction" asp-controller="@Model.SearchController" method="get">
+        <div class="list-search-input">
+            <span><i class="bi bi-search"></i></span>
+            <input class="form-control" name="searchtext" value="@Model.SearchText" type="text" placeholder="@Model.SearchPlaceholder" />
+        </div>
+        <div class="list-filter-actions">
+            <button class="btn list-btn list-btn-primary" type="submit">Search</button>
+            <a href="@Url.Action(Model.SearchAction, Model.SearchController)" class="btn list-btn list-btn-light">Clear</a>
+        </div>
+    </form>
+    <div class="list-status-panel">
+        <div class="list-status-label">Current result set</div>
+        <div class="list-status-chip">@Model.StatusText</div>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.TemplateAction) || !string.IsNullOrWhiteSpace(Model.ImportAction))
+{
+    <div class="list-import-wrap">
+        <div class="list-import-copy">
+            <div class="list-import-kicker">Bulk Operations</div>
+            <h4>Bulk Import</h4>
+            <p>Download the fixed Excel format, fill the rows, and upload the sheet to create records automatically.</p>
+        </div>
+        <div class="list-import-actions">
+            @if (!string.IsNullOrWhiteSpace(Model.TemplateAction))
+            {
+                <a asp-action="@Model.TemplateAction"
+                   asp-controller="@(string.IsNullOrWhiteSpace(Model.TemplateController) ? null : Model.TemplateController)"
+                   class="btn list-btn list-btn-light">
+                    <i class="bi bi-download me-2"></i>Download Format
+                </a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.ImportAction))
+            {
+                <form asp-action="@Model.ImportAction"
+                      asp-controller="@(string.IsNullOrWhiteSpace(Model.ImportController) ? null : Model.ImportController)"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="list-import-form">
+                    @Html.AntiForgeryToken()
+                    <label class="list-file-input">
+                        <input type="file" name="@Model.ImportInputName" accept=".xlsx,.xls" required />
+                        <span><i class="bi bi-paperclip"></i>Select Excel</span>
+                    </label>
+                    <button type="submit" class="btn list-btn list-btn-primary">
+                        <i class="bi bi-upload me-2"></i>Upload Excel
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+}

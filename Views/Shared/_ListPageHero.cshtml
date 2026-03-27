@@ -1,0 +1,22 @@
+@model Meeting_Of_Minutes.Models.ListPageHeroViewModel
+
+<section class="list-hero">
+    <div class="list-hero-main">
+        <div class="list-kicker"><i class="@Model.IconClass"></i> @Model.Kicker</div>
+        <h1 class="list-title">@Model.Title</h1>
+        <p class="list-subtitle">@Model.Subtitle</p>
+    </div>
+    <aside class="list-note">
+        <div class="list-note-label">@Model.NoteLabel</div>
+        <h2 class="list-note-title">@Model.NoteTitle</h2>
+        @if (Model.Notes.Count > 0)
+        {
+            <ul class="list-note-list">
+                @foreach (var note in Model.Notes)
+                {
+                    <li><i class="bi bi-check2-circle"></i><span>@note</span></li>
+                }
+            </ul>
+        }
+    </aside>
+</section>

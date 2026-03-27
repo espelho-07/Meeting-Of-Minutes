@@ -116,7 +116,7 @@ BEGIN
         s.[Created],
         s.[Modified],
         ISNULL(u.[UserName], '') AS [LoginUserName],
-        ISNULL(u.[Password], '') AS [LoginPassword],
+        CAST('' AS NVARCHAR(50)) AS [LoginPassword],
         ISNULL(u.[IsAutoPassword], 0) AS [IsAutoPassword],
         (
             SELECT COUNT(*)

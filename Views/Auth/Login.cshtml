@@ -253,8 +253,8 @@
                         <div>Admin and user workspaces stay separated.</div>
                     </div>
                     <div class="auth-stage-card">
-                        <small>Company Bound</small>
-                        <div>Every login follows company and department rules.</div>
+                        <small>Company Scoped</small>
+                        <div>Super Admin access is locked to a single company only.</div>
                     </div>
                     <div class="auth-stage-card">
                         <small>Ready Flow</small>
@@ -285,7 +285,7 @@
                     <div class="auth-input-group mb-3">
                         <span><i class="bi bi-shield-lock"></i></span>
                         <select asp-for="UserRole" class="form-select" id="loginRole">
-                            <option value="">Select role</option>
+                            <option value="">Select role</option>                            <option value="SuperAdmin">Super Admin</option>
                             <option value="Admin">Admin</option>
                             <option value="User">User</option>
                         </select>
@@ -325,8 +325,7 @@
                     </button>
                 </form>
 
-                <div class="text-center mt-4 pt-3 border-top">
-                    Need admin access? <a class="auth-footer-link" asp-controller="Auth" asp-action="Register">Create admin account</a>
+                <div class="text-center mt-4 pt-3 border-top">                    <span>Need to set up a company? <a class="auth-footer-link" asp-controller="Auth" asp-action="Register">Create company Super Admin</a></span>
                 </div>
             </div>
         </section>
@@ -342,8 +341,9 @@
 
         function toggleLoginDepartment() {
             const role = document.getElementById('loginRole');
+            const company = document.getElementById('loginCompany');
             const wrap = document.getElementById('loginDepartmentWrap');
-            if (!role || !wrap) return;
+            if (!role || !wrap || !company) return;
             wrap.style.display = role.value === 'User' ? '' : 'none';
         }
 
@@ -403,3 +403,6 @@
     </script>
 </body>
 </html>
+
+
+

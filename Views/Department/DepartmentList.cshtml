@@ -1,69 +1,67 @@
-@model List<DepartmentModel>
+@model PagedListViewModel<DepartmentModel>
 
 @await Html.PartialAsync("_AlertMessages")
 @await Html.PartialAsync("_SaaSListStyles")
 @{
     ViewData["Title"] = "Departments - Meeting Of Minutes";
     int SerialNumber = 1;
+    var heroModel = new ListPageHeroViewModel
+    {
+        IconClass = "bi bi-building",
+        Kicker = "Department Workspace",
+        Title = "Departments",
+        Subtitle = "Organize business units, keep staff placement clear and maintain the department structure used across meetings, attendance and access.",
+        NoteLabel = "Structure snapshot",
+        NoteTitle = $"{Model.TotalItems} departments are active in the current company scope.",
+        Notes = new List<string>
+        {
+            "Staff and meetings remain scoped to the department records shown here.",
+            "Counts help you review where teams and meetings are concentrated.",
+            "Department ownership drives user access across the application."
+        }
+    };
+    var toolbarModel = new ListPageToolbarViewModel
+    {
+        Heading = "Department Directory",
+        Meta = "Search, review and update department records from one shared management surface.",
+        SearchAction = "DepartmentList",
+        SearchController = "Department",
+        SearchPlaceholder = "Search departments...",
+        SearchText = ViewBag.searchtext,
+        StatusText = $"Total Departments: {Model.TotalItems}",
+        TemplateAction = "DownloadImportTemplate",
+        TemplateController = "Department",
+        ImportAction = "ImportFromExcel",
+        ImportController = "Department",
+        Actions = new List<ListToolbarActionViewModel>
+        {
+            new() { Action = "DepartmentAddEdit", Text = "Add Department", IconClass = "bi bi-plus-circle", CssClass = "list-btn-primary" },
+            new() { Action = "ExportToExcel", Text = "Export", IconClass = "bi bi-file-earmark-excel", CssClass = "list-btn-success" }
+        }
+    };
 }
 
-<div class="pagetitle mb-4">
-    <nav>
-        <ol class="breadcrumb flex-nowrap">
-            <li class="breadcrumb-item"><a asp-controller="DashBoard" asp-action="DashBoard"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">Departments</li>
-        </ol>
-    </nav>
-</div>
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Departments" })
 
 <div class="list-page">
-    <section class="list-hero">
-        <div class="list-hero-main">
-            <div class="list-kicker"><i class="bi bi-building"></i> Department Workspace</div>
-            <h1 class="list-title">Departments</h1>
-            <p class="list-subtitle">Organize business units, keep staff placement clear and maintain the department structure used across meetings, attendance and access.</p>
-        </div>
-        <aside class="list-note">
-            <div class="list-note-label">Structure snapshot</div>
-            <h2 class="list-note-title">@Model.Count departments are active in the current company scope.</h2>
-            <ul class="list-note-list">
-                <li><i class="bi bi-check2-circle"></i><span>Staff and meetings remain scoped to the department records shown here.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Counts help you review where teams and meetings are concentrated.</span></li>
-                <li><i class="bi bi-check2-circle"></i><span>Department ownership drives user access across the application.</span></li>
-            </ul>
-        </aside>
-    </section>
+    @await Html.PartialAsync("_ListPageHero", heroModel)
 
     <section class="list-surface">
-        <div class="list-surface-header">
-            <div>
-                <h3 class="list-surface-heading">Department Directory</h3>
-                <p class="list-surface-meta">Search, review and update department records from one shared management surface.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a asp-action="DepartmentAddEdit" class="btn list-btn list-btn-primary"><i class="bi bi-plus-circle me-2"></i>Add Department</a>
-                <a asp-action="ExportToExcel" class="btn list-btn list-btn-success"><i class="bi bi-file-earmark-excel me-2"></i>Export</a>
-            </div>
-        </div>
-
-        <div class="list-search-wrap">
-            <form class="list-search-form" asp-action="DepartmentList" asp-controller="Department" method="post">
-                @Html.AntiForgeryToken()
-                <div class="list-search-input">
-                    <span><i class="bi bi-search"></i></span>
-                    <input class="form-control" name="searchtext" value="@ViewBag.searchtext" type="text" placeholder="Search departments..." />
-                </div>
-                <button class="btn list-btn list-btn-primary" type="submit">Search</button>
-                <a href="@Url.Action("DepartmentList", "Department")" class="btn list-btn list-btn-light">Clear</a>
-            </form>
-            <div class="list-status-chip">Total Departments: @Model.Count</div>
-        </div>
+        @await Html.PartialAsync("_ListPageToolbar", toolbarModel)
 
         <div class="list-table-wrap">
             <div class="list-table-card">
-                @if (Model.Count == 0)
+                @if (Model.Items.Count == 0)
                 {
-                    <div class="list-empty">No departments found.</div>
+                    @await Html.PartialAsync("_EmptyState", new EmptyStateViewModel
+                    {
+                        IconClass = "bi bi-building",
+                        Title = "No departments found",
+                        Description = "There are no department records matching the current search or filter state.",
+                        ActionText = "Add Department",
+                        ActionUrl = Url.Action("DepartmentAddEdit", "Department"),
+                        Compact = true
+                    })
                 }
                 else
                 {
@@ -71,14 +69,14 @@
                         <thead>
                             <tr>
                                 <th class="ps-4">#</th>
-                                <th>Department Name</th>
-                                <th>Staff Count</th>
-                                <th>Meetings</th>
+                                <th><a class="list-sort-link" href="@Url.Action("DepartmentList", new { searchtext = Model.SearchText, page = 1, sortBy = "name", sortDirection = Model.SortBy == "name" && Model.SortDirection == "asc" ? "desc" : "asc" })">Department Name <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("DepartmentList", new { searchtext = Model.SearchText, page = 1, sortBy = "staff", sortDirection = Model.SortBy == "staff" && Model.SortDirection == "asc" ? "desc" : "asc" })">Staff Count <i class="bi bi-arrow-down-up"></i></a></th>
+                                <th><a class="list-sort-link" href="@Url.Action("DepartmentList", new { searchtext = Model.SearchText, page = 1, sortBy = "meetings", sortDirection = Model.SortBy == "meetings" && Model.SortDirection == "asc" ? "desc" : "asc" })">Meetings <i class="bi bi-arrow-down-up"></i></a></th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var dept in Model)
+                            @foreach (var dept in Model.Items)
                             {
                                 <tr>
                                     <td class="ps-4">@SerialNumber</td>
@@ -105,5 +103,6 @@
                 }
             </div>
         </div>
+        @await Html.PartialAsync("_ListPagination", Model)
     </section>
 </div>

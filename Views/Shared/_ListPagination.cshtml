@@ -1,0 +1,49 @@
+@model Meeting_Of_Minutes.Models.IPagedListViewModel
+
+@if (Model != null && Model.TotalPages > 1)
+{
+    string searchText = Convert.ToString(Model.SearchText) ?? string.Empty;
+    string sortBy = Convert.ToString(Model.SortBy) ?? string.Empty;
+    string sortDirection = Convert.ToString(Model.SortDirection) ?? string.Empty;
+
+    <div class="list-pagination-wrap">
+        <div class="list-pagination-meta">
+            Showing page @Model.PageNumber of @Model.TotalPages
+            <span>&bull;</span>
+            @Model.TotalItems total records
+        </div>
+        <div class="list-pagination-controls">
+            @if (Model.PageNumber > 1)
+            {
+                <a class="btn list-btn list-btn-light"
+                   href="@Url.Action(null, new { page = Model.PageNumber - 1, searchtext = searchText, sortBy, sortDirection })">
+                    <i class="bi bi-arrow-left me-2"></i>Previous
+                </a>
+            }
+
+            @for (int pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                if (pageNumber == Model.PageNumber || pageNumber == 1 || pageNumber == Model.TotalPages || Math.Abs(pageNumber - Model.PageNumber) <= 1)
+                {
+                    <a class="btn list-page-number @(pageNumber == Model.PageNumber ? "is-active" : string.Empty)"
+                       href="@Url.Action(null, new { page = pageNumber, searchtext = searchText, sortBy, sortDirection })">
+                        @pageNumber
+                    </a>
+                }
+                else if (pageNumber == 2 || pageNumber == Model.TotalPages - 1)
+                {
+                    <span class="list-page-ellipsis">&hellip;</span>
+                }
+            }
+
+            @if (Model.PageNumber < Model.TotalPages)
+            {
+                <a class="btn list-btn list-btn-light"
+                   href="@Url.Action(null, new { page = Model.PageNumber + 1, searchtext = searchText, sortBy, sortDirection })">
+                    Next<i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            }
+        </div>
+    </div>
+}
+

@@ -1,0 +1,62 @@
+@model Meeting_Of_Minutes.Models.InviteOnboardingModel
+
+@{
+    ViewData["Title"] = "Accept Invite - Meeting Of Minutes";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+@await Html.PartialAsync("_AlertMessages")
+
+<div class="auth-shell">
+    <section class="auth-aside">
+        <div class="auth-aside-content">
+            <div class="auth-pill">Invite onboarding</div>
+            <h1 class="auth-title">Finish setting up your workspace access</h1>
+            <p class="auth-copy">You were invited as <strong>@Model.UserRole</strong> for <strong>@Model.CompanyName</strong>. Set your password once and the platform will take you straight into the right role-based workspace.</p>
+
+            <div class="auth-highlights">
+                <div class="auth-highlight">
+                    <span class="auth-highlight-label">User</span>
+                    <strong>@Model.UserName</strong>
+                </div>
+                <div class="auth-highlight">
+                    <span class="auth-highlight-label">Email</span>
+                    <strong>@Model.Email</strong>
+                </div>
+                <div class="auth-highlight">
+                    <span class="auth-highlight-label">Invite expires</span>
+                    <strong>@Model.ExpiresAt.ToString("dd MMM yyyy hh:mm tt")</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-card">
+        <div class="auth-card-head">
+            <h2>Create your password</h2>
+            <p>This invite works once. After you save your password, the invite is closed automatically.</p>
+        </div>
+
+        <form asp-action="AcceptInvite" method="post" class="auth-form">
+            @Html.AntiForgeryToken()
+            <input asp-for="InviteToken" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">New password</label>
+                <input asp-for="Password" class="form-control auth-input" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ConfirmPassword" class="form-label">Confirm password</label>
+                <input asp-for="ConfirmPassword" class="form-control auth-input" type="password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn auth-submit-btn">Activate account</button>
+        </form>
+    </section>
+</div>
+
+<partial name="_ValidationScriptsPartial" />

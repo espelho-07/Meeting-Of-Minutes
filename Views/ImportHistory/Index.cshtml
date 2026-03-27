@@ -1,0 +1,110 @@
+@model List<Meeting_Of_Minutes.Models.ImportHistoryEntryModel>
+
+@await Html.PartialAsync("_AlertMessages")
+@await Html.PartialAsync("_SaaSListStyles")
+@{
+    ViewData["Title"] = "Import History - Meeting Of Minutes";
+    string selectedModule = ViewBag.ModuleName as string ?? string.Empty;
+    List<string> availableModules = ViewBag.AvailableModules as List<string> ?? new List<string>();
+}
+
+@await Html.PartialAsync("_ListBreadcrumb", new ListBreadcrumbViewModel { CurrentLabel = "Import History" })
+
+<div class="list-page">
+    <section class="list-hero">
+        <div class="list-hero-main">
+            <div class="list-kicker"><i class="bi bi-clock-history"></i>Import Audit</div>
+            <h1 class="list-title">Import History</h1>
+            <p class="list-subtitle">Track every Excel import, review who triggered it, compare imported vs skipped counts, and reopen the detailed import report whenever needed.</p>
+        </div>
+        <aside class="list-note">
+            <div class="list-note-label">Visibility</div>
+            <h2 class="list-note-title">@Model.Count import runs are available in the current company scope.</h2>
+            <ul class="list-note-list">
+                <li><i class="bi bi-check2-circle"></i><span>Each import keeps a downloadable row-level report for debugging or compliance review.</span></li>
+                <li><i class="bi bi-check2-circle"></i><span>Use module filters to focus on department, staff, venue, meeting type or meeting imports.</span></li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="list-surface">
+        <div class="list-surface-header">
+            <div>
+                <h3 class="list-surface-heading">Import Timeline</h3>
+                <p class="list-surface-meta">Operational memory for all Excel-driven data loads.</p>
+            </div>
+            <div class="list-status-chip">Total Imports: @Model.Count</div>
+        </div>
+
+        <div class="list-search-wrap">
+            <form asp-action="Index" method="get" class="list-search-form">
+                <select name="moduleName" class="form-select" style="max-width: 240px;">
+                    <option value="">All Modules</option>
+                    @foreach (string module in availableModules)
+                    {
+                        if (selectedModule == module)
+                        {
+                            <option value="@module" selected>@module</option>
+                        }
+                        else
+                        {
+                            <option value="@module">@module</option>
+                        }
+                    }
+                </select>
+                <button class="btn list-btn list-btn-primary" type="submit">Filter</button>
+                <a asp-action="Index" class="btn list-btn list-btn-light">Clear</a>
+            </form>
+        </div>
+
+        <div class="list-table-wrap">
+            <div class="list-table-card">
+                @if (Model.Count == 0)
+                {
+                    <div class="list-empty">No import history found.</div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Time</th>
+                                <th>Module</th>
+                                <th>User</th>
+                                <th>Imported</th>
+                                <th>Skipped</th>
+                                <th class="text-center">Report</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in Model)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-semibold text-dark">@entry.Created.ToString("dd MMM yyyy")</div>
+                                        <div class="small text-muted">@entry.Created.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@entry.ModuleName</div>
+                                        <div class="small text-muted">Excel import batch</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">@entry.UserName</div>
+                                        <div class="small text-muted">@(string.IsNullOrWhiteSpace(entry.CompanyName) ? "-" : entry.CompanyName)</div>
+                                    </td>
+                                    <td><span class="mom-count-pill meeting"><i class="bi bi-check2-circle"></i> @entry.ImportedCount</span></td>
+                                    <td><span class="mom-count-pill staff"><i class="bi bi-skip-forward"></i> @entry.SkippedCount</span></td>
+                                    <td class="text-center">
+                                        <a href="@entry.ReportPath" class="btn list-btn list-btn-light">
+                                            <i class="bi bi-download me-2"></i>Report
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </section>
+</div>

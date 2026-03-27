@@ -1,0 +1,142 @@
+@model Meeting_Of_Minutes.Models.AppShellViewModel
+@{
+    string pageTitle = Model.CurrentController switch
+    {
+        "DashBoard" => "Dashboard",
+        "MeetingsType" => "Meeting Types",
+        "MeetingVenue" => "Venues",
+        "MeetingMember" => "Attendance",
+        "Department" => "Departments",
+        "Staff" => "Staff Members",
+        "Meetings" => "Meetings",
+        "Profile" => "Profile",
+        "ActionCenter" => "Action Center",
+        "Activity" => "Activity",
+        _ => Model.CurrentController
+    };
+}
+
+<header class="mom-topbar">
+    <div class="mom-topbar-left">
+        <button type="button" class="mom-topbar-toggle" data-mom-sidebar-toggle aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="mom-topbar-titleblock">
+            <div class="mom-topbar-eyebrow">Workspace</div>
+            <div class="mom-topbar-title">@pageTitle</div>
+            <div class="mom-topbar-subtitle">@(Model.IsSuperAdminUser ? "Company super admin command surface" : Model.IsAdminUser ? "Department admin command surface" : "Personal meeting workspace")</div>
+        </div>
+    </div>
+
+    <div class="mom-topbar-right">
+        <div class="mom-topbar-context">
+            <div class="mom-topbar-chip d-none d-xl-inline-flex">
+                <span class="mom-chip-icon"><i class="bi bi-buildings"></i></span>
+                <span class="mom-chip-copy">
+                    <small>Current scope</small>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.CompanyName) ? "No company" : Model.CompanyName)</strong>
+                </span>
+            </div>
+            <div class="dropdown d-none d-lg-block">
+                <a class="mom-topbar-chip text-decoration-none" href="#" data-bs-toggle="dropdown">
+                    <span class="mom-chip-icon"><i class="bi bi-lightning-charge"></i></span>
+                    <span class="mom-chip-copy">
+                        <small>Attention</small>
+                        <strong>@(Model.IsAdminUser ? "Action Queue" : "My Queue")</strong>
+                    </span>
+                    @if (Model.OpenActionCount > 0)
+                    {
+                        <span class="mom-action-badge @(Model.CriticalActionCount > 0 ? "" : "is-soft")">@Model.OpenActionCount</span>
+                    }
+                </a>
+                <div class="dropdown-menu dropdown-menu-end mom-queue-dropdown">
+                    <div class="mom-queue-head">
+                        <strong>@(Model.IsAdminUser ? "Live Action Queue" : "My Pending Queue")</strong>
+                        <a asp-controller="ActionCenter" asp-action="Index" class="btn btn-light btn-sm">Open</a>
+                    </div>
+                    <div class="mom-queue-meta">
+                        <span class="mom-action-badge is-soft">@Model.ActionCenterSummary.Overdue24Count overdue 24h+</span>
+                        <span class="mom-action-badge @(Model.ActionCenterSummary.Overdue72Count > 0 ? "" : "is-soft")">@Model.ActionCenterSummary.Overdue72Count overdue 72h+</span>
+                    </div>
+                    <div class="mom-queue-mini">
+                        @if (Model.ActionCenterSummary.PreviewItems.Count == 0)
+                        {
+                            <div class="mom-empty-hint">No live action items right now.</div>
+                        }
+                        @foreach (var item in Model.ActionCenterSummary.PreviewItems)
+                        {
+                            string queueTargetUrl = string.IsNullOrWhiteSpace(item.TargetUrl) ? (Url.Action("Index", "ActionCenter") ?? "#") : item.TargetUrl;
+                            <a href="@queueTargetUrl" class="mom-queue-mini-item">
+                                <div class="d-flex justify-content-between gap-2">
+                                    <div class="mom-queue-mini-title">@item.Title</div>
+                                    <span class="mom-inline-chip @(item.IsCritical ? "is-danger" : item.IsStale24Hours ? "is-warning" : string.Empty)">@item.PriorityLabel</span>
+                                </div>
+                                <div class="mom-queue-mini-text">@item.Description</div>
+                                <div class="mom-queue-mini-meta">@item.Meta</div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mom-topbar-actions">
+            <button type="button" class="mom-theme-toggle" data-mom-theme-toggle aria-label="Toggle dark mode">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+
+            @if (Model.IsAdminUser)
+            {
+                <div class="dropdown">
+                    <a class="mom-icon-button text-decoration-none" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-bell"></i>
+                        @if (Model.UnreadNotificationCount > 0)
+                        {
+                            <span class="mom-icon-badge">@Model.UnreadNotificationCount</span>
+                        }
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end mom-notification-dropdown">
+                        <div class="mom-dropdown-head">
+                            <strong>Notifications</strong>
+                            <span>@(Model.UnreadNotificationCount > 0 ? $"{Model.UnreadNotificationCount} unread" : "All read")</span>
+                        </div>
+                        @if (Model.Notifications.Count == 0)
+                        {
+                            <div class="mom-empty-hint">No notifications right now.</div>
+                        }
+                        else
+                        {
+                            @foreach (var notification in Model.Notifications.Take(5))
+                            {
+                                <div class="mom-notification-item">
+                                    <div class="mom-notification-title">@notification.Title</div>
+                                    <div class="mom-notification-text">@notification.Message</div>
+                                    <div class="mom-notification-meta">@notification.Created.ToString("dd MMM yyyy hh:mm tt")</div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="dropdown">
+                <a class="mom-profile-chip text-decoration-none" href="#" data-bs-toggle="dropdown">
+                    <span class="mom-profile-avatar">@((Model.UserName ?? "U").Substring(0, 1).ToUpper())</span>
+                    <span class="mom-profile-meta d-none d-md-flex flex-column align-items-start">
+                        <strong>@(string.IsNullOrWhiteSpace(Model.UserName) ? "User" : Model.UserName)</strong>
+                        <small>@(Model.IsSuperAdminUser ? "Company Super Admin" : Model.IsAdminUser ? "Department Admin" : "Member")</small>
+                    </span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end mom-profile-dropdown">
+                    <a asp-controller="Profile" asp-action="Profile" class="dropdown-item">My Profile</a>
+                    <form asp-controller="Auth" asp-action="Logout" method="post" class="px-3 pt-2">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-dark w-100">Sign out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+

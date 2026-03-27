@@ -1,0 +1,14 @@
+@model Meeting_Of_Minutes.Models.ListBreadcrumbViewModel
+
+<div class="pagetitle mb-4">
+    <nav>
+        <ol class="breadcrumb flex-nowrap">
+            <li class="breadcrumb-item">
+                <a asp-controller="DashBoard" asp-action="DashBoard">
+                    <i class="bi bi-house-door"></i>
+                </a>
+            </li>
+            <li class="breadcrumb-item active">@Model.CurrentLabel</li>
+        </ol>
+    </nav>
+</div>

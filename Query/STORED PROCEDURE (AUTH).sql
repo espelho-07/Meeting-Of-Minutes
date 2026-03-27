@@ -71,6 +71,12 @@ BEGIN
 END
 GO
 
+IF COL_LENGTH('dbo.MST_User', 'PasswordHash') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[MST_User] ADD [PasswordHash] NVARCHAR(MAX) NULL;
+END
+GO
+
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_MST_User_Email' AND object_id = OBJECT_ID('dbo.MST_User'))
 BEGIN
     CREATE UNIQUE INDEX UX_MST_User_Email ON dbo.MST_User(Email) WHERE Email IS NOT NULL;
@@ -117,6 +123,7 @@ BEGIN
         u.[UserName],
         u.[Email],
         u.[Password],
+        u.[PasswordHash],
         u.[ContactNo],
         u.[City],
         u.[UserRole],
@@ -132,7 +139,6 @@ BEGIN
     LEFT JOIN [dbo].[MOM_Department] d
         ON d.[DepartmentID] = u.[DepartmentID]
     WHERE u.[Email] = @Email
-      AND u.[Password] = @Password
       AND u.[UserRole] = @UserRole
       AND u.[CompanyName] = @CompanyName
       AND u.[IsActive] = 1
@@ -148,6 +154,8 @@ BEGIN
         u.[UserID],
         u.[UserName],
         u.[Email],
+        u.[Password],
+        u.[PasswordHash],
         u.[ContactNo],
         u.[City],
         u.[UserRole],
@@ -174,6 +182,8 @@ BEGIN
         u.[UserID],
         u.[UserName],
         u.[Email],
+        u.[Password],
+        u.[PasswordHash],
         u.[ContactNo],
         u.[City],
         u.[UserRole],
@@ -196,6 +206,7 @@ CREATE OR ALTER PROCEDURE [dbo].[PR_MST_User_Insert]
     @UserName NVARCHAR(50),
     @Email NVARCHAR(150),
     @Password NVARCHAR(50),
+    @PasswordHash NVARCHAR(MAX) = NULL,
     @ContactNo NVARCHAR(15),
     @City NVARCHAR(100),
     @UserRole NVARCHAR(20),
@@ -211,6 +222,7 @@ BEGIN
         [UserName],
         [Email],
         [Password],
+        [PasswordHash],
         [ContactNo],
         [City],
         [UserRole],
@@ -227,6 +239,7 @@ BEGIN
         @UserName,
         @Email,
         @Password,
+        @PasswordHash,
         @ContactNo,
         @City,
         @UserRole,
@@ -246,6 +259,7 @@ CREATE OR ALTER PROCEDURE [dbo].[PR_MST_User_UpsertForStaff]
     @UserName NVARCHAR(50),
     @Email NVARCHAR(150),
     @Password NVARCHAR(50),
+    @PasswordHash NVARCHAR(MAX) = NULL,
     @ContactNo NVARCHAR(15),
     @City NVARCHAR(100),
     @CompanyName NVARCHAR(100),
@@ -260,6 +274,7 @@ BEGIN
             UserName = @UserName,
             Email = @Email,
             Password = CASE WHEN IsAutoPassword = 1 THEN @Password ELSE Password END,
+            PasswordHash = CASE WHEN IsAutoPassword = 1 THEN @PasswordHash ELSE PasswordHash END,
             ContactNo = @ContactNo,
             City = @City,
             UserRole = 'User',
@@ -276,6 +291,7 @@ BEGIN
             UserName,
             Email,
             Password,
+            PasswordHash,
             ContactNo,
             City,
             UserRole,
@@ -292,6 +308,7 @@ BEGIN
             @UserName,
             @Email,
             @Password,
+            @PasswordHash,
             @ContactNo,
             @City,
             'User',
@@ -316,6 +333,7 @@ BEGIN
         UserName,
         Email,
         Password,
+        PasswordHash,
         ContactNo,
         City,
         UserRole,
@@ -333,12 +351,14 @@ GO
 
 CREATE OR ALTER PROCEDURE [dbo].[PR_MST_User_UpdatePasswordByPK]
     @UserID INT,
-    @NewPassword NVARCHAR(50)
+    @NewPassword NVARCHAR(50),
+    @NewPasswordHash NVARCHAR(MAX) = NULL
 AS
 BEGIN
     UPDATE dbo.MST_User
     SET
         Password = @NewPassword,
+        PasswordHash = @NewPasswordHash,
         IsAutoPassword = 0,
         Modified = GETDATE()
     WHERE UserID = @UserID;
@@ -664,6 +684,114 @@ AS
 BEGIN
     DELETE FROM dbo.MST_AdminNotification
     WHERE @CompanyName IS NULL OR CompanyName = @CompanyName;
+END
+GO
+
+IF OBJECT_ID('dbo.MST_AuditLog', 'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[MST_AuditLog]
+    (
+        [AuditLogID] INT IDENTITY(1,1) PRIMARY KEY,
+        [CompanyName] NVARCHAR(100) NULL,
+        [UserID] INT NULL,
+        [UserName] NVARCHAR(100) NULL,
+        [UserRole] NVARCHAR(20) NULL,
+        [ActionType] NVARCHAR(50) NOT NULL,
+        [EntityName] NVARCHAR(100) NOT NULL,
+        [EntityID] NVARCHAR(50) NULL,
+        [Title] NVARCHAR(150) NOT NULL,
+        [Description] NVARCHAR(500) NOT NULL,
+        [Created] DATETIME NOT NULL CONSTRAINT DF_MST_AuditLog_Created DEFAULT(GETDATE()),
+        [Modified] DATETIME NOT NULL
+    );
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[PR_MST_AuditLog_Insert]
+    @CompanyName NVARCHAR(100) = NULL,
+    @UserID INT = NULL,
+    @UserName NVARCHAR(100) = NULL,
+    @UserRole NVARCHAR(20) = NULL,
+    @ActionType NVARCHAR(50),
+    @EntityName NVARCHAR(100),
+    @EntityID NVARCHAR(50) = NULL,
+    @Title NVARCHAR(150),
+    @Description NVARCHAR(500),
+    @Modified DATETIME
+AS
+BEGIN
+    INSERT INTO dbo.MST_AuditLog
+    (
+        CompanyName,
+        UserID,
+        UserName,
+        UserRole,
+        ActionType,
+        EntityName,
+        EntityID,
+        Title,
+        Description,
+        Modified
+    )
+    VALUES
+    (
+        @CompanyName,
+        @UserID,
+        @UserName,
+        @UserRole,
+        @ActionType,
+        @EntityName,
+        @EntityID,
+        @Title,
+        @Description,
+        @Modified
+    );
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[PR_MST_AuditLog_SelectByCompany]
+    @CompanyName NVARCHAR(100),
+    @TopCount INT = 20
+AS
+BEGIN
+    SELECT TOP (@TopCount)
+        AuditLogID,
+        CompanyName,
+        UserID,
+        UserName,
+        UserRole,
+        ActionType,
+        EntityName,
+        EntityID,
+        Title,
+        Description,
+        Created
+    FROM dbo.MST_AuditLog
+    WHERE CompanyName = @CompanyName
+    ORDER BY AuditLogID DESC;
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[PR_MST_AuditLog_SelectByUserID]
+    @UserID INT,
+    @TopCount INT = 20
+AS
+BEGIN
+    SELECT TOP (@TopCount)
+        AuditLogID,
+        CompanyName,
+        UserID,
+        UserName,
+        UserRole,
+        ActionType,
+        EntityName,
+        EntityID,
+        Title,
+        Description,
+        Created
+    FROM dbo.MST_AuditLog
+    WHERE UserID = @UserID
+    ORDER BY AuditLogID DESC;
 END
 GO
 

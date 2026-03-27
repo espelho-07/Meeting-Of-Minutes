@@ -1,4 +1,5 @@
-using Meeting_Of_Minutes.Models;
+﻿using Meeting_Of_Minutes.Models;
+using Meeting_Of_Minutes.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -41,7 +42,21 @@ namespace Meeting_Of_Minutes.Controllers
         }
 
 
-        public IActionResult MeetingVenueList()
+        public IActionResult MeetingVenueList(string? searchtext, int page = 1, string sortBy = "name", string sortDirection = "asc")
+        {
+            searchtext = string.IsNullOrWhiteSpace(searchtext) ? null : searchtext;
+            ViewBag.searchtext = searchtext;
+            return View(BuildMeetingVenuePage(searchtext, page, sortBy, sortDirection));
+        }
+
+        [HttpPost]
+        public IActionResult MeetingVenueList(IFormCollection formdata)
+        {
+            string? searchtext = formdata["searchtext"].ToString();
+            return RedirectToAction(nameof(MeetingVenueList), new { searchtext });
+        }
+
+        private List<MeetingVenueModel> GetAllMeetingVenues(string? searchtext)
         {
             List<MeetingVenueModel> list = new List<MeetingVenueModel>();
             string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
@@ -58,16 +73,50 @@ namespace Meeting_Of_Minutes.Controllers
 
             while (reader.Read())
             {
+                string venueName = reader["MeetingVenueName"].ToString() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(searchtext) &&
+                    venueName.IndexOf(searchtext, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    continue;
+                }
+
                 MeetingVenueModel mv = new MeetingVenueModel();
                 mv.MeetingVenueID = Convert.ToInt32(reader["MeetingVenueID"]);
-                mv.MeetingVenueName = reader["MeetingVenueName"].ToString();
+                mv.MeetingVenueName = venueName;
                 list.Add(mv);
             }
 
             reader.Close();
             con.Close();
 
-            return View(list);
+            return list;
+        }
+
+        private PagedListViewModel<MeetingVenueModel> BuildMeetingVenuePage(string? searchtext, int page, string? sortBy, string? sortDirection)
+        {
+            IEnumerable<MeetingVenueModel> query = GetAllMeetingVenues(searchtext);
+            bool isDesc = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+            query = (sortBy ?? "name").ToLowerInvariant() switch
+            {
+                "id" => isDesc ? query.OrderByDescending(x => x.MeetingVenueID) : query.OrderBy(x => x.MeetingVenueID),
+                _ => isDesc ? query.OrderByDescending(x => x.MeetingVenueName) : query.OrderBy(x => x.MeetingVenueName)
+            };
+
+            List<MeetingVenueModel> ordered = query.ToList();
+            const int pageSize = 10;
+            page = Math.Max(page, 1);
+
+            return new PagedListViewModel<MeetingVenueModel>
+            {
+                Items = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = ordered.Count,
+                SearchText = searchtext,
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
         }
 
         public IActionResult ExportToExcel()
@@ -118,11 +167,104 @@ namespace Meeting_Of_Minutes.Controllers
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                TempData["ErrorMessage"] = "Error exporting data: " + ex.Message;
+                TempData["ErrorMessage"] = "Error exporting data. Please try again.";
                 return RedirectToAction("MeetingVenueList");
             }
+        }
+
+        public IActionResult DownloadImportTemplate()
+        {
+            byte[] content = ExcelImportService.BuildTemplate(
+                "MeetingVenuesImport",
+                new[] { "MeetingVenueName" },
+                new List<IReadOnlyList<string>>
+                {
+                    new[] { "Conference Room A" }
+                });
+
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MeetingVenueImportTemplate.xlsx");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ImportFromExcel(IFormFile? excelFile)
+        {
+            if (!ExcelImportService.IsExcelFile(excelFile))
+            {
+                TempData["ErrorMessage"] = $"Please upload a valid Excel file up to {ExcelImportService.MaxFileSizeBytes / (1024 * 1024)} MB.";
+                return RedirectToAction("MeetingVenueList");
+            }
+
+            if (!ExcelImportService.HasRequiredHeaders(excelFile!, new[] { "MeetingVenueName" }, out string headerMessage))
+            {
+                TempData["ErrorMessage"] = headerMessage;
+                return RedirectToAction("MeetingVenueList");
+            }
+
+            List<Dictionary<string, string>> rows = ExcelImportService.ReadRows(excelFile!);
+            if (rows.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Excel file is empty.";
+                return RedirectToAction("MeetingVenueList");
+            }
+
+            int importedCount = 0;
+            int skippedCount = 0;
+            string companyName = HttpContext.Session.GetString("CompanyName") ?? string.Empty;
+            List<ImportReportRowModel> reportRows = new List<ImportReportRowModel>();
+
+            using SqlConnection con = new SqlConnection(Meeting_Of_Minutes.DbConnectionHelper.ConnectionString);
+            con.Open();
+
+            for (int index = 0; index < rows.Count; index++)
+            {
+                Dictionary<string, string> row = rows[index];
+                string meetingVenueName = ExcelImportService.GetValue(row, "MeetingVenueName");
+                string summary = meetingVenueName;
+                if (string.IsNullOrWhiteSpace(meetingVenueName))
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "MeetingVenueName is required.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand checkCmd = new SqlCommand("SELECT COUNT(*) FROM MOM_MeetingVenue WHERE MeetingVenueName = @MeetingVenueName AND CompanyName = @CompanyName", con);
+                checkCmd.Parameters.AddWithValue("@MeetingVenueName", meetingVenueName);
+                checkCmd.Parameters.AddWithValue("@CompanyName", companyName);
+
+                if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                {
+                    skippedCount++;
+                    reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Skipped", Message = "Venue already exists in current company.", DataSummary = summary });
+                    continue;
+                }
+
+                using SqlCommand cmd = new SqlCommand("PR_MeetingVenue_Insert", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingVenueName", meetingVenueName);
+                cmd.Parameters.AddWithValue("@CompanyName", companyName);
+                cmd.Parameters.AddWithValue("@Modified", DateTime.Now);
+                cmd.ExecuteNonQuery();
+                importedCount++;
+                reportRows.Add(new ImportReportRowModel { RowNumber = index + 2, Status = "Imported", Message = "Venue created successfully.", DataSummary = summary });
+            }
+
+            AuditLogService.Log(
+                companyName,
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                "Import",
+                "MeetingVenue",
+                null,
+                "Meeting venues imported from Excel",
+                $"{importedCount} meeting venues imported and {skippedCount} skipped.");
+
+            TempData["ImportReportPath"] = ImportReportService.SaveReport("MeetingVenueImport", companyName, HttpContext.Session.GetInt32("UserID"), HttpContext.Session.GetString("UserName"), importedCount, skippedCount, reportRows);
+            TempData["SuccessMessage"] = $"Meeting venue import completed. Imported: {importedCount}, Skipped: {skippedCount}.";
+            return RedirectToAction("MeetingVenueList");
         }
 
         [HttpPost]
@@ -196,6 +338,16 @@ namespace Meeting_Of_Minutes.Controllers
             TempData["SuccessMessage"] = model.MeetingVenueID == 0 ? "Meeting venue added successfully." : "Meeting venue updated successfully.";
             cmd.ExecuteNonQuery();
             con.Close();
+            AuditLogService.Log(
+                HttpContext.Session.GetString("CompanyName"),
+                HttpContext.Session.GetInt32("UserID"),
+                HttpContext.Session.GetString("UserName"),
+                HttpContext.Session.GetString("UserRole"),
+                model.MeetingVenueID == 0 ? "Create" : "Update",
+                "MeetingVenue",
+                model.MeetingVenueID == 0 ? null : model.MeetingVenueID.ToString(),
+                model.MeetingVenueID == 0 ? "Meeting venue created" : "Meeting venue updated",
+                $"{model.MeetingVenueName} venue was {(model.MeetingVenueID == 0 ? "created" : "updated")}.");
 
             return RedirectToAction("MeetingVenueList");
         }
@@ -216,6 +368,16 @@ namespace Meeting_Of_Minutes.Controllers
                 con.Open();
                 cmd.ExecuteNonQuery();
                 con.Close();
+                AuditLogService.Log(
+                    HttpContext.Session.GetString("CompanyName"),
+                    HttpContext.Session.GetInt32("UserID"),
+                    HttpContext.Session.GetString("UserName"),
+                    HttpContext.Session.GetString("UserRole"),
+                    "Delete",
+                    "MeetingVenue",
+                    MeetingVenueID.ToString(),
+                    "Meeting venue deleted",
+                    $"Meeting venue #{MeetingVenueID} was deleted.");
                 TempData["SuccessMessage"] = "Meeting venue deleted successfully.";
             }
             catch
@@ -228,6 +390,8 @@ namespace Meeting_Of_Minutes.Controllers
         #endregion
     }
 }
+
+
 
 
 
