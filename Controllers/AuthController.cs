@@ -368,7 +368,7 @@ namespace Meeting_Of_Minutes.Controllers
         [HttpGet]
         public JsonResult GetUserContextByEmail(string email)
         {
-            email = email?.Trim();
+            email = (email ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(email))
             {
                 return Json(new { found = false });

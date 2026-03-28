@@ -154,6 +154,17 @@ namespace Meeting_Of_Minutes.Services
             }
         }
 
+        public static bool ValidateImportFile(IFormFile? excelFile, IReadOnlyList<string> expectedHeaders, out string message)
+        {
+            if (!IsExcelFile(excelFile))
+            {
+                message = $"Please upload a valid Excel file up to {MaxFileSizeBytes / (1024 * 1024)} MB.";
+                return false;
+            }
+
+            return HasRequiredHeaders(excelFile!, expectedHeaders, out message);
+        }
+
         public static string GetValue(IDictionary<string, string> row, string key)
         {
             return row.TryGetValue(key, out string? value) ? value.Trim() : string.Empty;

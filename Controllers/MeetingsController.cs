@@ -450,6 +450,14 @@ namespace Meeting_Of_Minutes.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public JsonResult ValidateImportTemplate(IFormFile? excelFile)
+        {
+            bool isValid = ExcelImportService.ValidateImportFile(excelFile, new[] { "MeetingDate", "MeetingTypeName", "DepartmentName", "MeetingVenueName", "MeetingDescription", "IncludeAllDepartmentsMembers" }, out string message);
+            return Json(new { ok = isValid, message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ImportFromExcel(IFormFile? excelFile)
         {
             if (!IsAdmin())

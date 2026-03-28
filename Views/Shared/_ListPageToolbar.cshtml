@@ -67,10 +67,22 @@
                       class="list-import-form">
                     @Html.AntiForgeryToken()
                     <label class="list-file-input">
-                        <input type="file" name="@Model.ImportInputName" accept=".xlsx,.xls" required />
+                        <input type="file"
+                               name="@Model.ImportInputName"
+                               accept=".xlsx,.xls"
+                               required
+                               data-import-file-input
+                               data-validate-url="@Url.Action("ValidateImportTemplate", string.IsNullOrWhiteSpace(Model.ImportController) ? ViewContext.RouteData.Values["controller"]?.ToString() : Model.ImportController)" />
                         <span><i class="bi bi-paperclip"></i>Select Excel</span>
                     </label>
-                    <button type="submit" class="btn list-btn list-btn-primary">
+                    <div class="list-import-file-state" data-import-file-state hidden>
+                        <div class="list-import-file-name" data-import-file-name>No file selected</div>
+                        <div class="list-import-file-feedback" data-import-file-feedback></div>
+                    </div>
+                    <button type="button" class="btn list-btn list-btn-light" data-import-remove hidden>
+                        <i class="bi bi-x-circle me-2"></i>Remove
+                    </button>
+                    <button type="submit" class="btn list-btn list-btn-primary" data-import-submit disabled>
                         <i class="bi bi-upload me-2"></i>Upload Excel
                     </button>
                 </form>
@@ -78,3 +90,85 @@
         </div>
     </div>
 }
+
+<script>
+    (function () {
+        const importForms = document.querySelectorAll('.list-import-form');
+        importForms.forEach(function (form) {
+            if (form.dataset.importBound === 'true') return;
+            form.dataset.importBound = 'true';
+
+            const fileInput = form.querySelector('[data-import-file-input]');
+            const submitButton = form.querySelector('[data-import-submit]');
+            const removeButton = form.querySelector('[data-import-remove]');
+            const stateWrap = form.querySelector('[data-import-file-state]');
+            const fileName = form.querySelector('[data-import-file-name]');
+            const feedback = form.querySelector('[data-import-file-feedback]');
+            const token = form.querySelector('input[name="__RequestVerificationToken"]');
+
+            function resetState() {
+                if (fileInput) fileInput.value = '';
+                if (submitButton) submitButton.disabled = true;
+                if (removeButton) removeButton.hidden = true;
+                if (stateWrap) stateWrap.hidden = true;
+                if (fileName) fileName.textContent = 'No file selected';
+                if (feedback) {
+                    feedback.textContent = '';
+                    feedback.className = 'list-import-file-feedback';
+                }
+            }
+
+            async function validateFile(file) {
+                if (!fileInput || !file || !token) return;
+                if (stateWrap) stateWrap.hidden = false;
+                if (removeButton) removeButton.hidden = false;
+                if (fileName) fileName.textContent = file.name;
+                if (submitButton) submitButton.disabled = true;
+                if (feedback) {
+                    feedback.textContent = 'Validating template...';
+                    feedback.className = 'list-import-file-feedback is-pending';
+                }
+
+                const formData = new FormData();
+                formData.append(fileInput.name, file);
+                formData.append('__RequestVerificationToken', token.value);
+
+                try {
+                    const response = await fetch(fileInput.dataset.validateUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (feedback) {
+                        feedback.textContent = data.message || (data.ok ? 'Template looks good.' : 'Template validation failed.');
+                        feedback.className = 'list-import-file-feedback ' + (data.ok ? 'is-valid' : 'is-invalid');
+                    }
+                    if (submitButton) submitButton.disabled = !data.ok;
+                } catch {
+                    if (feedback) {
+                        feedback.textContent = 'Template validation failed. Please try again.';
+                        feedback.className = 'list-import-file-feedback is-invalid';
+                    }
+                    if (submitButton) submitButton.disabled = true;
+                }
+            }
+
+            fileInput?.addEventListener('change', function () {
+                const file = fileInput.files && fileInput.files.length > 0 ? fileInput.files[0] : null;
+                if (!file) {
+                    resetState();
+                    return;
+                }
+
+                validateFile(file);
+            });
+
+            removeButton?.addEventListener('click', function () {
+                resetState();
+            });
+
+            resetState();
+        });
+    })();
+</script>

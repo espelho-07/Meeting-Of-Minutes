@@ -397,6 +397,51 @@
         pointer-events: none;
     }
 
+    .list-import-file-state {
+        min-width: 220px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid #dbe3ef;
+        background: #fff;
+        box-shadow: 0 6px 14px rgba(38, 46, 78, 0.05);
+    }
+
+    .list-import-file-name {
+        color: #1f2a44;
+        font-size: 0.88rem;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 280px;
+    }
+
+    .list-import-file-feedback {
+        margin-top: 3px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #7b88a0;
+    }
+
+    .list-import-file-feedback.is-pending {
+        color: #866c00;
+    }
+
+    .list-import-file-feedback.is-valid {
+        color: #147d4a;
+    }
+
+    .list-import-file-feedback.is-invalid {
+        color: #c2384f;
+    }
+
+    .list-btn[disabled] {
+        opacity: 0.55;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+
     .list-table-wrap {
         padding: 16px 22px 22px;
     }
@@ -522,6 +567,25 @@
         .list-title {
             max-width: none;
             font-size: 2.2rem;
+        }
+
+        .list-search-form,
+        .list-status-panel,
+        .list-import-actions,
+        .list-import-form {
+            width: 100%;
+        }
+
+        .list-status-panel {
+            justify-items: start;
+        }
+
+        .list-import-file-state {
+            width: 100%;
+        }
+
+        .list-import-file-name {
+            max-width: none;
         }
     }
 </style>

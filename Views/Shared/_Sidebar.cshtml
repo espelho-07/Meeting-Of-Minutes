@@ -14,12 +14,17 @@
 
 <aside class="mom-sidebar" id="momSidebar">
     <div class="mom-sidebar-brand">
-        <div class="mom-brand-mark">M</div>
-        <div class="mom-sidebar-brand-copy">
-            <div class="mom-brand-eyebrow">Operations OS</div>
-            <div class="mom-brand-title">Meeting Of Minutes</div>
-            <div class="mom-brand-subtitle">@(Model.IsSuperAdminUser ? "Company super admin workspace" : Model.IsAdminUser ? "Department admin workspace" : "Personal workspace")</div>
+        <div class="mom-sidebar-brand-main">
+            <div class="mom-brand-mark">M</div>
+            <div class="mom-sidebar-brand-copy">
+                <div class="mom-brand-eyebrow">Operations OS</div>
+                <div class="mom-brand-title">Meeting Of Minutes</div>
+                <div class="mom-brand-subtitle">@(Model.IsSuperAdminUser ? "Company super admin workspace" : Model.IsAdminUser ? "Department admin workspace" : "Personal workspace")</div>
+            </div>
         </div>
+        <button type="button" class="mom-sidebar-close" data-mom-sidebar-toggle aria-label="Close sidebar">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
 
     <div class="mom-sidebar-scroll">

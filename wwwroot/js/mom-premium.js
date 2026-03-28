@@ -39,6 +39,20 @@
             });
         });
 
+        document.querySelectorAll('.mom-sidebar .mom-nav-link').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (window.innerWidth < 1200) {
+                    body.classList.remove(mobileSidebarClass);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && body.classList.contains(mobileSidebarClass)) {
+                body.classList.remove(mobileSidebarClass);
+            }
+        });
+
         document.querySelectorAll('.mom-alert-box').forEach(function (alertElement) {
             setTimeout(function () {
                 if (window.bootstrap) {

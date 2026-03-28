@@ -9,47 +9,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Company Super Admin Sign Up | Meeting Of Minutes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --mom-bg: #eff3f9;
-            --mom-surface: rgba(255,255,255,0.95);
-            --mom-border: #dde4f0;
-            --mom-text: #172033;
+            --mom-bg: #eef3fb;
+            --mom-stage-start: #161d44;
+            --mom-stage-end: #5963e8;
+            --mom-panel: rgba(255,255,255,0.95);
+            --mom-card: #ffffff;
+            --mom-line: #dde4f0;
+            --mom-line-strong: #c9d4e9;
+            --mom-text: #182133;
             --mom-muted: #6f7d95;
             --mom-accent: #5b5ce6;
-            --mom-shadow: 0 24px 60px rgba(19, 28, 53, 0.12);
+            --mom-accent-soft: rgba(91, 92, 230, 0.10);
+            --mom-success: #198754;
+            --mom-warning: #d88a1d;
+            --mom-danger: #d74e66;
+            --mom-shadow: 0 26px 60px rgba(19, 28, 53, 0.12);
+            --mom-shadow-soft: 0 18px 34px rgba(19, 28, 53, 0.08);
+            --mom-focus: 0 0 0 4px rgba(91, 92, 230, 0.14);
         }
+
+        * { box-sizing: border-box; }
 
         body {
             min-height: 100vh;
             margin: 0;
+            font-family: "Inter", system-ui, sans-serif;
+            color: var(--mom-text);
             background:
                 radial-gradient(circle at top left, rgba(91,92,230,0.15), transparent 24%),
-                radial-gradient(circle at bottom right, rgba(91,92,230,0.11), transparent 22%),
-                linear-gradient(180deg, #f8fafc 0%, var(--mom-bg) 100%);
-            font-family: "Nunito", sans-serif;
+                radial-gradient(circle at bottom right, rgba(117,126,255,0.10), transparent 20%),
+                linear-gradient(180deg, #f8faff 0%, var(--mom-bg) 100%);
         }
 
         .auth-shell {
             min-height: 100vh;
             display: grid;
-            grid-template-columns: 0.95fr 1.05fr;
+            grid-template-columns: minmax(380px, 0.92fr) minmax(560px, 1.08fr);
             gap: 24px;
-            padding: 28px;
+            padding: 24px;
         }
 
         .auth-stage,
         .auth-panel {
-            border-radius: 32px;
-            border: 1px solid rgba(221,228,240,0.9);
+            border-radius: 30px;
+            border: 1px solid rgba(221,228,240,0.92);
             overflow: hidden;
             box-shadow: var(--mom-shadow);
         }
 
         .auth-stage {
-            background: linear-gradient(160deg, #151c41 0%, #24306a 48%, #5963e8 100%);
+            background:
+                radial-gradient(circle at 80% 22%, rgba(255,255,255,0.10), transparent 24%),
+                linear-gradient(160deg, var(--mom-stage-start) 0%, #24306a 48%, var(--mom-stage-end) 100%);
             color: #fff;
             padding: 42px;
             display: flex;
@@ -62,11 +80,12 @@
             align-items: center;
             gap: 12px;
             font-weight: 800;
+            letter-spacing: 0.01em;
         }
 
         .auth-brand-badge {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border-radius: 16px;
             display: inline-flex;
             align-items: center;
@@ -75,43 +94,59 @@
             border: 1px solid rgba(255,255,255,0.18);
         }
 
+        .auth-stage-copy {
+            max-width: 560px;
+        }
+
         .auth-stage h1 {
-            font-size: clamp(2.4rem, 3.8vw, 4rem);
-            line-height: 1;
+            font-size: clamp(2.9rem, 4vw, 4.7rem);
+            line-height: 0.95;
             font-weight: 900;
-            margin: 0 0 14px;
-            max-width: 540px;
+            letter-spacing: -0.05em;
+            margin: 0 0 18px;
         }
 
         .auth-stage p {
-            color: rgba(255,255,255,0.76);
-            max-width: 520px;
             margin: 0;
+            max-width: 520px;
+            color: rgba(255,255,255,0.79);
+            line-height: 1.6;
         }
 
         .auth-points {
             display: grid;
-            gap: 12px;
-            margin-top: 28px;
+            gap: 14px;
+            margin-top: 30px;
         }
 
         .auth-point {
             display: flex;
-            gap: 12px;
+            gap: 14px;
             align-items: flex-start;
-            padding: 16px 18px;
-            border-radius: 20px;
+            padding: 18px 18px 17px;
+            border-radius: 22px;
             background: rgba(255,255,255,0.10);
             border: 1px solid rgba(255,255,255,0.12);
         }
 
         .auth-point i {
-            font-size: 1.1rem;
             margin-top: 2px;
+            font-size: 1rem;
+        }
+
+        .auth-point strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.98rem;
+        }
+
+        .auth-point div {
+            line-height: 1.4;
+            color: rgba(255,255,255,0.90);
         }
 
         .auth-panel {
-            background: var(--mom-surface);
+            background: var(--mom-panel);
             backdrop-filter: blur(18px);
             padding: 28px;
             display: flex;
@@ -120,7 +155,7 @@
 
         .auth-card {
             width: 100%;
-            max-width: 640px;
+            max-width: 760px;
             margin: 0 auto;
         }
 
@@ -129,47 +164,134 @@
             align-items: center;
             gap: 8px;
             border-radius: 999px;
-            padding: 8px 12px;
-            background: #eef1ff;
+            padding: 10px 14px;
+            background: var(--mom-accent-soft);
             color: var(--mom-accent);
+            font-size: 0.86rem;
             font-weight: 800;
             margin-bottom: 18px;
         }
 
         .auth-title {
-            font-size: 2.25rem;
-            line-height: 1;
+            margin: 0 0 10px;
+            font-size: clamp(2.1rem, 3vw, 3.4rem);
+            line-height: 0.98;
+            letter-spacing: -0.045em;
             font-weight: 900;
-            color: var(--mom-text);
-            margin-bottom: 10px;
         }
 
         .auth-subtitle {
+            margin: 0 0 24px;
             color: var(--mom-muted);
-            margin-bottom: 24px;
+            line-height: 1.55;
+            max-width: 650px;
+        }
+
+        .auth-form-card {
+            background: var(--mom-card);
+            border: 1px solid rgba(221,228,240,0.92);
+            border-radius: 26px;
+            box-shadow: var(--mom-shadow-soft);
+            padding: 26px;
+        }
+
+        .auth-form-section + .auth-form-section {
+            margin-top: 22px;
+            padding-top: 22px;
+            border-top: 1px solid rgba(221,228,240,0.72);
+        }
+
+        .auth-section-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .auth-section-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--mom-text);
+        }
+
+        .auth-section-copy {
+            margin: 4px 0 0;
+            font-size: 0.88rem;
+            color: var(--mom-muted);
+            line-height: 1.45;
+        }
+
+        .auth-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .auth-field-full {
+            grid-column: 1 / -1;
         }
 
         .auth-label {
-            font-size: 0.84rem;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
             font-weight: 800;
-            color: #44516c;
-            margin-bottom: 6px;
+            letter-spacing: 0.02em;
+            color: #52617b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .auth-control,
+        .auth-input-group .input-group-text {
+            min-height: 60px;
+            border-color: var(--mom-line);
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.94),
+                0 12px 24px rgba(19, 28, 53, 0.06);
+            transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease, background-color 0.22s ease;
         }
 
         .auth-control {
-            min-height: 54px;
-            border-radius: 16px;
-            border: 1px solid var(--mom-border);
-            background: #fff;
-            box-shadow: none !important;
+            border-radius: 20px;
+            padding: 0 18px;
+            color: var(--mom-text);
+            font-size: 0.96rem;
+            font-weight: 600;
+        }
+
+        .auth-control::placeholder {
+            color: #a1acc0;
+            font-weight: 500;
+        }
+
+        .auth-control:hover,
+        .auth-input-group:hover .auth-control,
+        .auth-input-group:hover .input-group-text {
+            border-color: rgba(91, 92, 230, 0.20);
+            transform: translateY(-1px);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.96),
+                0 16px 28px rgba(19, 28, 53, 0.08);
+        }
+
+        .auth-control:focus,
+        .auth-input-group:focus-within .auth-control,
+        .auth-input-group:focus-within .input-group-text {
+            background: #ffffff;
+            border-color: rgba(91, 92, 230, 0.38);
+            box-shadow: var(--mom-focus), 0 14px 26px rgba(19, 28, 53, 0.08);
         }
 
         .auth-input-group .input-group-text {
-            background: #fff;
-            border-color: var(--mom-border);
-            min-height: 54px;
-            border-radius: 16px 0 0 16px !important;
-            color: #93a0b8;
+            background: linear-gradient(180deg, #fcfdff 0%, #f3f6ff 100%);
+            color: #96a3ba;
+            border-radius: 18px 0 0 18px !important;
+            justify-content: center;
+            width: 54px;
         }
 
         .auth-input-group .form-control {
@@ -181,44 +303,214 @@
         .auth-input-group .toggle-eye {
             cursor: pointer;
             border-left: 0;
-            border-radius: 0 16px 16px 0 !important;
+            border-radius: 0 18px 18px 0 !important;
         }
 
-        .auth-rulebox {
-            background: #fbfcff;
-            border: 1px solid #e9edf6;
-            border-radius: 20px;
+        .text-danger,
+        .field-validation-error {
+            display: block;
+            margin-top: 7px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--mom-danger) !important;
+        }
+
+        .validation-summary-errors {
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(215, 78, 102, 0.22);
+            background: #fff6f8;
+            margin-bottom: 16px;
+        }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .auth-strength {
+            margin-top: 18px;
             padding: 16px 18px;
+            border-radius: 20px;
+            border: 1px solid #e9edf6;
+            background: #fbfcff;
         }
 
-        .rule { font-size: 13px; color: #6c7a92; }
-        .rule.ok { color: #198754; font-weight: 700; }
+        .auth-strength-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .auth-strength-title {
+            font-weight: 800;
+            color: #44516c;
+        }
+
+        .auth-strength-pill {
+            min-width: 88px;
+            text-align: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #67748d;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .auth-strength-pill.is-weak {
+            background: #fff2f4;
+            color: var(--mom-danger);
+        }
+
+        .auth-strength-pill.is-medium {
+            background: #fff7e9;
+            color: var(--mom-warning);
+        }
+
+        .auth-strength-pill.is-strong {
+            background: #effaf4;
+            color: var(--mom-success);
+        }
+
+        .auth-strength-bars {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .auth-strength-bar {
+            height: 8px;
+            border-radius: 999px;
+            background: #e6ebf5;
+            transition: background-color 0.18s ease;
+        }
+
+        .auth-strength-bar.is-weak { background: #f08a9a; }
+        .auth-strength-bar.is-medium { background: #f0b14b; }
+        .auth-strength-bar.is-strong { background: #43b581; }
+
+        .auth-rule-list {
+            display: grid;
+            gap: 6px;
+        }
+
+        .rule {
+            font-size: 0.82rem;
+            color: #6c7a92;
+        }
+
+        .rule.ok {
+            color: var(--mom-success);
+            font-weight: 700;
+        }
 
         .auth-submit {
             background: linear-gradient(90deg, #4f5bea 0%, #6672ff 100%);
             border: 0;
-            border-radius: 16px;
-            min-height: 54px;
+            border-radius: 18px;
+            min-height: 56px;
             font-weight: 800;
-            box-shadow: 0 18px 30px rgba(91, 92, 230, 0.22);
+            box-shadow: 0 18px 30px rgba(91, 92, 230, 0.20);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
         }
 
-        .auth-link, .auth-link:hover {
+        .auth-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 22px 34px rgba(91, 92, 230, 0.24);
+        }
+
+        .auth-submit:active {
+            transform: scale(0.992);
+        }
+
+        .auth-submit.is-loading {
+            pointer-events: none;
+            opacity: 0.92;
+        }
+
+        .auth-submit .loading-label {
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-submit.is-loading .default-label {
+            display: none;
+        }
+
+        .auth-submit.is-loading .loading-label {
+            display: inline-flex;
+        }
+
+        .auth-footer {
+            margin-top: 18px;
+            text-align: center;
+            color: var(--mom-muted);
+        }
+
+        .auth-link,
+        .auth-link:hover {
             color: var(--mom-accent);
             text-decoration: none;
             font-weight: 800;
         }
 
         @@media (max-width: 1100px) {
-            .auth-shell { grid-template-columns: 1fr; }
+            .auth-shell {
+                grid-template-columns: 1fr;
+                padding: 18px;
+            }
+
+            .auth-stage,
+            .auth-panel {
+                border-radius: 24px;
+            }
+
+            .auth-stage {
+                padding: 28px;
+            }
+
+            .auth-panel {
+                padding: 18px;
+            }
         }
 
         @@media (max-width: 767px) {
-            .auth-shell { padding: 16px; }
-            .auth-stage, .auth-panel { border-radius: 24px; }
-            .auth-stage { padding: 24px; }
-            .auth-panel { padding: 18px; }
-            .auth-title { font-size: 2rem; }
+            .auth-shell {
+                padding: 12px;
+                gap: 14px;
+            }
+
+            .auth-stage,
+            .auth-panel,
+            .auth-form-card {
+                border-radius: 22px;
+            }
+
+            .auth-stage,
+            .auth-panel {
+                padding: 16px;
+            }
+
+            .auth-form-card {
+                padding: 18px;
+            }
+
+            .auth-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-title {
+                font-size: 2rem;
+            }
+
+            .auth-stage h1 {
+                font-size: 2.7rem;
+            }
         }
     </style>
 </head>
@@ -230,22 +522,22 @@
                 <span>Meeting Of Minutes</span>
             </div>
 
-            <div>
+            <div class="auth-stage-copy">
                 <h1>Create the Super Admin for your company.</h1>
-                <p>Each company can have exactly one Super Admin. That account controls Admin and User creation, role changes and password recovery only inside that company.</p>
+                <p>Set up the first elevated account for a company workspace. This account will manage admin creation, role security and access control inside that company.</p>
 
                 <div class="auth-points">
                     <div class="auth-point">
                         <i class="bi bi-building"></i>
-                        <div><strong>One per company</strong><br>Once a company Super Admin exists, all further Admin and User accounts are created from secured User Management.</div>
+                        <div><strong>One per company</strong>Once a company Super Admin exists, all further Admin and User accounts are created from secured user management.</div>
                     </div>
                     <div class="auth-point">
                         <i class="bi bi-people"></i>
-                        <div><strong>Automatic user creation</strong><br>Staff records generate user accounts automatically with the correct company and department context.</div>
+                        <div><strong>Automatic user creation</strong>Staff records generate user accounts automatically with the correct company and department context.</div>
                     </div>
                     <div class="auth-point">
                         <i class="bi bi-bell"></i>
-                        <div><strong>Approval workflow</strong><br>Admins receive profile update requests and password-change notifications inside the dashboard.</div>
+                        <div><strong>Approval workflow</strong>Admins receive profile update requests and password-change notifications inside the dashboard.</div>
                     </div>
                 </div>
             </div>
@@ -255,79 +547,126 @@
             <div class="auth-card">
                 <div class="auth-eyebrow"><i class="bi bi-person-plus"></i> Company Super Admin</div>
                 <div class="auth-title">Create company Super Admin</div>
-                <div class="auth-subtitle">Choose the company that still needs a Super Admin. If that company already has one, signup will be blocked automatically.</div>
+                <div class="auth-subtitle">The form is now grouped into company, contact and password sections so it scans better and feels less cluttered while keeping your current flow intact.</div>
 
-                <form method="post" asp-controller="Auth" asp-action="Register">
-                    @Html.AntiForgeryToken()
-                    <input asp-for="UserRole" type="hidden" value="SuperAdmin" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                <div class="auth-form-card">
+                    <form method="post" asp-controller="Auth" asp-action="Register" id="registerForm">
+                        @Html.AntiForgeryToken()
+                        <input asp-for="UserRole" type="hidden" value="SuperAdmin" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label asp-for="CompanyName" class="auth-label">Company</label>
-                            <select asp-for="CompanyName" asp-items="ViewBag.CompanyDropDown" class="form-select auth-control">`r`n                                <option value="">Select company</option>`r`n                            </select>
-                            <span asp-validation-for="CompanyName" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="UserName" class="auth-label">User Name</label>
-                            <input asp-for="UserName" class="form-control auth-control" placeholder="Enter user name" />
-                            <span asp-validation-for="UserName" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="Email" class="auth-label">Email</label>
-                            <input asp-for="Email" class="form-control auth-control" placeholder="Enter email" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="ContactNo" class="auth-label">Contact No</label>
-                            <input asp-for="ContactNo" class="form-control auth-control" placeholder="Enter contact number" />
-                            <span asp-validation-for="ContactNo" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-12">
-                            <label asp-for="City" class="auth-label">City</label>
-                            <input asp-for="City" class="form-control auth-control" placeholder="Enter city" />
-                            <span asp-validation-for="City" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="Password" class="auth-label">Password</label>
-                            <div class="input-group auth-input-group">
-                                <span class="input-group-text"><i class="bi bi-key"></i></span>
-                                <input asp-for="Password" type="password" class="form-control auth-control" placeholder="Enter password" id="passwordField" />
-                                <span class="input-group-text toggle-eye" id="togglePassword"><i class="bi bi-eye"></i></span>
+                        <div class="auth-form-section">
+                            <div class="auth-section-heading">
+                                <div>
+                                    <h2 class="auth-section-title">Company setup</h2>
+                                    <p class="auth-section-copy">Enter the company name that still needs its first Super Admin account.</p>
+                                </div>
                             </div>
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
 
-                        <div class="col-md-6">
-                            <label asp-for="ConfirmPassword" class="auth-label">Confirm Password</label>
-                            <div class="input-group auth-input-group">
-                                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
-                                <input asp-for="ConfirmPassword" type="password" class="form-control auth-control" placeholder="Confirm password" id="confirmPasswordField" />
-                                <span class="input-group-text toggle-eye" id="toggleConfirmPassword"><i class="bi bi-eye"></i></span>
+                            <div class="auth-form-grid">
+                                <div class="auth-field-full">
+                                    <label asp-for="CompanyName" class="auth-label">Company</label>
+                                    <input asp-for="CompanyName" type="text" class="form-control auth-control" placeholder="Enter company name" autocomplete="organization" autofocus />
+                                    <span asp-validation-for="CompanyName" class="text-danger"></span>
+                                </div>
                             </div>
-                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
-                    </div>
 
-                    <div class="auth-rulebox mt-3 mb-4">
-                        <div class="fw-semibold mb-2" style="color:#44516c;">Password must contain:</div>
-                        <div class="rule" id="ruleLength"><i class="bi bi-dot"></i> Minimum 8 characters</div>
-                        <div class="rule" id="ruleUpper"><i class="bi bi-dot"></i> At least 1 uppercase letter (A-Z)</div>
-                        <div class="rule" id="ruleLower"><i class="bi bi-dot"></i> At least 1 lowercase letter (a-z)</div>
-                        <div class="rule" id="ruleDigit"><i class="bi bi-dot"></i> At least 1 number (0-9)</div>
-                        <div class="rule" id="ruleSpecial"><i class="bi bi-dot"></i> At least 1 special character (!#@@$...)</div>
-                    </div>
+                        <div class="auth-form-section">
+                            <div class="auth-section-heading">
+                                <div>
+                                    <h2 class="auth-section-title">Identity and contact</h2>
+                                    <p class="auth-section-copy">These details become the primary company-level access account for that workspace.</p>
+                                </div>
+                            </div>
 
-                    <button type="submit" class="btn auth-submit w-100 text-white">Create Super Admin</button>
-                </form>
+                            <div class="auth-form-grid">
+                                <div>
+                                    <label asp-for="UserName" class="auth-label">User Name</label>
+                                    <input asp-for="UserName" class="form-control auth-control" placeholder="Enter user name" />
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                </div>
 
-                <div class="text-center mt-3">
-                    <a asp-controller="Auth" asp-action="Login" class="auth-link">Back to Login</a>
+                                <div>
+                                    <label asp-for="City" class="auth-label">City</label>
+                                    <input asp-for="City" class="form-control auth-control" placeholder="Enter city" />
+                                    <span asp-validation-for="City" class="text-danger"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="Email" class="auth-label">Email</label>
+                                    <input asp-for="Email" type="email" class="form-control auth-control" placeholder="Enter email" autocomplete="email" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="ContactNo" class="auth-label">Contact No</label>
+                                    <input asp-for="ContactNo" type="tel" class="form-control auth-control" placeholder="Enter contact number" inputmode="numeric" />
+                                    <span asp-validation-for="ContactNo" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="auth-form-section">
+                            <div class="auth-section-heading">
+                                <div>
+                                    <h2 class="auth-section-title">Password setup</h2>
+                                    <p class="auth-section-copy">Create a secure password. Strength feedback updates as you type.</p>
+                                </div>
+                            </div>
+
+                            <div class="auth-form-grid">
+                                <div>
+                                    <label asp-for="Password" class="auth-label">Password</label>
+                                    <div class="input-group auth-input-group">
+                                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                        <input asp-for="Password" type="password" class="form-control auth-control" placeholder="Enter password" id="passwordField" autocomplete="new-password" />
+                                        <span class="input-group-text toggle-eye" id="togglePassword"><i class="bi bi-eye"></i></span>
+                                    </div>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+
+                                <div>
+                                    <label asp-for="ConfirmPassword" class="auth-label">Confirm Password</label>
+                                    <div class="input-group auth-input-group">
+                                        <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                                        <input asp-for="ConfirmPassword" type="password" class="form-control auth-control" placeholder="Confirm password" id="confirmPasswordField" autocomplete="new-password" />
+                                        <span class="input-group-text toggle-eye" id="toggleConfirmPassword"><i class="bi bi-eye"></i></span>
+                                    </div>
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="auth-strength">
+                                <div class="auth-strength-head">
+                                    <div class="auth-strength-title">Password strength</div>
+                                    <div class="auth-strength-pill" id="strengthPill">Start typing</div>
+                                </div>
+                                <div class="auth-strength-bars">
+                                    <div class="auth-strength-bar"></div>
+                                    <div class="auth-strength-bar"></div>
+                                    <div class="auth-strength-bar"></div>
+                                    <div class="auth-strength-bar"></div>
+                                </div>
+                                <div class="auth-rule-list">
+                                    <div class="rule" id="ruleLength"><i class="bi bi-dot"></i> Minimum 8 characters</div>
+                                    <div class="rule" id="ruleUpper"><i class="bi bi-dot"></i> At least 1 uppercase letter (A-Z)</div>
+                                    <div class="rule" id="ruleLower"><i class="bi bi-dot"></i> At least 1 lowercase letter (a-z)</div>
+                                    <div class="rule" id="ruleDigit"><i class="bi bi-dot"></i> At least 1 number (0-9)</div>
+                                    <div class="rule" id="ruleSpecial"><i class="bi bi-dot"></i> At least 1 special character (!#@@$...)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn auth-submit w-100 text-white" id="registerSubmit">
+                            <span class="default-label">Create Super Admin</span>
+                            <span class="loading-label"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Creating account...</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="auth-footer">
+                    Already have access? <a asp-controller="Auth" asp-action="Login" class="auth-link">Back to Login</a>
                 </div>
             </div>
         </section>
@@ -337,12 +676,17 @@
 
     <script>
         (function () {
+            const registerForm = document.getElementById('registerForm');
+            const submitButton = document.getElementById('registerSubmit');
             const passwordField = document.getElementById('passwordField');
             const confirmPasswordField = document.getElementById('confirmPasswordField');
             const togglePassword = document.getElementById('togglePassword');
             const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+            const strengthPill = document.getElementById('strengthPill');
+            const bars = Array.from(document.querySelectorAll('.auth-strength-bar'));
 
             function toggleInput(input, iconWrap) {
+                if (!input || !iconWrap) return;
                 const icon = iconWrap.querySelector('i');
                 if (input.type === 'password') {
                     input.type = 'text';
@@ -353,6 +697,74 @@
                 }
             }
 
+            function setRule(id, ok) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.toggle('ok', ok);
+            }
+
+            function evaluateStrength(value) {
+                let score = 0;
+                if (value.length >= 8) score++;
+                if (/[A-Z]/.test(value)) score++;
+                if (/[a-z]/.test(value)) score++;
+                if (/\d/.test(value)) score++;
+                if (/[^A-Za-z0-9]/.test(value)) score++;
+                return score;
+            }
+
+            function updateStrengthUi() {
+                const value = passwordField ? passwordField.value : '';
+                const score = evaluateStrength(value);
+                const level = score >= 5 ? 'strong' : score >= 3 ? 'medium' : score > 0 ? 'weak' : 'idle';
+
+                setRule('ruleLength', value.length >= 8);
+                setRule('ruleUpper', /[A-Z]/.test(value));
+                setRule('ruleLower', /[a-z]/.test(value));
+                setRule('ruleDigit', /\d/.test(value));
+                setRule('ruleSpecial', /[^A-Za-z0-9]/.test(value));
+
+                if (strengthPill) {
+                    strengthPill.className = 'auth-strength-pill';
+                    if (level === 'weak') {
+                        strengthPill.classList.add('is-weak');
+                        strengthPill.textContent = 'Weak';
+                    } else if (level === 'medium') {
+                        strengthPill.classList.add('is-medium');
+                        strengthPill.textContent = 'Medium';
+                    } else if (level === 'strong') {
+                        strengthPill.classList.add('is-strong');
+                        strengthPill.textContent = 'Strong';
+                    } else {
+                        strengthPill.textContent = 'Start typing';
+                    }
+                }
+
+                bars.forEach((bar, index) => {
+                    bar.className = 'auth-strength-bar';
+                    if (index < Math.min(4, score)) {
+                        bar.classList.add(level === 'strong' ? 'is-strong' : level === 'medium' ? 'is-medium' : 'is-weak');
+                    }
+                });
+            }
+
+            function formIsValid(form) {
+                if (!form) return false;
+                if (window.jQuery) {
+                    const validator = window.jQuery(form).data('validator');
+                    if (validator) {
+                        return window.jQuery(form).valid();
+                    }
+                }
+                return form.checkValidity();
+            }
+
+            function syncRegisterSubmitState(isLoading) {
+                if (!submitButton) return;
+                submitButton.classList.toggle('is-loading', isLoading);
+                submitButton.disabled = isLoading;
+            }
+
             if (togglePassword) {
                 togglePassword.addEventListener('click', function () { toggleInput(passwordField, togglePassword); });
             }
@@ -361,27 +773,43 @@
                 toggleConfirmPassword.addEventListener('click', function () { toggleInput(confirmPasswordField, toggleConfirmPassword); });
             }
 
-            function setRule(id, ok) {
-                const el = document.getElementById(id);
-                if (!el) return;
-                if (ok) el.classList.add('ok'); else el.classList.remove('ok');
-            }
-
-            function validatePasswordUI() {
-                const value = passwordField ? passwordField.value : '';
-                setRule('ruleLength', value.length >= 8);
-                setRule('ruleUpper', /[A-Z]/.test(value));
-                setRule('ruleLower', /[a-z]/.test(value));
-                setRule('ruleDigit', /\d/.test(value));
-                setRule('ruleSpecial', /[^A-Za-z0-9]/.test(value));
-            }
-
             if (passwordField) {
-                passwordField.addEventListener('input', validatePasswordUI);
-                validatePasswordUI();
+                passwordField.addEventListener('input', updateStrengthUi);
+                updateStrengthUi();
             }
+
+            registerForm?.addEventListener('input', function () {
+                syncRegisterSubmitState(false);
+            });
+
+            registerForm?.addEventListener('change', function () {
+                syncRegisterSubmitState(false);
+            });
+
+            if (registerForm && submitButton) {
+                registerForm.addEventListener('submit', function (event) {
+                    if (submitButton.classList.contains('is-loading')) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    if (!formIsValid(registerForm)) {
+                        syncRegisterSubmitState(false);
+                        return;
+                    }
+
+                    syncRegisterSubmitState(true);
+                });
+            }
+
+            window.addEventListener('pageshow', function () {
+                syncRegisterSubmitState(false);
+            });
         })();
     </script>
 </body>
 </html>
+
+
+
 
